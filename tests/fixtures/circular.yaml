@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: Circular Reference Test API
+  version: 1.0.0
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+        parent:
+          $ref: '#/components/schemas/ParentNode'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChildNode'
+
+    ParentNode:
+      allOf:
+        - $ref: '#/components/schemas/Node'
+
+    ChildNode:
+      allOf:
+        - $ref: '#/components/schemas/Node'

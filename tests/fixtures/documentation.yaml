@@ -1,0 +1,198 @@
+openapi: 3.0.0
+info:
+  title: Documentation & Metadata Test API
+  version: 1.0.0
+  description: Tests for title, description, examples, and JSDoc generation
+components:
+  schemas:
+    # Title field tests
+    UserAccount:
+      title: User Account
+      description: Represents a user account in the system
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: User ID
+          description: Unique identifier for the user
+        username:
+          type: string
+          title: Username
+          description: The user's login name
+        email:
+          type: string
+          format: email
+          title: Email Address
+
+    ProductInfo:
+      title: Product Information
+      description: Detailed product information
+      type: object
+      properties:
+        name:
+          type: string
+          title: Product Name
+        sku:
+          type: string
+          title: SKU
+          description: Stock Keeping Unit
+
+    # Examples (plural) - top-level
+    StatusCode:
+      type: string
+      title: HTTP Status Code
+      description: Standard HTTP status code
+      examples:
+        - "200"
+        - "404"
+        - "500"
+      enum:
+        - "200"
+        - "201"
+        - "400"
+        - "401"
+        - "403"
+        - "404"
+        - "500"
+
+    Price:
+      type: number
+      title: Product Price
+      description: Price in USD
+      minimum: 0
+      maximum: 10000
+      multipleOf: 0.01
+      examples:
+        - 9.99
+        - 19.95
+        - 99.00
+
+    FlexibleMetadata:
+      type: object
+      title: Flexible Metadata Object
+      description: A flexible metadata object with property constraints
+      minProperties: 1
+      maxProperties: 10
+      additionalProperties:
+        type: string
+      examples:
+        - color: blue
+          size: large
+
+    NullableString31:
+      type: [string, "null"]
+      description: String that can be null (OpenAPI 3.1 style)
+      examples:
+        - "hello"
+        - null
+
+    # Property-level examples
+    ProductWithAllFeatures:
+      type: object
+      title: Product
+      description: A product with comprehensive validation
+      minProperties: 2
+      maxProperties: 10
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Product ID
+        name:
+          type: string
+          title: Product Name
+          minLength: 1
+          maxLength: 100
+          examples:
+            - "Laptop"
+            - "Smartphone"
+        price:
+          type: [number, "null"]
+          title: Price
+          description: Optional price in USD
+          minimum: 0
+          exclusiveMaximum: true
+          maximum: 10000
+          examples:
+            - 999.99
+            - null
+        metadata:
+          type: object
+          minProperties: 1
+          maxProperties: 5
+          additionalProperties:
+            type: string
+      required:
+        - id
+        - name
+
+    # Description options tests
+    SimpleDescription:
+      type: object
+      description: A simple object with description
+      properties:
+        field:
+          type: string
+          description: A simple field
+
+    # JSDoc vs .describe() tests
+    Address:
+      type: object
+      title: Address
+      description: Mailing address information
+      properties:
+        street:
+          type: string
+          description: Street address
+        city:
+          type: string
+          description: City name
+        country:
+          type: string
+          description: Country code
+
+    # Complex nested descriptions
+    OrderDetails:
+      type: object
+      title: Order Details
+      description: Complete order information with nested structures
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          title: Order ID
+          description: Unique order identifier
+        customer:
+          $ref: '#/components/schemas/UserAccount'
+        items:
+          type: array
+          description: List of order items
+          items:
+            type: object
+            title: Order Item
+            description: Individual item in the order
+            properties:
+              productId:
+                type: string
+                title: Product ID
+                description: Reference to product
+              quantity:
+                type: integer
+                title: Quantity
+                description: Number of items
+                minimum: 1
+
+    # Schemas for .describe() runtime descriptions
+    ConfigSchema:
+      type: object
+      description: Configuration object for runtime validation
+      properties:
+        apiKey:
+          type: string
+          description: API key for authentication
+        timeout:
+          type: integer
+          description: Request timeout in milliseconds
+          minimum: 100
+          maximum: 30000

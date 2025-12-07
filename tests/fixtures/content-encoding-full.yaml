@@ -1,0 +1,49 @@
+openapi: 3.1.0
+info:
+  title: Content Encoding Test
+  version: 1.0.0
+components:
+  schemas:
+    Base64Image:
+      type: string
+      contentEncoding: base64
+      contentMediaType: image/png
+      description: Base64 encoded PNG image
+
+    Base64UrlToken:
+      type: string
+      contentEncoding: base64url
+      minLength: 10
+      maxLength: 100
+      description: Base64URL encoded token with length constraints
+
+    QuotedPrintableText:
+      type: string
+      contentEncoding: quoted-printable
+      contentMediaType: text/plain
+      description: Quoted-printable encoded text
+
+    BinaryData:
+      type: string
+      contentEncoding: binary
+      description: Binary data as string
+
+    JsonString:
+      type: string
+      contentMediaType: application/json
+      description: JSON content in string format
+
+    XmlString:
+      type: string
+      contentMediaType: application/xml
+      description: XML content in string format
+
+    YamlString:
+      type: string
+      contentMediaType: application/yaml
+      description: YAML content in string format
+
+    HtmlString:
+      type: string
+      contentMediaType: text/html
+      description: HTML content in string format

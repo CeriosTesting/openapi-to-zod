@@ -1,0 +1,53 @@
+openapi: 3.0.3
+info:
+  title: Schema Dependencies Test
+  version: 1.0.0
+components:
+  schemas:
+    PaymentWithAddress:
+      type: object
+      properties:
+        name:
+          type: string
+        creditCard:
+          type: string
+        billingAddress:
+          type: string
+        city:
+          type: string
+        zipCode:
+          type: string
+      dependencies:
+        creditCard:
+          properties:
+            billingAddress:
+              type: string
+            city:
+              type: string
+            zipCode:
+              type: string
+          required: ["billingAddress", "city", "zipCode"]
+
+    ContactWithVerification:
+      type: object
+      properties:
+        email:
+          type: string
+        phone:
+          type: string
+        emailVerified:
+          type: boolean
+        phoneVerified:
+          type: boolean
+        verificationDate:
+          type: string
+      dependencies:
+        email:
+          required: ["emailVerified"]
+        phone:
+          properties:
+            phoneVerified:
+              type: boolean
+            verificationDate:
+              type: string
+          required: ["phoneVerified"]

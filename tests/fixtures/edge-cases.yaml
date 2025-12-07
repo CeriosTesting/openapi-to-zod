@@ -1,0 +1,198 @@
+openapi: 3.1.0
+info:
+  title: Edge Cases Test
+  version: 1.0.0
+components:
+  schemas:
+    # Empty object schema
+    EmptyObject:
+      type: object
+      description: Object with no properties defined
+
+    # Empty object with constraints
+    EmptyObjectWithMin:
+      type: object
+      minProperties: 1
+      description: Empty object that requires at least one property
+
+    # Object with only additionalProperties
+    OnlyAdditionalProps:
+      type: object
+      additionalProperties:
+        type: string
+      description: Object with no explicit properties, only additional
+
+    # Array without items specification
+    UnspecifiedArray:
+      type: array
+      description: Array without items type specified
+
+    # Schema with unknown type fallback
+    UnknownTypeFallback:
+      description: Schema without type specified
+
+    # Nested nullable scenarios
+    DeepNullable:
+      type: object
+      properties:
+        nullableArray:
+          type: array
+          nullable: true
+          items:
+            type: object
+            nullable: true
+            properties:
+              value:
+                type: string
+                nullable: true
+
+    # Constraint edge cases
+    ZeroMinMax:
+      type: number
+      minimum: 0
+      maximum: 0
+      description: Number that must be exactly zero
+
+    EqualMinMax:
+      type: string
+      minLength: 5
+      maxLength: 5
+      description: String with equal min and max length
+
+    LargeNumbers:
+      type: object
+      properties:
+        veryLarge:
+          type: number
+          maximum: 9999999999999
+        verySmall:
+          type: number
+          minimum: -9999999999999
+
+    # OpenAPI 3.1 multiple type arrays
+    MultipleTypes:
+      type: [string, number]
+      description: Can be string or number (OpenAPI 3.1)
+
+    MultipleTypesWithNull:
+      type: [string, number, "null"]
+      description: Can be string, number, or null
+
+    # Very deep nesting
+    DeepNesting:
+      type: object
+      properties:
+        level1:
+          type: object
+          properties:
+            level2:
+              type: object
+              properties:
+                level3:
+                  type: object
+                  properties:
+                    level4:
+                      type: object
+                      properties:
+                        value:
+                          type: string
+
+    # Special characters in property names
+    SpecialPropertyNames:
+      type: object
+      properties:
+        "property-with-dash":
+          type: string
+        "property.with.dots":
+          type: string
+        "property$with$dollar":
+          type: string
+        "property_with_underscore":
+          type: string
+
+    # Empty enum (edge case)
+    ValidEnum:
+      type: string
+      enum:
+        - value1
+        - value2
+
+    # Single value enum
+    SingleValueEnum:
+      type: string
+      enum:
+        - onlyValue
+
+    # Enum with special characters
+    EnumWithSpecialChars:
+      type: string
+      enum:
+        - "value-with-dash"
+        - "value.with.dot"
+        - "value with space"
+        - "value@special"
+
+    # Very long string
+    VeryLongString:
+      type: string
+      maxLength: 10000
+      description: String with very large max length
+
+    # Array of arrays
+    NestedArrays:
+      type: array
+      items:
+        type: array
+        items:
+          type: string
+
+    # Nullable everything
+    NullableEverything:
+      type: object
+      nullable: true
+      properties:
+        nullableString:
+          type: string
+          nullable: true
+        nullableNumber:
+          type: number
+          nullable: true
+        nullableObject:
+          type: object
+          nullable: true
+          properties:
+            nested:
+              type: string
+              nullable: true
+
+    # Reference to primitive type
+    StringAlias:
+      type: string
+      description: Simple string alias
+
+    # Discriminated union with many variants
+    ManyVariants:
+      oneOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              const: variant1
+            value:
+              type: string
+        - type: object
+          properties:
+            type:
+              type: string
+              const: variant2
+            value:
+              type: number
+        - type: object
+          properties:
+            type:
+              type: string
+              const: variant3
+            value:
+              type: boolean
+      discriminator:
+        propertyName: type

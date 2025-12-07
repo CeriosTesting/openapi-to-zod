@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: Array Contains Test
+  version: 1.0.0
+components:
+  schemas:
+    AdminUsers:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          role:
+            type: string
+      contains:
+        type: object
+        properties:
+          role:
+            const: admin
+
+    TaggedItems:
+      type: array
+      items:
+        type: string
+      contains:
+        type: string
+        pattern: "^tag_"
+      minContains: 1
+      maxContains: 3
+
+    MixedNumbers:
+      type: array
+      items:
+        type: number
+      contains:
+        type: number
+        minimum: 100
+      minContains: 2
+
+    RequiredKeywords:
+      type: array
+      items:
+        type: string
+      contains:
+        enum: ["urgent", "critical", "important"]
+      minContains: 1
+      maxContains: 2

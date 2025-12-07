@@ -1,0 +1,49 @@
+openapi: 3.1.0
+info:
+  title: Pattern Properties Test
+  version: 1.0.0
+components:
+  schemas:
+    DynamicConfig:
+      type: object
+      properties:
+        name:
+          type: string
+      patternProperties:
+        "^config_[a-z]+$":
+          type: string
+        "^num_[a-z]+$":
+          type: number
+
+    StringKeysOnly:
+      type: object
+      propertyNames:
+        pattern: "^[a-zA-Z_]+$"
+      additionalProperties:
+        type: string
+
+    ShortKeysOnly:
+      type: object
+      propertyNames:
+        maxLength: 10
+      additionalProperties: true
+
+    LongKeysOnly:
+      type: object
+      propertyNames:
+        minLength: 5
+      additionalProperties: true
+
+    CombinedValidation:
+      type: object
+      properties:
+        id:
+          type: string
+      patternProperties:
+        "^data_[0-9]+$":
+          type: object
+          properties:
+            value:
+              type: number
+      propertyNames:
+        pattern: "^[a-z_0-9]+$"

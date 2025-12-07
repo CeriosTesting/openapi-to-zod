@@ -1,0 +1,218 @@
+openapi: 3.1.0
+info:
+  title: Advanced JSON Schema Features Test
+  version: 1.0.0
+components:
+  schemas:
+    # Multiple type arrays (OpenAPI 3.1)
+    FlexibleId:
+      type: [string, number]
+      description: Can be either string or number
+
+    StringOrNumberArray:
+      type: [string, number]
+      minimum: 0
+      minLength: 1
+
+    # dependentRequired
+    CreditCardPayment:
+      type: object
+      properties:
+        creditCard:
+          type: string
+        securityCode:
+          type: string
+        billingZip:
+          type: string
+      dependentRequired:
+        creditCard:
+          - securityCode
+          - billingZip
+
+    ShippingAddress:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+      required:
+        - name
+      dependentRequired:
+        country:
+          - postalCode
+
+    # not keyword
+    NotEmptyString:
+      type: string
+      not:
+        const: ""
+
+    NonZeroNumber:
+      type: number
+      not:
+        const: 0
+
+    NotNegative:
+      type: number
+      not:
+        maximum: 0
+        exclusiveMaximum: true
+
+    # if/then/else conditionals
+    DiscountProduct:
+      type: object
+      properties:
+        price:
+          type: number
+        discountPercentage:
+          type: number
+        discountCode:
+          type: string
+      required:
+        - price
+      if:
+        properties:
+          discountPercentage:
+            type: number
+            minimum: 1
+      then:
+        required:
+          - discountCode
+
+    ConditionalBilling:
+      type: object
+      properties:
+        paymentType:
+          type: string
+          const: credit_card
+        creditCardNumber:
+          type: string
+        bankAccount:
+          type: string
+      if:
+        properties:
+          paymentType:
+            const: credit_card
+      then:
+        required:
+          - creditCardNumber
+      else:
+        required:
+          - bankAccount
+
+    AgeBasedRequirements:
+      type: object
+      properties:
+        age:
+          type: number
+        parentConsent:
+          type: boolean
+        idNumber:
+          type: string
+      required:
+        - age
+      if:
+        properties:
+          age:
+            minimum: 18
+      then:
+        required:
+          - idNumber
+      else:
+        required:
+          - parentConsent
+
+    # Nested readOnly/writeOnly
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        username:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+        profile:
+          type: object
+          properties:
+            displayName:
+              type: string
+            secretKey:
+              type: string
+              writeOnly: true
+            userId:
+              type: string
+              readOnly: true
+            settings:
+              type: object
+              properties:
+                theme:
+                  type: string
+                apiKey:
+                  type: string
+                  writeOnly: true
+                lastLogin:
+                  type: string
+                  readOnly: true
+
+    NestedReadOnlyExample:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            computed:
+              type: string
+              readOnly: true
+            userInput:
+              type: string
+
+    # Combined features
+    ComplexConditional:
+      type: object
+      properties:
+        type:
+          type: string
+        value:
+          type: [string, number]
+        requiredField:
+          type: string
+        optionalField:
+          type: string
+      dependentRequired:
+        type:
+          - value
+      if:
+        properties:
+          type:
+            const: string
+      then:
+        properties:
+          value:
+            type: string
+            not:
+              const: ""
+
+    MultipleDependencies:
+      type: object
+      properties:
+        field1:
+          type: string
+        field2:
+          type: string
+        field3:
+          type: string
+        field4:
+          type: string
+      dependentRequired:
+        field1:
+          - field2
+        field3:
+          - field4

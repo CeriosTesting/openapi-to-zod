@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: Empty Schema Test
+  version: 1.0.0
+components:
+  schemas:
+    # Empty schema (should default to z.unknown())
+    EmptySchema: {}
+
+    # Schema with only description (should default to z.unknown())
+    DescriptionOnly:
+      description: This schema has no type or properties
+
+    # Schema with only title
+    TitleOnly:
+      title: Just a Title
+
+    # Valid schema for comparison
+    ValidSchema:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string

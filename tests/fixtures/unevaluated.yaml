@@ -1,0 +1,111 @@
+openapi: 3.1.0
+info:
+  title: Unevaluated Properties and Items Test
+  version: 1.0.0
+components:
+  schemas:
+    # Basic unevaluatedProperties test
+    BaseEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+
+    ExtendedEntity:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity'
+        - type: object
+          properties:
+            name:
+              type: string
+          required:
+            - name
+      unevaluatedProperties: false
+
+    # unevaluatedProperties with schema
+    FlexibleExtension:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity'
+        - type: object
+          properties:
+            type:
+              type: string
+      unevaluatedProperties:
+        type: string
+        description: Additional string properties allowed
+
+    # unevaluatedProperties with oneOf
+    PaymentMethod:
+      oneOf:
+        - type: object
+          properties:
+            paymentId:
+              type: string
+            cardNumber:
+              type: string
+          required:
+            - paymentId
+            - cardNumber
+        - type: object
+          properties:
+            paymentId:
+              type: string
+            bankAccount:
+              type: string
+          required:
+            - paymentId
+            - bankAccount
+      unevaluatedProperties: false
+
+    # unevaluatedItems with prefixItems
+    MixedArray:
+      type: array
+      prefixItems:
+        - type: string
+          description: Name
+        - type: number
+          description: Age
+      unevaluatedItems: false
+
+    # unevaluatedItems with schema
+    FlexibleTuple:
+      type: array
+      prefixItems:
+        - type: string
+        - type: number
+      unevaluatedItems:
+        type: boolean
+        description: Additional boolean items allowed
+
+    # unevaluatedItems with allOf
+    RestrictedArray:
+      allOf:
+        - type: array
+          items:
+            type: number
+        - type: array
+          maxItems: 5
+      unevaluatedItems: false
+
+    # Complex scenario: nested unevaluated
+    ComplexComposition:
+      anyOf:
+        - type: object
+          properties:
+            version:
+              type: string
+            feature1:
+              type: string
+        - type: object
+          properties:
+            version:
+              type: string
+            feature2:
+              type: number
+      unevaluatedProperties:
+        type: boolean

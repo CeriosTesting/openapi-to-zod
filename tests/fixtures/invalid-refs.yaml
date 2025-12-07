@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: Invalid References Test
+  version: 1.0.0
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        profile:
+          $ref: '#/components/schemas/NonExistentProfile'
+
+    Product:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/MissingUser'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/NonExistentTag'

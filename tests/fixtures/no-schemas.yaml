@@ -1,0 +1,12 @@
+openapi: 3.0.0
+info:
+  title: No Schemas Test
+  version: 1.0.0
+components:
+  # Has components but no schemas
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer

@@ -1,0 +1,70 @@
+openapi: 3.1.0
+info:
+  title: Content Media Type Test
+  version: 1.0.0
+components:
+  schemas:
+    # JSON content (already supported)
+    JsonContent:
+      type: string
+      contentMediaType: application/json
+      description: String containing JSON data
+
+    # XML content
+    XmlContent:
+      type: string
+      contentMediaType: application/xml
+      description: String containing XML data
+
+    # YAML content
+    YamlContent:
+      type: string
+      contentMediaType: application/yaml
+      description: String containing YAML data
+
+    # Text content
+    TextContent:
+      type: string
+      contentMediaType: text/plain
+      description: Plain text content
+
+    # HTML content
+    HtmlContent:
+      type: string
+      contentMediaType: text/html
+      description: HTML content
+
+    # Combined with encoding
+    Base64Xml:
+      type: string
+      contentEncoding: base64
+      contentMediaType: application/xml
+      description: Base64-encoded XML
+
+    # Combined JSON with encoding
+    Base64Json:
+      type: string
+      contentEncoding: base64
+      contentMediaType: application/json
+      description: Base64-encoded JSON
+
+    # Document with multiple content types
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+        jsonData:
+          type: string
+          contentMediaType: application/json
+        xmlData:
+          type: string
+          contentMediaType: application/xml
+        yamlConfig:
+          type: string
+          contentMediaType: application/yaml
+        htmlContent:
+          type: string
+          contentMediaType: text/html
+      required:
+        - id

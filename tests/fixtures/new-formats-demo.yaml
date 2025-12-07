@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info:
+  title: New String Formats Demo API
+  version: 1.0.0
+  description: Demonstrates the newly added hostname, uri-reference, byte, and binary formats
+components:
+  schemas:
+    NetworkResource:
+      type: object
+      required:
+        - hostname
+        - endpoint
+      properties:
+        hostname:
+          type: string
+          format: hostname
+          description: A valid hostname (e.g., example.com, api.example.com)
+          example: api.example.com
+
+        endpoint:
+          type: string
+          format: uri-reference
+          description: A URI reference (can be absolute or relative)
+          example: /api/v1/users?page=1
+
+        certificateData:
+          type: string
+          format: byte
+          description: Base64-encoded certificate data
+          example: QmFzZTY0IGVuY29kZWQgZGF0YQ==
+
+        binaryPayload:
+          type: string
+          format: binary
+          description: Binary data (arbitrary byte sequence)
+
+        fullUrl:
+          type: string
+          format: uri
+          description: Full absolute URI
+          example: https://api.example.com/v1/resource

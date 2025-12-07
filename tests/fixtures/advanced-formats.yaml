@@ -1,0 +1,134 @@
+openapi: 3.1.0
+info:
+  title: Advanced Zod v4 Format Tests
+  version: 1.0.0
+components:
+  schemas:
+    # Time format (Zod v4)
+    TimeField:
+      type: string
+      format: time
+      description: ISO 8601 time format
+
+    # Duration format (Zod v4)
+    DurationField:
+      type: string
+      format: duration
+      description: ISO 8601 duration format
+
+    # Emoji format (Zod v4)
+    EmojiField:
+      type: string
+      format: emoji
+      description: Single emoji character
+
+    # Base64 format (Zod v4)
+    Base64Field:
+      type: string
+      format: base64
+      description: Base64 encoded string
+
+    # Base64URL format (Zod v4)
+    Base64UrlField:
+      type: string
+      format: base64url
+      description: Base64 URL-safe encoded string
+
+    # Nanoid format (Zod v4)
+    NanoidField:
+      type: string
+      format: nanoid
+      description: Nano ID format
+
+    # CUID format (Zod v4)
+    CuidField:
+      type: string
+      format: cuid
+      description: CUID format
+
+    # CUID2 format (Zod v4)
+    Cuid2Field:
+      type: string
+      format: cuid2
+      description: CUID2 format
+
+    # ULID format (Zod v4)
+    UlidField:
+      type: string
+      format: ulid
+      description: ULID format
+
+    # CIDR format (Zod v4 - defaults to v4)
+    CidrField:
+      type: string
+      format: cidr
+      description: CIDR notation (IPv4)
+
+    # CIDR v4 format (Zod v4)
+    Cidrv4Field:
+      type: string
+      format: cidrv4
+      description: CIDR notation IPv4
+
+    # CIDR v6 format (Zod v4)
+    Cidrv6Field:
+      type: string
+      format: cidrv6
+      description: CIDR notation IPv6
+
+    # Format combinations with constraints
+    TimeWithConstraints:
+      type: string
+      format: time
+      minLength: 5
+      maxLength: 12
+
+    Base64WithLength:
+      type: string
+      format: base64
+      minLength: 10
+      maxLength: 100
+
+    # All advanced formats in one object
+    AdvancedFormats:
+      type: object
+      properties:
+        time:
+          type: string
+          format: time
+        duration:
+          type: string
+          format: duration
+        emoji:
+          type: string
+          format: emoji
+        base64:
+          type: string
+          format: base64
+        base64url:
+          type: string
+          format: base64url
+        nanoid:
+          type: string
+          format: nanoid
+        cuid:
+          type: string
+          format: cuid
+        cuid2:
+          type: string
+          format: cuid2
+        ulid:
+          type: string
+          format: ulid
+        cidr:
+          type: string
+          format: cidr
+        cidrv4:
+          type: string
+          format: cidrv4
+        cidrv6:
+          type: string
+          format: cidrv6
+      required:
+        - time
+        - duration

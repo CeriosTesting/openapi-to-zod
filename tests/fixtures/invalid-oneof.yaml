@@ -1,0 +1,10 @@
+openapi: 3.0.0
+info:
+  title: Invalid OneOf Test
+  version: 1.0.0
+components:
+  schemas:
+    InvalidOneOf:
+      oneOf:
+        - $ref: '#/components/schemas/NonExistentOption1'
+        - $ref: '#/components/schemas/NonExistentOption2'

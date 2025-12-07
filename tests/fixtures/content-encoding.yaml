@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: Content Encoding Test
+  version: 1.0.0
+components:
+  schemas:
+    Base64Data:
+      type: string
+      contentEncoding: base64
+      minLength: 4
+      maxLength: 1000
+
+    JsonString:
+      type: string
+      contentMediaType: application/json
+      description: Must contain valid JSON
+
+    BinaryFile:
+      type: string
+      contentMediaType: application/octet-stream
+      contentEncoding: base64
+
+    PlainWithEncoding:
+      type: string
+      contentEncoding: base64
+      pattern: "^[A-Za-z0-9+/=]+$"

@@ -1,0 +1,56 @@
+openapi: 3.0.0
+info:
+  title: Invalid Spec Test Cases
+  version: 1.0.0
+components:
+  schemas:
+    # Schema with invalid $ref in allOf
+    InvalidAllOf:
+      allOf:
+        - $ref: '#/components/schemas/NonExistentBase'
+        - type: object
+          properties:
+            name:
+              type: string
+
+    # Schema with invalid $ref in oneOf
+    InvalidOneOf:
+      oneOf:
+        - $ref: '#/components/schemas/NonExistentOption1'
+        - $ref: '#/components/schemas/NonExistentOption2'
+
+    # Schema with invalid $ref in anyOf
+    InvalidAnyOf:
+      anyOf:
+        - type: string
+        - $ref: '#/components/schemas/NonExistentType'
+
+    # Schema with deeply nested invalid $ref
+    InvalidNested:
+      type: object
+      properties:
+        metadata:
+          type: object
+          properties:
+            settings:
+              $ref: '#/components/schemas/NonExistentSettings'
+
+    # Empty schema (should default to z.unknown())
+    EmptySchema: {}
+
+    # Schema with only description (should default to z.unknown())
+    DescriptionOnly:
+      description: This schema has no type or properties
+
+    # Schema with only title
+    TitleOnly:
+      title: Just a Title
+
+    # Valid schema for reference testing
+    ValidSchema:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string

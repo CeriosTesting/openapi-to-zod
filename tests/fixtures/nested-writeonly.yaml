@@ -1,0 +1,79 @@
+openapi: 3.1.0
+info:
+  title: Nested WriteOnly/ReadOnly Test
+  version: 1.0.0
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - username
+        - email
+        - credentials
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        userId:
+          type: string
+          readOnly: true
+        credentials:
+          type: object
+          required:
+            - username
+          properties:
+            username:
+              type: string
+            password:
+              type: string
+              writeOnly: true
+            hash:
+              type: string
+              readOnly: true
+        profile:
+          type: object
+          properties:
+            displayName:
+              type: string
+            internalId:
+              type: string
+              readOnly: true
+            apiKey:
+              type: string
+              writeOnly: true
+
+    NestedArray:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              secret:
+                type: string
+                writeOnly: true
+              generated:
+                type: string
+                readOnly: true
+
+    CompositionNested:
+      allOf:
+        - type: object
+          properties:
+            public:
+              type: string
+        - type: object
+          properties:
+            nested:
+              type: object
+              properties:
+                visible:
+                  type: string
+                hidden:
+                  type: string
+                  writeOnly: true

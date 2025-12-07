@@ -1,0 +1,344 @@
+openapi: 3.0.0
+info:
+  title: Schema Constraints Test API
+  version: 1.0.0
+  description: Comprehensive tests for all OpenAPI constraint validations
+components:
+  schemas:
+    # Object Constraints - additionalProperties
+    StrictProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      additionalProperties: false
+
+    FlexibleProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      additionalProperties: true
+
+    TypedAdditionalProduct:
+      type: object
+      properties:
+        id:
+          type: string
+      additionalProperties:
+        type: string
+
+    # Object Constraints - minProperties/maxProperties
+    FlexibleMetadata:
+      type: object
+      minProperties: 1
+      maxProperties: 10
+      additionalProperties:
+        type: string
+
+    StrictMetadata:
+      type: object
+      minProperties: 2
+      maxProperties: 5
+      additionalProperties: true
+
+    MinPropertiesOnly:
+      type: object
+      description: Must have at least 3 properties
+      minProperties: 3
+      additionalProperties:
+        type: number
+
+    MaxPropertiesOnly:
+      type: object
+      description: Can have at most 5 properties
+      maxProperties: 5
+      properties:
+        id:
+          type: string
+
+    # Number Constraints - multipleOf
+    Price:
+      type: number
+      minimum: 0
+      maximum: 10000
+      multipleOf: 0.01
+
+    Quantity:
+      type: integer
+      minimum: 1
+      multipleOf: 5
+
+    PriceWithMultiple:
+      type: number
+      minimum: 10
+      maximum: 1000
+      multipleOf: 5
+
+    # Number Constraints - exclusive bounds (OpenAPI 3.0 boolean style)
+    PercentageExclusive:
+      type: number
+      minimum: 0
+      maximum: 100
+      exclusiveMinimum: true
+      exclusiveMaximum: true
+      description: Percentage between 0 and 100 (exclusive)
+
+    AgeExclusiveMin:
+      type: integer
+      minimum: 0
+      exclusiveMinimum: true
+      maximum: 150
+      description: Age must be greater than 0
+
+    TemperatureExclusiveMax:
+      type: number
+      minimum: -273.15
+      maximum: 1000
+      exclusiveMaximum: true
+      description: Temperature less than 1000
+
+    MixedBounds:
+      type: number
+      minimum: 0
+      maximum: 100
+      exclusiveMaximum: true
+
+    # Number Constraints - exclusive bounds (OpenAPI 3.1 number style)
+    ScoreExclusive31:
+      type: number
+      exclusiveMinimum: 0
+      exclusiveMaximum: 100
+      description: Score between 0 and 100 (exclusive, 3.1 style)
+
+    RatingWithMultiple:
+      type: number
+      exclusiveMinimum: 0
+      exclusiveMaximum: 10
+      multipleOf: 0.5
+
+    # Array Constraints - minItems/maxItems
+    Tags:
+      type: array
+      items:
+        type: string
+      minItems: 1
+      maxItems: 10
+
+    OptionalTags:
+      type: array
+      items:
+        type: string
+      maxItems: 5
+
+    RequiredIds:
+      type: array
+      items:
+        type: integer
+      minItems: 2
+
+    BoundedList:
+      type: array
+      items:
+        type: number
+      minItems: 1
+      maxItems: 5
+
+    # Array Constraints - uniqueItems
+    UniqueIds:
+      type: array
+      items:
+        type: string
+        format: uuid
+      minItems: 1
+      uniqueItems: true
+
+    UniqueEmails:
+      type: array
+      items:
+        type: string
+        format: email
+      uniqueItems: true
+      minItems: 1
+      description: List of unique email addresses
+
+    UniqueTags:
+      type: array
+      items:
+        type: string
+      uniqueItems: true
+      maxItems: 10
+
+    UniqueTagsMaxOnly:
+      type: array
+      items:
+        type: string
+      uniqueItems: true
+      maxItems: 10
+
+    # Literal Values - const keyword
+    ConstString:
+      type: string
+      const: "production"
+
+    ConstNumber:
+      type: integer
+      const: 42
+
+    ConstBoolean:
+      type: boolean
+      const: true
+
+    ConfigWithConst:
+      type: object
+      properties:
+        environment:
+          type: string
+          const: "production"
+          description: Must be production
+        version:
+          type: integer
+          const: 1
+        enabled:
+          type: boolean
+          const: true
+
+    # Nullable Types - OpenAPI 3.0 style
+    OldStyleNullable:
+      type: object
+      properties:
+        oldStyle:
+          type: string
+          nullable: true
+
+    # Nullable Types - OpenAPI 3.1 style
+    NullableString31:
+      type: [string, "null"]
+      description: String that can be null (OpenAPI 3.1 style)
+
+    NullableNumber31:
+      type: [number, "null"]
+      minimum: 0
+      maximum: 100
+
+    NullableObject31:
+      type: [object, "null"]
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+
+    MixedNullable:
+      type: object
+      properties:
+        oldStyle:
+          type: string
+          nullable: true
+        newStyle:
+          type: [string, "null"]
+        normalField:
+          type: string
+
+    UserAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    OptionalUser:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserAccount'
+          nullable: true
+        alternateUser:
+          allOf:
+            - $ref: '#/components/schemas/UserAccount'
+          nullable: true
+
+    # Deprecation Support
+    OldUser:
+      type: object
+      description: Legacy user schema
+      deprecated: true
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    UserWithDeprecatedFields:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        legacyId:
+          type: integer
+          description: Old ID format, use uuid instead
+          deprecated: true
+        oldName:
+          type: string
+          deprecated: true
+        phone:
+          type: string
+          description: Phone field is deprecated
+          deprecated: true
+
+    # Combined Constraints
+    ProductWithConstraints:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        price:
+          $ref: '#/components/schemas/Price'
+        quantity:
+          $ref: '#/components/schemas/Quantity'
+        tags:
+          $ref: '#/components/schemas/Tags'
+      additionalProperties:
+        type: number
+
+    ProductWithNewFeatures:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: "active"
+        score:
+          type: number
+          exclusiveMinimum: 0
+          exclusiveMaximum: 10
+          multipleOf: 0.1
+        tags:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 5
+          uniqueItems: true
+        oldField:
+          type: string
+          description: This field will be removed in v2
+          deprecated: true
+      required:
+        - id

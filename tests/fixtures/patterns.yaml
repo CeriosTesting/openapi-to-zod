@@ -1,0 +1,70 @@
+openapi: 3.0.0
+info:
+  title: Pattern Validation Tests
+  version: 1.0.0
+components:
+  schemas:
+    # Basic pattern
+    BasicPattern:
+      type: string
+      pattern: '^[A-Z][a-z]+$'
+      description: Starts with uppercase, followed by lowercase letters
+
+    # Pattern with special characters
+    EmailPattern:
+      type: string
+      pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+      description: Email validation pattern
+
+    # Pattern with escaped characters
+    FilePathPattern:
+      type: string
+      pattern: '^[a-zA-Z]:\\\.+$'
+      description: Windows file path pattern
+
+    # Pattern with quantifiers
+    PhonePattern:
+      type: string
+      pattern: '^\+?[1-9]\d{1,14}$'
+      description: International phone number pattern
+
+    # Pattern with length constraints
+    UsernamePattern:
+      type: string
+      pattern: '^[a-zA-Z0-9_-]+$'
+      minLength: 3
+      maxLength: 20
+      description: Username with pattern and length constraints
+
+    # Pattern with format (pattern should take precedence)
+    UrlPattern:
+      type: string
+      format: uri
+      pattern: '^https://.*\.com$'
+      description: URL pattern that overrides format
+
+    # Complex pattern with lookaheads
+    PasswordPattern:
+      type: string
+      pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+      description: Strong password pattern
+
+    # Object with multiple patterns
+    FormData:
+      type: object
+      properties:
+        username:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]{3,20}$'
+        email:
+          type: string
+          pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        phone:
+          type: string
+          pattern: '^\+?[1-9]\d{1,14}$'
+        postalCode:
+          type: string
+          pattern: '^\d{5}(-\d{4})?$'
+      required:
+        - username
+        - email

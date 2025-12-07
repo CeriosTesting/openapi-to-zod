@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info:
+  title: Not Keyword Test
+  version: 1.0.0
+components:
+  schemas:
+    NotEmptyString:
+      type: string
+      not:
+        const: ""
+      description: String that cannot be empty
+
+    NotNegativeNumber:
+      type: number
+      not:
+        type: number
+        maximum: 0
+      description: Number that must be positive
+
+    NotSpecificPattern:
+      type: string
+      pattern: "^[a-z]+$"
+      not:
+        pattern: "^test"
+      description: Lowercase string that doesn't start with 'test'
+
+    NotObject:
+      not:
+        type: object
+      description: Can be anything except an object
+
+    ComplexNot:
+      type: object
+      properties:
+        value:
+          type: string
+          minLength: 1
+          not:
+            enum: ["forbidden", "banned", "restricted"]
+      description: Object with value that has constraints and exclusions

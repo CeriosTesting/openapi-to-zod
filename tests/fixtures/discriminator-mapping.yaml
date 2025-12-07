@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: Discriminator Mapping Test
+  version: 1.0.0
+components:
+  schemas:
+    Dog:
+      type: object
+      required:
+        - petType
+        - breed
+      properties:
+        petType:
+          type: string
+          const: dog
+        breed:
+          type: string
+
+    Cat:
+      type: object
+      required:
+        - petType
+        - indoor
+      properties:
+        petType:
+          type: string
+          const: cat
+        indoor:
+          type: boolean
+
+    Bird:
+      type: object
+      required:
+        - petType
+        - canFly
+      properties:
+        petType:
+          type: string
+          const: bird
+        canFly:
+          type: boolean
+
+    Pet:
+      oneOf:
+        - $ref: '#/components/schemas/Dog'
+        - $ref: '#/components/schemas/Cat'
+        - $ref: '#/components/schemas/Bird'
+      discriminator:
+        propertyName: petType
+        mapping:
+          dogType: '#/components/schemas/Dog'
+          catType: '#/components/schemas/Cat'
+          birdType: '#/components/schemas/Bird'
+
+    Vehicle:
+      anyOf:
+        - $ref: '#/components/schemas/Car'
+        - $ref: '#/components/schemas/Truck'
+      discriminator:
+        propertyName: vehicleType
+        mapping:
+          automobile: '#/components/schemas/Car'
+          lorry: '#/components/schemas/Truck'
+
+    Car:
+      type: object
+      required:
+        - vehicleType
+        - seats
+      properties:
+        vehicleType:
+          type: string
+          const: car
+        seats:
+          type: integer
+
+    Truck:
+      type: object
+      required:
+        - vehicleType
+        - cargoCapacity
+      properties:
+        vehicleType:
+          type: string
+          const: truck
+        cargoCapacity:
+          type: number

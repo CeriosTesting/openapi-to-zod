@@ -1,0 +1,775 @@
+# @cerios/zod-openapi
+
+Transform OpenAPI YAML specifications into Zod v4 compliant schemas with full TypeScript support.
+
+## Features
+
+- ✅ **Zod v4 Compatible**: Uses latest Zod features, no deprecated methods
+- 📝 **TypeScript Types**: Automatically generates TypeScript types from schemas using `z.infer`
+- 🎯 **Enums**: Creates proper TypeScript enums with PascalCase properties
+- 🔧 **Flexible Modes**: Strict, normal, or loose validation
+- 📐 **Format Support**: Full support for string formats (uuid, email, url, date, etc.)
+- 🎨 **camelCase Schemas**: Schemas follow camelCase naming with Schema suffix
+- ❓ **Optional Properties**: Uses `.optional()` for optional properties instead of `.partial()`
+- 🔀 **Discriminated Unions**: Automatic `z.discriminatedUnion()` for oneOf/anyOf with discriminators
+- 🔐 **readOnly/writeOnly**: Generate separate request/response schemas
+- 📋 **Constraint Support**: multipleOf, additionalProperties, array constraints, min/maxProperties, and more
+- 💬 **Runtime Descriptions**: Optional `.describe()` calls for better error messages
+- 🏷️ **Schema Naming**: Add custom prefixes and suffixes to schema names
+- 📊 **Statistics**: Optional generation statistics in output files
+- ❗ **Better Errors**: Clear error messages with file paths and line numbers
+- 🎭 **Tuple Validation**: OpenAPI 3.1 `prefixItems` support with `.tuple()` and `.rest()`
+- 🔗 **Smart AllOf**: Uses `.merge()` for objects, `.and()` for primitives
+- 🎯 **Literal Types**: `const` keyword support with `z.literal()`
+- 🔢 **Exclusive Bounds**: `exclusiveMinimum`/`exclusiveMaximum` with `.gt()`/`.lt()`
+- 🎨 **Unique Arrays**: `uniqueItems` validation with Set-based checking
+- 📛 **Deprecation**: `@deprecated` JSDoc annotations for deprecated schemas
+- 🏷️ **Metadata**: `title` and `examples` in JSDoc comments
+- 🔒 **OpenAPI 3.1 Nullable**: Type array syntax `type: ["string", "null"]` support
+
+## Installation
+
+```bash
+npm install @cerios/zod-openapi
+# or
+pnpm add @cerios/zod-openapi
+# or
+yarn add @cerios/zod-openapi
+```
+
+## CLI Usage
+
+```bash
+# Basic usage
+zod-openapi -i openapi.yaml -o schemas.ts
+
+# Strict mode (no additional properties)
+zod-openapi -i openapi.yaml -o schemas.ts --mode strict
+
+# Loose mode (allows additional properties)
+zod-openapi -i openapi.yaml -o schemas.ts --mode loose
+
+# Without JSDoc descriptions
+zod-openapi -i openapi.yaml -o schemas.ts --no-descriptions
+
+# Add .describe() for runtime error messages
+zod-openapi -i openapi.yaml -o schemas.ts --use-describe
+
+# Generate request schemas (excludes readOnly properties)
+zod-openapi -i openapi.yaml -o request-schemas.ts -s request
+
+# Generate response schemas (excludes writeOnly properties)
+zod-openapi -i openapi.yaml -o response-schemas.ts -s response
+
+# Use TypeScript enums instead of Zod enums
+zod-openapi -i openapi.yaml -o schemas.ts -e typescript
+
+# Add prefix to schema names
+zod-openapi -i openapi.yaml -o schemas.ts -p api
+# Result: apiUserSchema, apiProductSchema, etc.
+
+# Add suffix to schema names
+zod-openapi -i openapi.yaml -o schemas.ts --suffix dto
+# Result: userDtoSchema, productDtoSchema, etc.
+
+# Combine prefix and suffix
+zod-openapi -i openapi.yaml -o schemas.ts -p api --suffix dto
+# Result: apiUserDtoSchema, apiProductDtoSchema, etc.
+
+# Disable generation statistics (enabled by default)
+zod-openapi -i openapi.yaml -o schemas.ts --no-stats
+```
+
+## Programmatic Usage
+
+```typescript
+import { generateZodSchemas } from '@cerios/zod-openapi';
+
+generateZodSchemas({
+  input: 'path/to/openapi.yaml',
+  output: 'path/to/schemas.ts',
+  mode: 'normal', // 'strict' | 'normal' | 'loose'
+  includeDescriptions: true,
+});
+```
+
+## Validation Modes
+
+### Normal Mode (default)
+Uses `z.object()` which allows additional properties:
+
+```typescript
+const userSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+});
+```
+
+### Strict Mode
+Uses `z.strictObject()` which rejects additional properties:
+
+```typescript
+const userSchema = z.strictObject({
+  id: z.uuid(),
+  name: z.string(),
+});
+```
+
+### Loose Mode
+Uses `z.looseObject()` which explicitly allows additional properties:
+
+```typescript
+const userSchema = z.looseObject({
+  id: z.uuid(),
+  name: z.string(),
+});
+```
+
+## Examples
+
+### Input OpenAPI YAML
+
+```yaml
+components:
+  schemas:
+    UserStatusEnumOptions:
+      type: string
+      enum:
+        - active
+        - inactive
+        - pending
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        age:
+          type: integer
+          minimum: 0
+          maximum: 150
+        status:
+          $ref: '#/components/schemas/UserStatusEnumOptions'
+```
+
+### Generated Output
+
+```typescript
+// Auto-generated by @cerios/zod-openapi
+// Do not edit this file manually
+
+import { z } from "zod";
+
+// Enums
+export enum UserStatusEnum {
+  Active = "active",
+  Inactive = "inactive",
+  Pending = "pending",
+}
+
+// Schemas
+export const userStatusEnumOptionsSchema = z.enum(UserStatusEnum);
+
+export const userSchema = z.object({
+  id: z.uuid().min(36).max(36),
+  email: z.email().max(255),
+  name: z.string().min(1).max(100).optional(),
+  age: z.number().int().gte(0).lte(150).optional(),
+  status: userStatusEnumOptionsSchema.optional(),
+});
+
+// Types
+export type UserStatusEnumOptions = z.infer<typeof userStatusEnumOptionsSchema>;
+export type User = z.infer<typeof userSchema>;
+```
+
+## Format Support
+
+The generator supports all OpenAPI string formats with Zod v4:
+
+| OpenAPI Format | Zod v4 Function |
+|----------------|-----------------|
+| `uuid` | `z.uuid()` |
+| `email` | `z.email()` |
+| `url`, `uri` | `z.url()` |
+| `date` | `z.iso.date()` |
+| `date-time` | `z.iso.datetime()` |
+| `time` | `z.iso.time()` |
+| `duration` | `z.iso.duration()` |
+| `ipv4` | `z.ipv4()` |
+| `ipv6` | `z.ipv6()` |
+| `emoji` | `z.emoji()` |
+| `base64` | `z.base64()` |
+| `base64url` | `z.base64url()` |
+| `nanoid` | `z.nanoid()` |
+| `cuid` | `z.cuid()` |
+| `cuid2` | `z.cuid2()` |
+| `ulid` | `z.ulid()` |
+| `cidrv4` | `z.cidrv4()` |
+| `cidrv6` | `z.cidrv6()` |
+
+## Advanced Features
+
+### String Constraints
+
+- `minLength` and `maxLength` are automatically applied
+- `pattern` is converted to `.regex()`
+- Formats with constraints are properly chained
+
+### Number Constraints
+
+- `minimum` becomes `.gte()`
+- `maximum` becomes `.lte()`
+- `integer` type uses `.int()`
+
+### Nullable Types
+
+OpenAPI's `nullable: true` is converted to `.nullable()`
+
+### Schema Composition
+
+- `allOf` → `.and()`
+- `oneOf`, `anyOf` → `z.union()`
+- `$ref` → Proper schema references
+
+### Enums
+
+Enums are generated as TypeScript enums with:
+- PascalCase property names
+- Original string values
+- Zod schema using `z.enum()`
+
+## Schema Naming
+
+Customize schema names with prefixes and suffixes:
+
+```bash
+# Add API prefix
+zod-openapi -i openapi.yaml -o schemas.ts -p api
+# Output: apiUserSchema, apiProductSchema, etc.
+
+# Add DTO suffix
+zod-openapi -i openapi.yaml -o schemas.ts --suffix dto
+# Output: userDtoSchema, productDtoSchema, etc.
+
+# Combine both
+zod-openapi -i openapi.yaml -o schemas.ts -p api --suffix dto
+# Output: apiUserDtoSchema, apiProductDtoSchema, etc.
+```
+
+This is useful when:
+- Working with multiple API specs in the same project
+- Following specific naming conventions (DTO, Model, Entity)
+- Avoiding naming conflicts with existing code
+
+## Generation Statistics
+
+Statistics are **included by default** in generated files. Use `--no-stats` to disable:
+
+```typescript
+// Generation Statistics:
+//   Total schemas: 42
+//   Enums: 8
+//   Circular references: 3
+//   Discriminated unions: 5
+//   With constraints: 18
+//   Generated at: 2025-12-07T06:21:47.634Z
+```
+
+Helpful for:
+- Understanding your API complexity
+- Tracking changes over time
+- Debugging generation issues
+
+To disable: `zod-openapi -i openapi.yaml -o schemas.ts --no-stats`
+
+## OpenAPI Features Supported
+
+This section provides a comprehensive overview of all OpenAPI schema features supported by the generator.
+
+### Basic Types
+
+#### String Constraints
+- `minLength` → `.min(n)`
+- `maxLength` → `.max(n)`
+- `pattern` → `.regex(/pattern/)`
+- `format` → Specific Zod validators (see Format Support section)
+
+#### Number Constraints
+- `minimum` → `.gte(n)` (inclusive)
+- `maximum` → `.lte(n)` (inclusive)
+- `exclusiveMinimum` → `.gt(n)` (OpenAPI 3.0 boolean or 3.1 number)
+- `exclusiveMaximum` → `.lt(n)` (OpenAPI 3.0 boolean or 3.1 number)
+- `multipleOf` → `.multipleOf(n)`
+- `integer` type → `.int()`
+
+**Example:**
+```yaml
+Price:
+  type: number
+  minimum: 0
+  maximum: 10000
+  multipleOf: 0.01  # Enforces 2 decimal places
+```
+
+**Generated:**
+```typescript
+export const priceSchema = z.number().gte(0).lte(10000).multipleOf(0.01);
+```
+
+#### Exclusive Bounds (OpenAPI 3.0 & 3.1)
+
+**OpenAPI 3.0 Style (boolean):**
+```yaml
+Percentage:
+  type: number
+  minimum: 0
+  maximum: 100
+  exclusiveMinimum: true
+  exclusiveMaximum: true
+```
+
+**OpenAPI 3.1 Style (number):**
+```yaml
+Score:
+  type: number
+  exclusiveMinimum: 0
+  exclusiveMaximum: 100
+```
+
+**Both generate:**
+```typescript
+export const percentageSchema = z.number().gt(0).lt(100);
+```
+
+### Array Features
+
+#### Basic Array Constraints
+- `minItems` → `.min(n)`
+- `maxItems` → `.max(n)`
+- `uniqueItems: true` → `.refine()` with Set-based validation
+
+**Example:**
+```yaml
+UniqueTags:
+  type: array
+  items:
+    type: string
+  uniqueItems: true
+  minItems: 1
+  maxItems: 10
+```
+
+**Generated:**
+```typescript
+export const uniqueTagsSchema = z
+  .array(z.string())
+  .min(1)
+  .max(10)
+  .refine((items) => new Set(items).size === items.length, {
+    message: "Array items must be unique"
+  });
+```
+
+#### Tuple Validation (OpenAPI 3.1)
+
+**OpenAPI Spec Support**: 3.1+
+
+Use `prefixItems` for fixed-position array types (tuples):
+
+```yaml
+Coordinates:
+  type: array
+  description: Geographic coordinates as [latitude, longitude]
+  prefixItems:
+    - type: number
+      minimum: -90
+      maximum: 90
+    - type: number
+      minimum: -180
+      maximum: 180
+  minItems: 2
+  maxItems: 2
+```
+
+**Generated:**
+```typescript
+export const coordinatesSchema = z.tuple([
+  z.number().gte(-90).lte(90),
+  z.number().gte(-180).lte(180)
+]);
+```
+
+**With Rest Items:**
+```yaml
+CommandArgs:
+  type: array
+  prefixItems:
+    - type: string  # Command name
+    - type: string  # Action
+  items:
+    type: string  # Additional arguments
+```
+
+**Generated:**
+```typescript
+export const commandArgsSchema = z
+  .tuple([z.string(), z.string()])
+  .rest(z.string());
+```
+
+**Runtime:**
+- ✅ Valid: `["git", "commit", "-m", "Initial commit"]`
+- ✅ Valid: `["git", "status"]`
+- ❌ Invalid: `["git"]` (missing required position)
+
+### Object Features
+
+#### Property Constraints
+- `required` array → Properties without `.optional()`
+- `additionalProperties: false` → `.strict()` (or implicit in strict mode)
+- `additionalProperties: true` → `.catchall(z.unknown())`
+- `additionalProperties: {schema}` → `.catchall(schema)`
+- `minProperties` → `.refine()` with property count validation
+- `maxProperties` → `.refine()` with property count validation
+
+**Example:**
+```yaml
+FlexibleMetadata:
+  type: object
+  minProperties: 1
+  maxProperties: 10
+  additionalProperties:
+    type: string
+```
+
+**Generated:**
+```typescript
+export const flexibleMetadataSchema = z
+  .object({})
+  .catchall(z.string())
+  .refine((obj) => Object.keys(obj).length >= 1 && Object.keys(obj).length <= 10, {
+    message: "Object must have between 1 and 10 properties"
+  });
+```
+
+### Schema Composition
+
+#### AllOf - Smart Merging
+
+**Improved handling** uses `.merge()` for objects, `.and()` for primitives:
+
+**Object Merging (uses `.merge()`):**
+```yaml
+User:
+  allOf:
+    - $ref: "#/components/schemas/BaseEntity"
+    - $ref: "#/components/schemas/Timestamped"
+    - type: object
+      properties:
+        username:
+          type: string
+      required:
+        - username
+```
+
+**Generated:**
+```typescript
+export const userSchema = baseEntitySchema
+  .merge(timestampedSchema)
+  .merge(z.object({
+    username: z.string()
+  }));
+```
+
+**Primitive Constraints (uses `.and()`):**
+```yaml
+StringConstraints:
+  allOf:
+    - type: string
+      minLength: 3
+    - type: string
+      maxLength: 50
+    - type: string
+      pattern: "^[a-zA-Z0-9_]+$"
+```
+
+**Generated:**
+```typescript
+export const stringConstraintsSchema = z
+  .string()
+  .min(3)
+  .and(z.string().max(50))
+  .and(z.string().regex(/^[a-zA-Z0-9_]+$/));
+```
+
+**Benefits:**
+- ✅ Better TypeScript type inference
+- ✅ Clearer object composition intent
+- ✅ Required fields properly enforced
+- ✅ Nested inheritance support
+
+#### OneOf / AnyOf
+
+- `oneOf` → `z.union()` or `z.discriminatedUnion()` (if discriminator present)
+- `anyOf` → `z.union()` or `z.discriminatedUnion()` (if discriminator present)
+
+### Nullable Types
+
+**OpenAPI 3.0 Style:**
+```yaml
+NullableString:
+  type: string
+  nullable: true
+```
+
+**OpenAPI 3.1 Style:**
+```yaml
+NullableString:
+  type: ["string", "null"]
+```
+
+**Both generate:**
+```typescript
+export const nullableStringSchema = z.string().nullable();
+```
+
+### Literal Values
+
+Use `const` for exact value matching:
+
+```yaml
+Environment:
+  type: string
+  const: "production"
+```
+
+**Generated:**
+```typescript
+export const environmentSchema = z.literal("production");
+```
+
+**Supports:**
+- String literals: `z.literal("production")`
+- Number literals: `z.literal(42)`
+- Boolean literals: `z.literal(true)`
+- Null literals: `z.literal(null)`
+
+**Common use cases:**
+- Discriminator fields in unions
+- Fixed configuration values
+- API version constraints
+
+### Deprecation Support
+
+Mark schemas or properties as deprecated:
+
+```yaml
+OldUser:
+  type: object
+  deprecated: true
+  description: Legacy user schema
+  properties:
+    legacyId:
+      type: integer
+      deprecated: true
+      description: Old ID format, use uuid instead
+```
+
+**Generated:**
+```typescript
+/** Legacy user schema @deprecated */
+export const oldUserSchema = z.object({
+  /** Old ID format, use uuid instead @deprecated */
+  legacyId: z.number().int().optional()
+});
+```
+
+### Metadata & Documentation
+
+#### Title Field
+
+Adds descriptive titles to JSDoc:
+
+```yaml
+UserAccount:
+  title: User Account
+  description: Represents a user account in the system
+  type: object
+  properties:
+    id:
+      title: User ID
+      description: Unique identifier for the user
+      type: string
+      format: uuid
+```
+
+**Generated:**
+```typescript
+/** User Account Represents a user account in the system */
+export const userAccountSchema = z.object({
+  /** User ID Unique identifier for the user */
+  id: z.string().uuid().optional()
+});
+```
+
+#### Examples
+
+Add usage examples to documentation:
+
+```yaml
+StatusCode:
+  title: HTTP Status Code
+  type: string
+  enum: ["200", "201", "400", "404", "500"]
+  examples:
+    - "200"
+    - "404"
+    - "500"
+```
+
+**Generated:**
+```typescript
+/** HTTP Status Code @example "200", "404", "500" */
+export const statusCodeSchema = z.enum(["200", "201", "400", "404", "500"]);
+```
+
+### Feature Matrix
+
+| Feature | OpenAPI 3.0 | OpenAPI 3.1 | Zod Method |
+|---------|-------------|-------------|------------|
+| Basic types | ✅ | ✅ | `z.string()`, `z.number()`, etc. |
+| String constraints | ✅ | ✅ | `.min()`, `.max()`, `.regex()` |
+| Number constraints | ✅ | ✅ | `.gte()`, `.lte()`, `.int()` |
+| Exclusive bounds (boolean) | ✅ | ✅ | `.gt()`, `.lt()` |
+| Exclusive bounds (number) | ❌ | ✅ | `.gt()`, `.lt()` |
+| multipleOf | ✅ | ✅ | `.multipleOf()` |
+| Array constraints | ✅ | ✅ | `.min()`, `.max()` |
+| uniqueItems | ✅ | ✅ | `.refine()` with Set |
+| prefixItems (tuples) | ❌ | ✅ | `z.tuple()` |
+| additionalProperties | ✅ | ✅ | `.strict()`, `.catchall()` |
+| minProperties/maxProperties | ✅ | ✅ | `.refine()` |
+| const | ✅ | ✅ | `z.literal()` |
+| nullable (property) | ✅ | ✅ | `.nullable()` |
+| nullable (type array) | ❌ | ✅ | `.nullable()` |
+| allOf (objects) | ✅ | ✅ | `.merge()` |
+| allOf (primitives) | ✅ | ✅ | `.and()` |
+| oneOf/anyOf | ✅ | ✅ | `z.union()` |
+| discriminators | ✅ | ✅ | `z.discriminatedUnion()` |
+| deprecated | ✅ | ✅ | JSDoc `@deprecated` |
+| title | ✅ | ✅ | JSDoc comment |
+| examples | ✅ | ✅ | JSDoc `@example` |
+| format | ✅ | ✅ | Specific Zod validators |
+| readOnly/writeOnly | ✅ | ✅ | Schema filtering |
+
+## Error Messages
+
+The generator provides clear, actionable error messages:
+
+### Invalid References
+```
+Error: Invalid schema 'User': Invalid reference at 'profile':
+'#/components/schemas/NonExistentProfile' points to non-existent schema 'NonExistentProfile'
+```
+
+### YAML Syntax Errors
+```
+Error: Failed to parse OpenAPI YAML file at openapi.yaml:
+Implicit keys need to be on a single line at line 12, column 9
+```
+
+All errors include:
+- File path
+- Line and column numbers (when available)
+- Clear description of the problem
+- Context about what was expected
+
+## API Reference
+
+### `generateZodSchemas(options: GeneratorOptions): void`
+
+Main function to generate schemas.
+
+#### Options
+
+```typescript
+interface GeneratorOptions {
+  /**
+   * Object validation mode
+   * - 'strict': Uses z.strictObject() - no additional properties allowed
+   * - 'normal': Uses z.object() - additional properties allowed
+   * - 'loose': Uses z.looseObject() - explicitly allows additional properties
+   */
+  mode?: 'strict' | 'normal' | 'loose';
+
+  /**
+   * Input OpenAPI YAML file path
+   */
+  input: string;
+
+  /**
+   * Output TypeScript file path
+   */
+  output: string;
+
+  /**
+   * Whether to include descriptions as JSDoc comments
+   */
+  includeDescriptions?: boolean;
+}
+```
+
+## Requirements
+
+- Node.js >= 16
+- Zod >= 4.0.0
+
+## Test Coverage
+
+Comprehensive test suite with **140+ passing tests** covering:
+
+- ✅ **Basic Schema Generation** (14 tests) - Core OpenAPI types, references, nested objects
+- ✅ **Enum Generation** (10 tests) - TypeScript enums, Zod enums, PascalCase conversion
+- ✅ **Circular References** (5 tests) - Self-references, mutual references, validation
+- ✅ **Format Support** (9 tests) - UUID, email, URL, date-time, and 15+ other formats
+- ✅ **Validation Modes** (7 tests) - Strict, normal, loose object validation
+- ✅ **CLI Integration** (7 tests) - Command-line interface, options parsing
+- ✅ **Integration Tests** (6 tests) - End-to-end schema generation
+- ✅ **Constraint Features** (12 tests) - additionalProperties, multipleOf, array constraints
+- ✅ **Additional Features** (22 tests) - minProperties/maxProperties, OpenAPI 3.1 nullable, title/examples
+- ✅ **New Features** (18 tests) - const, uniqueItems, exclusive bounds, deprecated
+- ✅ **Tuples & AllOf** (19 tests) - prefixItems, improved object merging
+- ✅ **Request/Response Schemas** - readOnly/writeOnly filtering
+- ✅ **Discriminated Unions** - oneOf/anyOf with discriminators
+
+**Runtime Validation Examples** available in `examples/` directory:
+- `additional-features-validation.ts` - minProperties, nullable, examples
+- `constraints-validation.ts` - additionalProperties, multipleOf, array constraints
+- `new-features-validation.ts` - const, uniqueItems, exclusive bounds, deprecated
+- `tuples-and-allof-validation.ts` - Tuple validation, object merging
+
+## License
+
+MIT © Cerios
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support
+
+For issues and questions, please use the [GitHub issues](https://github.com/CeriosTesting/zod-openapi/issues) page.

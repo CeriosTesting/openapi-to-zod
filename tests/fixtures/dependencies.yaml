@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Dependencies Test
+  version: 1.0.0
+components:
+  schemas:
+    CreditCard:
+      type: object
+      properties:
+        name:
+          type: string
+        creditCard:
+          type: string
+        securityCode:
+          type: string
+        billingZip:
+          type: string
+      dependencies:
+        creditCard: ["securityCode", "billingZip"]
+
+    BillingAddress:
+      type: object
+      properties:
+        name:
+          type: string
+        billingAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+      dependencies:
+        billingAddress: ["city", "state", "zipCode"]
+
+    MultipleDependencies:
+      type: object
+      properties:
+        email:
+          type: string
+        phone:
+          type: string
+        emailVerified:
+          type: boolean
+        phoneVerified:
+          type: boolean
+      dependencies:
+        email: ["emailVerified"]
+        phone: ["phoneVerified"]

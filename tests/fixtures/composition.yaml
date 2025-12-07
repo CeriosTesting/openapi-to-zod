@@ -1,0 +1,250 @@
+openapi: 3.1.0
+info:
+  title: Schema Composition Test API
+  version: 1.0.0
+  description: Tests for tuples, allOf, oneOf, anyOf composition patterns
+components:
+  schemas:
+    # Tuples - prefixItems (OpenAPI 3.1)
+    Coordinates:
+      type: array
+      title: Geographic coordinates
+      description: Latitude and longitude pair
+      prefixItems:
+        - type: number
+          description: Latitude
+          minimum: -90
+          maximum: 90
+        - type: number
+          description: Longitude
+          minimum: -180
+          maximum: 180
+      minItems: 2
+      maxItems: 2
+
+    RGB:
+      type: array
+      prefixItems:
+        - type: integer
+          minimum: 0
+          maximum: 255
+        - type: integer
+          minimum: 0
+          maximum: 255
+        - type: integer
+          minimum: 0
+          maximum: 255
+      minItems: 3
+      maxItems: 3
+
+    MixedTuple:
+      type: array
+      prefixItems:
+        - type: string
+        - type: number
+        - type: boolean
+      minItems: 3
+      maxItems: 3
+
+    TupleWithRest:
+      type: array
+      prefixItems:
+        - type: string
+          description: Name
+        - type: integer
+          description: Age
+      items:
+        type: string
+      minItems: 2
+
+    NestedTuple:
+      type: array
+      prefixItems:
+        - type: string
+        - type: object
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+
+    # allOf - Composition/Intersection
+    BaseEntity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    Timestamped:
+      type: object
+      properties:
+        updatedAt:
+          type: string
+          format: date-time
+
+    User:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity'
+        - type: object
+          required:
+            - name
+            - email
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+              format: email
+
+    Product:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity'
+        - $ref: '#/components/schemas/Timestamped'
+        - type: object
+          properties:
+            name:
+              type: string
+            price:
+              type: number
+
+    ExtendedMetadata:
+      allOf:
+        - type: object
+          properties:
+            version:
+              type: integer
+        - type: object
+          properties:
+            author:
+              type: string
+
+    Auditable:
+      type: object
+      properties:
+        lastModifiedBy:
+          type: string
+        version:
+          type: integer
+
+    FullyAuditedEntity:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity'
+        - $ref: '#/components/schemas/Timestamped'
+        - $ref: '#/components/schemas/Auditable'
+        - type: object
+          properties:
+            deletedAt:
+              type: string
+              format: date-time
+              nullable: true
+
+    # allOf with nullable
+    NullableUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+      nullable: true
+
+    # allOf with primitive types
+    AdminUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            role:
+              type: string
+              const: admin
+
+    UserWithMetadata:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            username:
+              type: string
+            metadata:
+              type: object
+              additionalProperties:
+                type: string
+          required:
+            - username
+
+    StringConstraints:
+      allOf:
+        - type: string
+        - minLength: 3
+          maxLength: 50
+          pattern: "^[a-zA-Z]+$"
+
+    NumberConstraints:
+      allOf:
+        - type: number
+        - minimum: 0
+          maximum: 100
+
+    # oneOf - Union/Discriminated Union
+    Pet:
+      oneOf:
+        - $ref: '#/components/schemas/Dog'
+        - $ref: '#/components/schemas/Cat'
+      discriminator:
+        propertyName: petType
+
+    Dog:
+      type: object
+      required:
+        - petType
+      properties:
+        petType:
+          type: string
+          const: dog
+        bark:
+          type: boolean
+
+    Cat:
+      type: object
+      required:
+        - petType
+      properties:
+        petType:
+          type: string
+          const: cat
+        meow:
+          type: boolean
+
+    # anyOf - Flexible Union with discriminator
+    PaymentMethod:
+      anyOf:
+        - $ref: '#/components/schemas/CreditCard'
+        - $ref: '#/components/schemas/BankAccount'
+      discriminator:
+        propertyName: type
+
+    CreditCard:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          const: credit_card
+        cardNumber:
+          type: string
+        expiryDate:
+          type: string
+
+    BankAccount:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          const: bank_account
+        accountNumber:
+          type: string
+        routingNumber:
+          type: string
