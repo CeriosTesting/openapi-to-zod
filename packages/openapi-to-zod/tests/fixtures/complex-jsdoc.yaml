@@ -1,0 +1,14 @@
+
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+components:
+  schemas:
+    ComplexSchema:
+      type: object
+      description: "Try to break with comment end"
+      properties:
+        field:
+          type: string
+          description: "Field with */ comment terminator"

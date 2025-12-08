@@ -1,0 +1,15 @@
+
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+components:
+  schemas:
+    EmailSchema:
+      type: object
+      description: "Contact us at support@example.com"
+      properties:
+        email:
+          type: string
+          format: email
+          description: "User email @example.com format"

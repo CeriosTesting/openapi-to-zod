@@ -1,0 +1,14 @@
+
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+components:
+  schemas:
+    UserSchema:
+      type: object
+      description: "User object with special chars: */ and @mention"
+      properties:
+        name:
+          type: string
+          description: "User's full name"

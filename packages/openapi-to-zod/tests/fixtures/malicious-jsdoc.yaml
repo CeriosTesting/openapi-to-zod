@@ -1,0 +1,14 @@
+
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+components:
+  schemas:
+    MaliciousSchema:
+      type: object
+      description: "This has */ injection attempt"
+      properties:
+        name:
+          type: string
+          description: "Another */ attempt /* and this */"

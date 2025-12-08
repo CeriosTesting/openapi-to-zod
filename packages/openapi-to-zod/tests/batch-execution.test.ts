@@ -201,7 +201,7 @@ describe("Batch Execution", () => {
 			const specs: SpecConfig[] = Array.from({ length: 10 }, (_, i) => ({
 				name: `spec-${i}`,
 				input: TestUtils.getFixturePath("simple.yaml"),
-				output: `tests/output/batch-large-${i}.ts`,
+				output: TestUtils.getOutputPath(`batch-large-${i}.ts`),
 			}));
 
 			const summary = await executeBatch(specs, "parallel");
