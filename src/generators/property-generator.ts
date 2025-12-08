@@ -1,4 +1,4 @@
-import type { OpenAPISchema, OpenAPISpec } from "../types";
+import type { NativeEnumType, OpenAPISchema, OpenAPISpec, TypeMode } from "../types";
 import type { NamingOptions } from "../utils/name-utils";
 import { resolveRef, toCamelCase } from "../utils/name-utils";
 import { addDescription, getPrimaryType, hasMultipleTypes, isNullable, wrapNullable } from "../utils/string-utils";
@@ -16,6 +16,8 @@ export interface PropertyGeneratorContext {
 	mode: ObjectMode;
 	includeDescriptions: boolean;
 	useDescribe: boolean;
+	typeMode: TypeMode;
+	nativeEnumType: NativeEnumType;
 	namingOptions: NamingOptions;
 }
 

@@ -33,7 +33,7 @@ describe("Integration Tests", () => {
 					stdio: "pipe",
 				});
 			}).not.toThrow();
-		});
+		}, 10000); // TypeScript compilation can be slow
 
 		it("should generate valid TypeScript enums that compile", () => {
 			const options: GeneratorOptions = {
@@ -51,7 +51,7 @@ describe("Integration Tests", () => {
 					stdio: "pipe",
 				});
 			}).not.toThrow();
-		});
+		}, 10000);
 
 		it("should generate circular references that compile", () => {
 			const options: GeneratorOptions = {
@@ -68,7 +68,7 @@ describe("Integration Tests", () => {
 					stdio: "pipe",
 				});
 			}).not.toThrow();
-		});
+		}, 10000);
 	});
 
 	describe("Runtime Validation", () => {

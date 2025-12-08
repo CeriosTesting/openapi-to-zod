@@ -116,7 +116,7 @@ function printSummary(summary: BatchExecutionSummary): void {
 		}
 	}
 
-	console.log("=".repeat(50) + "\n");
+	console.log(`${"=".repeat(50)}\n`);
 }
 
 /**

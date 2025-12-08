@@ -6,6 +6,20 @@ import type { ConfigFile, GeneratorOptions, SpecConfig } from "../types";
  * Zod schema for strict validation of config files
  * Rejects unknown properties to catch typos and invalid options
  */
+const TypeModeSchema = z.enum(["inferred", "native"]);
+const NativeEnumTypeSchema = z.enum(["union", "enum"]);
+
+const RequestResponseOptionsSchema = z
+	.object({
+		mode: z.enum(["strict", "normal", "loose"]).optional(),
+		enumType: z.enum(["zod", "typescript"]).optional(),
+		useDescribe: z.boolean().optional(),
+		includeDescriptions: z.boolean().optional(),
+		typeMode: TypeModeSchema.optional(),
+		nativeEnumType: NativeEnumTypeSchema.optional(),
+	})
+	.strict();
+
 const GeneratorOptionsSchema = z
 	.object({
 		mode: z.enum(["strict", "normal", "loose"]).optional(),
@@ -18,6 +32,10 @@ const GeneratorOptionsSchema = z
 		prefix: z.string().optional(),
 		suffix: z.string().optional(),
 		showStats: z.boolean().optional(),
+		typeMode: TypeModeSchema.optional(),
+		nativeEnumType: NativeEnumTypeSchema.optional(),
+		request: RequestResponseOptionsSchema.optional(),
+		response: RequestResponseOptionsSchema.optional(),
 		name: z.string().optional(),
 	})
 	.strict();
@@ -34,6 +52,10 @@ const ConfigFileSchema = z
 				prefix: z.string().optional(),
 				suffix: z.string().optional(),
 				showStats: z.boolean().optional(),
+				typeMode: TypeModeSchema.optional(),
+				nativeEnumType: NativeEnumTypeSchema.optional(),
+				request: RequestResponseOptionsSchema.optional(),
+				response: RequestResponseOptionsSchema.optional(),
 			})
 			.strict()
 			.optional(),

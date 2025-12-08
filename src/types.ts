@@ -1,3 +1,64 @@
+/**
+ * Type generation mode
+ * - 'inferred': Generate Zod schemas with z.infer<typeof schema> types (default)
+ * - 'native': Generate native TypeScript types without Zod schemas
+ */
+export type TypeMode = "inferred" | "native";
+
+/**
+ * Native enum generation type (used when typeMode is 'native')
+ * - 'union': Generate union types like 'a' | 'b' | 'c' (default)
+ * - 'enum': Generate TypeScript enums like enum StatusEnum { A = 'a', B = 'b' }
+ */
+export type NativeEnumType = "union" | "enum";
+
+/**
+ * Options that can be overridden per request/response context
+ * These options override root-level options when specified.
+ * Resolution order: root options → request/response overrides (nested wins silently)
+ */
+export interface RequestResponseOptions {
+	/**
+	 * Object validation mode
+	 * - 'strict': Uses z.strictObject() - no additional properties allowed
+	 * - 'normal': Uses z.object() - additional properties allowed
+	 * - 'loose': Uses z.looseObject() - explicitly allows additional properties
+	 */
+	mode?: "strict" | "normal" | "loose";
+
+	/**
+	 * Enum generation type
+	 * - 'zod': Uses z.enum() with inferred types (default)
+	 * - 'typescript': Uses TypeScript enums with z.enum() referencing them
+	 */
+	enumType?: "zod" | "typescript";
+
+	/**
+	 * Whether to add .describe() calls for better error messages
+	 * @default false
+	 */
+	useDescribe?: boolean;
+
+	/**
+	 * Whether to include descriptions as JSDoc comments
+	 */
+	includeDescriptions?: boolean;
+
+	/**
+	 * Type generation mode
+	 * - 'inferred': Generate Zod schemas with z.infer types (default)
+	 * - 'native': Generate native TypeScript types
+	 */
+	typeMode?: TypeMode;
+
+	/**
+	 * Native enum generation type (when typeMode is 'native')
+	 * - 'union': Generate union types (default)
+	 * - 'enum': Generate TypeScript enums
+	 */
+	nativeEnumType?: NativeEnumType;
+}
+
 export interface GeneratorOptions {
 	/**
 	 * Object validation mode
@@ -60,6 +121,34 @@ export interface GeneratorOptions {
 	 * @default true
 	 */
 	showStats?: boolean;
+
+	/**
+	 * Type generation mode
+	 * - 'inferred': Generate Zod schemas with z.infer types (default)
+	 * - 'native': Generate native TypeScript types
+	 * @default 'inferred'
+	 */
+	typeMode?: TypeMode;
+
+	/**
+	 * Native enum generation type (when typeMode is 'native')
+	 * - 'union': Generate union types (default)
+	 * - 'enum': Generate TypeScript enums with 'Enum' suffix
+	 * @default 'union'
+	 */
+	nativeEnumType?: NativeEnumType;
+
+	/**
+	 * Request-specific options that override root-level options
+	 * Applied when schemas are used in request contexts
+	 */
+	request?: Partial<RequestResponseOptions>;
+
+	/**
+	 * Response-specific options that override root-level options
+	 * Applied when schemas are used in response contexts
+	 */
+	response?: Partial<RequestResponseOptions>;
 }
 
 export interface OpenAPISchema {
@@ -122,6 +211,7 @@ export interface OpenAPISpec {
 	components?: {
 		schemas?: Record<string, OpenAPISchema>;
 	};
+	paths?: Record<string, any>;
 }
 
 /**
@@ -163,6 +253,19 @@ export interface ConfigFile {
 	 * @default "parallel"
 	 */
 	executionMode?: ExecutionMode;
+}
+
+/**
+ * Resolved options for a specific schema context (request or response)
+ * All optional fields from RequestResponseOptions are required here
+ */
+export interface ResolvedOptions {
+	mode: "strict" | "normal" | "loose";
+	enumType: "zod" | "typescript";
+	useDescribe: boolean;
+	includeDescriptions: boolean;
+	typeMode: TypeMode;
+	nativeEnumType: NativeEnumType;
 }
 
 /**
