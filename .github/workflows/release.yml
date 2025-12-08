@@ -19,27 +19,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: |
-          npm install -g npm@latest
-          npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Version packages and update lockfile
         id: version
         run: |
-          OUTPUT=$(npx changeset version 2>&1)
+          OUTPUT=$(pnpm changeset version 2>&1)
           echo "$OUTPUT"
 
           if echo "$OUTPUT" | grep -q "No unreleased changesets"; then
             echo "No changesets found - nothing to release"
             echo "has-changes=false" >> $GITHUB_OUTPUT
           else
-            npm install
+            pnpm install
             echo "has-changes=true" >> $GITHUB_OUTPUT
           fi
 

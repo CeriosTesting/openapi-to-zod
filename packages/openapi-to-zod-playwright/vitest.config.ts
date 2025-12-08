@@ -1,13 +1,19 @@
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./src"),
+		},
+	},
 	test: {
 		environment: "node",
 		globals: true,
-		include: ["packages/*/tests/**/*.test.ts"],
+		include: ["tests/**/*.test.ts"],
 		coverage: {
-			include: ["packages/*/src/**/*.ts"],
-			exclude: ["packages/*/src/**/*.d.ts"],
+			include: ["src/**/*.ts"],
+			exclude: ["src/**/*.d.ts"],
 			reporter: ["text", "lcov", "html"],
 		},
 		clearMocks: true,

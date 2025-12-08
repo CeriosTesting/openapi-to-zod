@@ -85,7 +85,6 @@ export class ZodSchemaGenerator {
 	 * Resolve options for a specific context (request or response)
 	 * Nested options silently override root-level options
 	 */
-	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Called in constructor on line 57
 	private resolveOptionsForContext(context: "request" | "response"): ResolvedOptions {
 		const contextOptions = context === "request" ? this.options.request : this.options.response;
 
@@ -103,7 +102,6 @@ export class ZodSchemaGenerator {
 	 * Analyze schema usage across the OpenAPI spec to determine if schemas
 	 * are used in request, response, or both contexts
 	 */
-	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Called in constructor on line 60
 	private analyzeSchemaUsage(): void {
 		const requestSchemas = new Set<string>();
 		const responseSchemas = new Set<string>();
@@ -335,7 +333,6 @@ export class ZodSchemaGenerator {
 	/**
 	 * Determine the typeMode for each schema based on its usage context
 	 */
-	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Called in constructor on line 63
 	private determineSchemaTypeModes(): void {
 		for (const [name] of Object.entries(this.spec.components?.schemas || {})) {
 			const context = this.schemaUsageMap.get(name);
@@ -460,7 +457,6 @@ export class ZodSchemaGenerator {
 	/**
 	 * Validate the OpenAPI specification
 	 */
-	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Called in constructor on line 36
 	private validateSpec(): void {
 		if (!this.spec.components?.schemas) {
 			throw new Error(

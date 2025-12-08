@@ -1,0 +1,75 @@
+{
+	"name": "@cerios/openapi-to-zod-playwright",
+	"version": "0.0.0",
+	"author": "Ronald Veth - Cerios",
+	"description": "Generate type-safe Playwright API clients from OpenAPI specifications with Zod validation",
+	"license": "MIT",
+	"keywords": [
+		"playwright",
+		"openapi",
+		"zod",
+		"validation",
+		"typescript",
+		"api-client",
+		"testing",
+		"e2e",
+		"generator",
+		"cerios"
+	],
+	"bin": {
+		"openapi-to-zod-playwright": "./dist/cli.js"
+	},
+	"main": "./dist/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"files": ["dist"],
+	"type": "commonjs",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.mts",
+				"default": "./dist/index.mjs"
+			},
+			"require": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			}
+		},
+		"./package.json": "./package.json"
+	},
+	"bugs": {
+		"url": "https://github.com/CeriosTesting/openapi-to-zod/issues"
+	},
+	"homepage": "https://github.com/CeriosTesting/openapi-to-zod#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CeriosTesting/openapi-to-zod.git",
+		"directory": "packages/openapi-to-zod-playwright"
+	},
+	"scripts": {
+		"build": "tsup",
+		"compile": "tsc --noEmit",
+		"dev": "tsup --watch",
+		"test": "vitest"
+	},
+	"dependencies": {
+		"@cerios/openapi-to-zod": "workspace:*",
+		"commander": "^12.1.0",
+		"yaml": "^2.6.1"
+	},
+	"peerDependencies": {
+		"@playwright/test": "^1.48.0",
+		"zod": "^4.0.0"
+	},
+	"devDependencies": {
+		"@arethetypeswrong/cli": "^0.17.3",
+		"@biomejs/biome": "1.9.4",
+		"@playwright/test": "^1.48.2",
+		"@types/node": "^22.10.1",
+		"tsup": "^8.3.5",
+		"typescript": "^5.7.2",
+		"vitest": "^2.1.8",
+		"zod": "^4.0.0"
+	}
+}

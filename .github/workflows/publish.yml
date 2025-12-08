@@ -8,76 +8,49 @@ permissions:
   id-token: write
 
 jobs:
-  check-version:
+  publish:
     runs-on: ubuntu-latest
 
-    outputs:
-      should-publish: ${{ steps.check.outputs.should-publish }}
-      version: ${{ steps.check.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
-      - name: Check if version changed
-        id: check
-        run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          git checkout HEAD~1
-          PREVIOUS_VERSION=$(node -p "require('./package.json').version")
-          git checkout -
-
-          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-            echo "should-publish=true" >> $GITHUB_OUTPUT
-            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
-          else
-            echo "should-publish=false" >> $GITHUB_OUTPUT
-            echo "No version change detected"
-          fi
-
-  publish:
-    needs: check-version
-    if: needs.check-version.outputs.should-publish == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'pnpm'
 
       - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Check for changes
+        id: check
         run: |
-          npm install -g npm@latest
-          npm ci
+          pnpm changeset status --since=origin/main || echo "has-changesets=false" >> $GITHUB_OUTPUT
+          if pnpm changeset status --since=origin/main; then
+            echo "has-changesets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-changesets=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build
-        run: npm run build
-
-      - name: Publish packages to npm
-        run: npx changeset publish --provenance
+      - name: Create Release Pull Request or Publish
+        if: steps.check.outputs.has-changesets == 'true'
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+          commit: 'chore: version packages'
+          title: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push tags
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git push --tags
-
-      - name: Create GitHub Release
-        run: |
-          VERSION="${{ needs.check-version.outputs.version }}"
-          TAG="v${VERSION}"
-
-          # Extract changelog for this version
-          gh release create "$TAG" \
-            --title "Release $TAG" \
-            --notes-file <(sed -n "/## ${VERSION}/,/## /p" CHANGELOG.md | sed '$ d')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
