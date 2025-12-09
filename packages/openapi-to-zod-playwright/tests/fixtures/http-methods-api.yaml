@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: HTTP Methods API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get users
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      operationId: createUser
+      summary: Create user
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      operationId: replaceUsers
+      summary: Replace all users
+      responses:
+        '200':
+          description: Users replaced
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    patch:
+      operationId: updateUsers
+      summary: Update users
+      responses:
+        '200':
+          description: Users updated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    delete:
+      operationId: deleteAllUsers
+      summary: Delete all users
+      responses:
+        '204':
+          description: All users deleted
+    head:
+      operationId: headUsers
+      summary: Check users endpoint
+      responses:
+        '200':
+          description: Endpoint exists
+    options:
+      operationId: optionsUsers
+      summary: Get allowed methods
+      responses:
+        '200':
+          description: Allowed methods
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  methods:
+                    type: array
+                    items:
+                      type: string
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string

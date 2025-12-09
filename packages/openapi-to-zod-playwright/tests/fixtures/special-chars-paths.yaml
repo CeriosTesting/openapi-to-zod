@@ -1,0 +1,70 @@
+openapi: 3.0.0
+info:
+  title: Special Characters Paths API
+  version: 1.0.0
+paths:
+  /user-profiles:
+    get:
+      operationId: getUserProfiles
+      summary: Get user profiles (kebab-case)
+      responses:
+        '200':
+          description: User profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /user_settings:
+    get:
+      operationId: getUserSettings
+      summary: Get user settings (snake_case)
+      responses:
+        '200':
+          description: User settings
+          content:
+            application/json:
+              schema:
+                type: object
+  /users/{user-id}:
+    get:
+      operationId: getUserByKebabId
+      summary: Get user by ID (kebab-case param)
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema:
+                type: object
+  /accounts/{account_id}:
+    get:
+      operationId: getAccountBySnakeId
+      summary: Get account by ID (snake_case param)
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  schemas:
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string

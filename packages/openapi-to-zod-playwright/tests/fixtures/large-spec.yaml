@@ -1,0 +1,132 @@
+openapi: 3.0.0
+info:
+  title: Large API Spec
+  version: 1.0.0
+paths:
+  /endpoint1:
+    get:
+      operationId: getEndpoint1
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint2:
+    get:
+      operationId: getEndpoint2
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint3:
+    get:
+      operationId: getEndpoint3
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint4:
+    get:
+      operationId: getEndpoint4
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint5:
+    get:
+      operationId: getEndpoint5
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint6:
+    get:
+      operationId: getEndpoint6
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint7:
+    get:
+      operationId: getEndpoint7
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint8:
+    get:
+      operationId: getEndpoint8
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint9:
+    get:
+      operationId: getEndpoint9
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /endpoint10:
+    get:
+      operationId: getEndpoint10
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  schemas:
+    Schema1:
+      type: object
+      properties:
+        id:
+          type: string
+    Schema2:
+      type: object
+      properties:
+        id:
+          type: string
+    Schema3:
+      type: object
+      properties:
+        id:
+          type: string
+    Schema4:
+      type: object
+      properties:
+        id:
+          type: string
+    Schema5:
+      type: object
+      properties:
+        id:
+          type: string

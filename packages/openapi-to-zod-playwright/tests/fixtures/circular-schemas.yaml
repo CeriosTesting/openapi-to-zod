@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Circular Schemas API
+  version: 1.0.0
+paths:
+  /nodes:
+    get:
+      operationId: getNodes
+      summary: Get tree nodes
+      responses:
+        '200':
+          description: Tree nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TreeNode'
+components:
+  schemas:
+    TreeNode:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+        parent:
+          $ref: '#/components/schemas/TreeNode'

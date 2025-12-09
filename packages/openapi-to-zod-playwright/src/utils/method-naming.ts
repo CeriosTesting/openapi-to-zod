@@ -6,9 +6,14 @@
  *   /api/v1/organizations/{orgId}/repos/{repoId} -> ApiV1OrganizationsByOrgIdReposByRepoId
  */
 export function pathToPascalCase(path: string): string {
-	return path
-		.split("/")
-		.filter(Boolean) // Remove empty segments
+	const segments = path.split("/").filter(Boolean); // Remove empty segments
+
+	// Handle root path
+	if (segments.length === 0) {
+		return "Root";
+	}
+
+	return segments
 		.map(segment => {
 			// Handle path parameters like {userId}
 			if (segment.startsWith("{") && segment.endsWith("}")) {
@@ -78,9 +83,15 @@ export function extractPathParams(path: string): string[] {
  * Handles special cases and ensures valid identifiers
  */
 export function sanitizeParamName(paramName: string): string {
-	// Remove any special characters and convert to camelCase
-	return paramName
-		.replace(/[^a-zA-Z0-9_]/g, "")
-		.replace(/^[0-9]/, "_$&") // Prefix with _ if starts with number
-		.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+	// First, convert kebab-case and snake_case to camelCase
+	const camelCased = paramName
+		.replace(/[-_]([a-z])/g, (_, letter) => letter.toUpperCase())
+		.replace(/[^a-zA-Z0-9]/g, ""); // Remove remaining special characters
+
+	// Prefix with _ if starts with number
+	if (/^[0-9]/.test(camelCased)) {
+		return `_${camelCased}`;
+	}
+
+	return camelCased;
 }

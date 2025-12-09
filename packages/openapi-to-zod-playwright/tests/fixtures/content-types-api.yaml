@@ -1,0 +1,60 @@
+openapi: 3.0.0
+info:
+  title: Content Types API
+  version: 1.0.0
+paths:
+  /data:
+    get:
+      operationId: getData
+      summary: Get data in multiple formats
+      responses:
+        '200':
+          description: Multiple content types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+  /text:
+    get:
+      operationId: getText
+      summary: Get text with charset
+      responses:
+        '200':
+          description: Text with charset
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+components:
+  schemas:
+    Data:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string

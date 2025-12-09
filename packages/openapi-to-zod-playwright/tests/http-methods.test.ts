@@ -1,0 +1,63 @@
+import { describe, expect, it } from "vitest";
+import { PlaywrightGenerator } from "../src/playwright-generator";
+import { TestUtils } from "./utils/test-utils";
+
+describe("HTTP Methods", () => {
+	const fixtureFile = TestUtils.getFixturePath("http-methods-api.yaml");
+
+	function generateOutput(): string {
+		const generator = new PlaywrightGenerator({
+			input: fixtureFile,
+			output: TestUtils.getOutputPath("http-methods.ts"),
+		});
+		return generator.generateString();
+	}
+
+	it("should generate GET methods", () => {
+		const output = generateOutput();
+		expect(output).toContain("async getUsers(");
+		expect(output).toContain("await this.request.get(");
+	});
+
+	it("should generate POST methods", () => {
+		const output = generateOutput();
+		expect(output).toContain("async postUsers(");
+		expect(output).toContain("await this.request.post(");
+	});
+
+	it("should generate PUT methods", () => {
+		const output = generateOutput();
+		expect(output).toContain("async putUsers(");
+		expect(output).toContain("await this.request.put(");
+	});
+
+	it("should generate PATCH methods", () => {
+		const output = generateOutput();
+		expect(output).toContain("async patchUsers(");
+		expect(output).toContain("await this.request.patch(");
+	});
+
+	it("should generate DELETE methods", () => {
+		const output = generateOutput();
+		expect(output).toContain("async deleteUsers(");
+		expect(output).toContain("await this.request.delete(");
+	});
+
+	it("should generate HEAD methods", () => {
+		const output = generateOutput();
+		expect(output).toContain("async headUsers(");
+		expect(output).toContain("await this.request.head(");
+	});
+
+	it("should generate OPTIONS methods", () => {
+		const output = generateOutput();
+		expect(output).toContain("async optionsUsers(");
+		expect(output).toContain("await this.request.options(");
+	});
+
+	it("should generate client and service classes", () => {
+		const output = generateOutput();
+		expect(output).toContain("export class ApiClient");
+		expect(output).toContain("export class ApiService");
+	});
+});

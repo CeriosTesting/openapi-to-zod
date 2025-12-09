@@ -1,0 +1,62 @@
+openapi: 3.0.0
+info:
+  title: Long Paths API
+  version: 1.0.0
+paths:
+  /api/v1/organizations/{orgId}/teams/{teamId}/projects/{projectId}/repositories/{repoId}/branches/{branchId}/commits/{commitId}/files/{fileId}:
+    get:
+      operationId: getFileFromCommit
+      summary: Get a file from a specific commit
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: teamId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commitId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+components:
+  schemas:
+    FileContent:
+      type: object
+      properties:
+        content:
+          type: string

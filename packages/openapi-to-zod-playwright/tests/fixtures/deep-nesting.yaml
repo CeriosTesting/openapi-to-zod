@@ -1,0 +1,62 @@
+openapi: 3.0.0
+info:
+  title: Deep Nesting API
+  version: 1.0.0
+paths:
+  /complex:
+    get:
+      operationId: getComplex
+      summary: Get deeply nested structure
+      responses:
+        '200':
+          description: Complex nested object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Level1'
+components:
+  schemas:
+    Level1:
+      type: object
+      properties:
+        id:
+          type: string
+        level2:
+          $ref: '#/components/schemas/Level2'
+    Level2:
+      type: object
+      properties:
+        name:
+          type: string
+        level3:
+          $ref: '#/components/schemas/Level3'
+    Level3:
+      type: object
+      properties:
+        value:
+          type: string
+        level4:
+          $ref: '#/components/schemas/Level4'
+    Level4:
+      type: object
+      properties:
+        data:
+          type: string
+        level5:
+          $ref: '#/components/schemas/Level5'
+    Level5:
+      type: object
+      properties:
+        final:
+          type: string
+        metadata:
+          type: object
+          properties:
+            nested:
+              type: object
+              properties:
+                deep:
+                  type: object
+                  properties:
+                    value:
+                      type: string
