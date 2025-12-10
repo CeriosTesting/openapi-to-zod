@@ -8,7 +8,6 @@ describe("PlaywrightGenerator", () => {
 	function generateOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
-			output: TestUtils.getOutputPath("simple-api.ts"),
 		});
 		return generator.generateString();
 	}
@@ -47,20 +46,18 @@ describe("PlaywrightGenerator", () => {
 		expect(output).toContain("async deleteUsersByUserId(userId: string");
 	});
 
-	it("should generate service methods with status codes for multiple responses", () => {
+	it("should generate service methods with content-type handling", () => {
 		const output = generateOutput();
 
-		// GET /users has only 200 - no suffix
-		expect(output).toContain("async getUsers()");
+		// Service methods should exist
+		expect(output).toContain("async getUsers");
+		expect(output).toContain("async postUsers");
+		expect(output).toContain("async getUsersByUserId");
+		expect(output).toContain("async deleteUsersByUserId");
 
-		// POST /users has only 201 (400 is error) - no suffix for single success response
-		expect(output).toContain("async postUsers(options: { data: CreateUserRequest })");
-
-		// GET /users/{userId} has only 200 - no suffix
-		expect(output).toContain("async getUsersByUserId(userId: string");
-
-		// DELETE /users/{userId} has only 204 - no suffix
-		expect(output).toContain("async deleteUsersByUserId(userId: string");
+		// Service methods call client
+		const serviceSection = output.substring(output.indexOf("export class ApiService"));
+		expect(serviceSection).toContain("this.client.");
 	});
 
 	it("should use expect for status validation", () => {
@@ -80,11 +77,16 @@ describe("PlaywrightGenerator", () => {
 		expect(output).toContain("return;");
 	});
 
-	it("should make client data options partial", () => {
+	it("should use raw Playwright options in client methods", () => {
 		const output = generateOutput();
 
-		// Client methods should have Partial<Type> for data
-		expect(output).toContain("async postUsers(options?: { data?: Partial<CreateUserRequest> })");
+		// Client methods should use raw Playwright options
+		const clientSection = output.substring(
+			output.indexOf("export class ApiClient"),
+			output.indexOf("export class ApiService")
+		);
+		expect(clientSection).toContain("options?:");
+		expect(clientSection).toContain("async postUsers(");
 	});
 
 	describe("String Generation Methods", () => {

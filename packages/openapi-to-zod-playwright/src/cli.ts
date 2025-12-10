@@ -15,6 +15,10 @@ import { type PlaywrightGeneratorOptions } from "./types";
 const CliOptionsSchema = z.object({
 	input: z.string().min(1, "Input path cannot be empty"),
 	output: z.string().min(1, "Output path cannot be empty"),
+	outputClient: z.string().optional(),
+	outputService: z.string().optional(),
+	generateService: z.boolean().default(true),
+	validateServiceRequest: z.boolean().default(false),
 	mode: z.enum(["strict", "normal", "loose"]).default("normal"),
 	typeMode: z.enum(["inferred", "native"]).default("inferred"),
 	enumType: z.enum(["zod", "typescript"]).default("zod"),
@@ -36,6 +40,10 @@ function validateCliOptions(options: unknown): PlaywrightGeneratorOptions {
 		return {
 			input: validated.input,
 			output: validated.output,
+			outputClient: validated.outputClient,
+			outputService: validated.outputService,
+			generateService: validated.generateService,
+			validateServiceRequest: validated.validateServiceRequest,
 			mode: validated.mode,
 			typeMode: validated.typeMode,
 			enumType: validated.enumType,
@@ -71,6 +79,10 @@ program
 program
 	.requiredOption("-i, --input <path>", "Input OpenAPI specification file (YAML or JSON)")
 	.requiredOption("-o, --output <path>", "Output file path for generated code")
+	.option("--output-client <path>", "Optional output file path for client class (separate file)")
+	.option("--output-service <path>", "Optional output file path for service class (separate file)")
+	.option("--no-generate-service", "Disable service class generation (only generate client)")
+	.option("--validate-service-request", "Enable Zod validation for service method request bodies")
 	.option("-m, --mode <mode>", "Validation mode: strict, normal, or loose", "normal")
 	.option("--type-mode <mode>", "Type mode: inferred or native", "inferred")
 	.option("--enum-type <type>", "Enum type: zod or typescript", "zod")

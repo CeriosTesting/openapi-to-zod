@@ -1,0 +1,44 @@
+openapi: 3.0.0
+info:
+  title: Params with Body API
+  version: 1.0.0
+paths:
+  /search:
+    post:
+      operationId: search
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+              required:
+                - query
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResults'
+components:
+  schemas:
+    SearchResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object

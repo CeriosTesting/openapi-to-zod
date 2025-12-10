@@ -13,25 +13,56 @@ interface EndpointInfo {
 /**
  * Generates the ApiClient class code
  * The client is a thin passthrough layer with no validation
+ * Pure wrapper around Playwright's APIRequestContext with raw options
  * @param spec - OpenAPI specification
- * @param strict - If true, request properties follow schema strictness. If false, all properties are Partial
  */
-export function generateClientClass(spec: OpenAPISpec, strict = false): string {
+export function generateClientClass(spec: OpenAPISpec): string {
 	const endpoints = extractEndpoints(spec);
 
 	if (endpoints.length === 0) {
 		return "";
 	}
 
-	const methods = endpoints.map(endpoint => generateClientMethod(endpoint, strict)).join("\n\n");
+	const methods = endpoints.map(endpoint => generateClientMethod(endpoint)).join("\n\n");
 
-	const description = strict
-		? "Thin passthrough client for API requests\n * No validation - request properties follow schema strictness"
-		: "Thin passthrough client for API requests\n * No validation - allows testing invalid requests\n * All request properties are optional via Partial";
+	return `import type { ReadStream } from "node:fs";
 
-	return `
 /**
- * ${description}
+ * Represents a value that can be used in multipart form data
+ */
+export type MultipartFormValue = string | number | boolean | ReadStream | { name: string; mimeType: string; buffer: Buffer };
+
+/**
+ * Options for API requests
+ * Extends Playwright's APIRequestContext options with typed parameters
+ * @property data - Request body data (JSON, text, or binary)
+ * @property form - URL-encoded form data
+ * @property multipart - Multipart form data for file uploads
+ * @property params - Query string parameters
+ * @property headers - HTTP headers
+ * @property timeout - Request timeout in milliseconds
+ * @property failOnStatusCode - Whether to fail on non-2xx status codes (default: true)
+ * @property ignoreHTTPSErrors - Whether to ignore HTTPS errors (default: false)
+ * @property maxRedirects - Maximum number of redirects to follow (default: 20)
+ * @property maxRetries - Maximum number of retries (default: 0)
+ */
+export type ApiClientOptions = {
+	data?: string | Buffer | any;
+	form?: { [key: string]: string | number | boolean } | FormData;
+	multipart?: FormData | { [key: string]: MultipartFormValue };
+	params?: { [key: string]: string | number | boolean } | URLSearchParams | string;
+	headers?: { [key: string]: string };
+	timeout?: number;
+	failOnStatusCode?: boolean;
+	ignoreHTTPSErrors?: boolean;
+	maxRedirects?: number;
+	maxRetries?: number;
+};
+
+/**
+ * Thin passthrough client for API requests
+ * Pure wrapper around Playwright's APIRequestContext
+ * Exposes path parameters and raw Playwright options
  */
 export class ApiClient {
 	constructor(private readonly request: APIRequestContext) {}
@@ -78,9 +109,9 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 }
 
 /**
- * Generates a single client method
+ * Generates a single client method - pure passthrough to Playwright
  */
-function generateClientMethod(endpoint: EndpointInfo, strict: boolean): string {
+function generateClientMethod(endpoint: EndpointInfo): string {
 	const { path, method, methodName, pathParams } = endpoint;
 
 	// Build parameter list
@@ -92,38 +123,8 @@ function generateClientMethod(endpoint: EndpointInfo, strict: boolean): string {
 		params.push(`${sanitized}: string`);
 	}
 
-	// Build options type based on what exists on endpoint
-	const optionsParts: string[] = [];
-
-	// Check for query parameters
-	if (endpoint.parameters?.some((p: any) => p.in === "query")) {
-		optionsParts.push("query?: Record<string, any>");
-	}
-
-	// Check for header parameters
-	if (endpoint.parameters?.some((p: any) => p.in === "header")) {
-		optionsParts.push("headers?: Record<string, string>");
-	}
-
-	// Check for request body
-	const requestBody = (endpoint as any).requestBody;
-	if (requestBody?.content?.["application/json"]) {
-		const schema = requestBody.content["application/json"].schema;
-		if (schema?.$ref) {
-			const schemaName = schema.$ref.split("/").pop();
-			// Apply Partial wrapper only when not in strict mode
-			const dataType = strict ? schemaName : `Partial<${schemaName}>`;
-			optionsParts.push(`data?: ${dataType}`);
-		} else {
-			const dataType = strict ? "any" : "Partial<any>";
-			optionsParts.push(`data?: ${dataType}`);
-		}
-	}
-
-	// Add options parameter only if there are options
-	if (optionsParts.length > 0) {
-		params.push(`options?: { ${optionsParts.join("; ")} }`);
-	}
+	// Add raw Playwright options parameter
+	params.push("options?: ApiClientOptions");
 
 	const paramList = params.join(", ");
 
@@ -134,15 +135,14 @@ function generateClientMethod(endpoint: EndpointInfo, strict: boolean): string {
 		urlTemplate = urlTemplate.replace(`{${param}}`, `\${${sanitized}}`);
 	}
 
-	// Generate method body
+	// Generate method body - pure passthrough
 	const methodLower = method.toLowerCase();
-	const hasOptions = optionsParts.length > 0;
 
 	return `\t/**
 	 * ${method} ${path}
 	 * @returns Raw Playwright APIResponse
 	 */
 	async ${methodName}(${paramList}): Promise<APIResponse> {
-		return await this.request.${methodLower}(\`${urlTemplate}\`${hasOptions ? ", options" : ""});
+		return await this.request.${methodLower}(\`${urlTemplate}\`, options);
 	}`;
 }

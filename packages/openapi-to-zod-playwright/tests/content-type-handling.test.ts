@@ -8,7 +8,6 @@ describe("Content Type Handling", () => {
 	function generateOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
-			output: TestUtils.getOutputPath("content-types.ts"),
 		});
 		return generator.generateString();
 	}

@@ -8,7 +8,6 @@ describe("HTTP Methods", () => {
 	function generateOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
-			output: TestUtils.getOutputPath("http-methods.ts"),
 		});
 		return generator.generateString();
 	}

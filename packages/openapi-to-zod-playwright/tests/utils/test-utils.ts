@@ -36,7 +36,6 @@ export const TestUtils = {
 	generateClient(fixtureName: string, options?: Partial<PlaywrightGeneratorOptions>): string {
 		const generator = new PlaywrightGenerator({
 			input: this.getFixturePath(fixtureName),
-			output: this.getOutputPath("test-output.ts"),
 			...options,
 		});
 		return generator.generateString();

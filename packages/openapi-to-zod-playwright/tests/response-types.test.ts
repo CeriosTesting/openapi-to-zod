@@ -9,7 +9,6 @@ describe("Response Types", () => {
 		function generateOutput(): string {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
-				output: TestUtils.getOutputPath("primitives.ts"),
 			});
 			return generator.generateString();
 		}
@@ -59,7 +58,6 @@ describe("Response Types", () => {
 		function generateOutput(): string {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
-				output: TestUtils.getOutputPath("complex-responses.ts"),
 			});
 			return generator.generateString();
 		}
@@ -83,7 +81,6 @@ describe("Response Types", () => {
 		function generateOutput(): string {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
-				output: TestUtils.getOutputPath("no-content.ts"),
 			});
 			return generator.generateString();
 		}

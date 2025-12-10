@@ -8,7 +8,6 @@ describe("Status Codes", () => {
 	function generateOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
-			output: TestUtils.getOutputPath("status-codes.ts"),
 		});
 		return generator.generateString();
 	}

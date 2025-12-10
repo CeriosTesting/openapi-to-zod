@@ -8,7 +8,6 @@ describe("Headers", () => {
 	function generateOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
-			output: TestUtils.getOutputPath("headers.ts"),
 		});
 		return generator.generateString();
 	}
@@ -16,23 +15,31 @@ describe("Headers", () => {
 	it("should include headers option in client methods", () => {
 		const output = generateOutput();
 
-		expect(output).toContain("headers?: Record<string, string>");
+		// Client uses raw Playwright options which include headers
+		expect(output).toContain("headers?:");
 	});
 
 	it("should handle optional headers", () => {
 		const output = generateOutput();
 
-		expect(output).toContain("options?: {");
+		// Headers are in the unified options parameter
+		expect(output).toContain("options?:");
 		expect(output).toContain("headers?:");
 	});
 
-	it("should combine query, headers, and data in options", () => {
+	it("should use raw Playwright options with headers", () => {
 		const output = generateOutput();
 
-		// Should have headers option at minimum
+		// Client should define ApiClientOptions type with headers
+		expect(output).toContain("export type ApiClientOptions");
 		expect(output).toContain("headers?:");
-		// May also have query and data options depending on endpoints
-		expect(output).toBeTruthy();
+
+		// Client methods should use ApiClientOptions
+		const clientSection = output.substring(
+			output.indexOf("export class ApiClient"),
+			output.lastIndexOf("export class")
+		);
+		expect(clientSection).toContain("options?: ApiClientOptions");
 	});
 
 	it("should generate methods for endpoints with headers", () => {
@@ -42,10 +49,10 @@ describe("Headers", () => {
 		expect(output).toContain("async postSecure(");
 	});
 
-	it("should pass headers to request", () => {
+	it("should pass headers through to Playwright", () => {
 		const output = generateOutput();
 
-		// Should pass headers in the request
+		// Headers are part of the raw Playwright options
 		expect(output).toContain("headers?:");
 	});
 });

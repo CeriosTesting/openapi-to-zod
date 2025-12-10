@@ -8,30 +8,30 @@ describe("Query Parameters", () => {
 	function generateOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
-			output: TestUtils.getOutputPath("query-params.ts"),
 		});
 		return generator.generateString();
 	}
 
-	it("should include query parameter option in client methods", () => {
+	it("should include params parameter option in client methods", () => {
 		const output = generateOutput();
 
-		expect(output).toContain("query?: Record<string, any>");
+		// Client now uses raw Playwright params type
+		expect(output).toContain("params?:");
 	});
 
-	it("should handle optional query parameters", () => {
+	it("should handle optional params", () => {
 		const output = generateOutput();
 
-		// Query should be optional
+		// Params should be optional in options
 		expect(output).toContain("options?: {");
-		expect(output).toContain("query?:");
+		expect(output).toContain("params?:");
 	});
 
-	it("should handle multiple query parameters", () => {
+	it("should use Playwright's params type", () => {
 		const output = generateOutput();
 
-		// Should accept Record for flexibility
-		expect(output).toContain("Record<string, any>");
+		// Should use Playwright's params type signature
+		expect(output).toContain("params?:");
 	});
 
 	it("should generate method for endpoint with query params", () => {
@@ -40,10 +40,10 @@ describe("Query Parameters", () => {
 		expect(output).toContain("async getUsers(");
 	});
 
-	it("should pass query params to request", () => {
+	it("should pass params to request in client", () => {
 		const output = generateOutput();
 
-		// Should pass query params in the request
-		expect(output).toContain("query?:");
+		// Client should pass params in the options
+		expect(output).toContain("params?:");
 	});
 });

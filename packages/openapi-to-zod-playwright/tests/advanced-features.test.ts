@@ -3,33 +3,36 @@ import { PlaywrightGenerator } from "../src/playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Advanced Features", () => {
-	describe("Request Body Validation", () => {
+	describe("Service Layer", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-		it("should validate request bodies when validateServiceRequest is true", () => {
+		it("should generate service methods that extract parameters", () => {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
-				validateServiceRequest: true,
 			});
 
 			const output = generator.generateString();
 
-			// Should contain Zod validation for request bodies
-			expect(output).toContain(".parse(");
-			expect(output).toContain("createUserRequestSchema");
+			// Service should extract data parameter for JSON content types
+			expect(output).toContain("export class ApiService");
+			// Service calls client with extracted options
+			expect(output).toContain("this.client.");
 		});
 
-		it("should skip request validation when validateServiceRequest is false", () => {
+		it("should generate client methods with raw Playwright options", () => {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
-				validateServiceRequest: false,
 			});
 
 			const output = generator.generateString();
 
-			// Should not validate request bodies in service methods
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
-			expect(serviceSection).not.toContain("createUserRequestSchema.parse(");
+			// Client methods use raw Playwright options (no validation)
+			expect(output).toContain("export class ApiClient");
+			const clientSection = output.substring(
+				output.indexOf("export class ApiClient"),
+				output.indexOf("export class ApiService")
+			);
+			expect(clientSection).not.toContain(".parse(");
 		});
 	});
 
@@ -47,41 +50,29 @@ describe("Advanced Features", () => {
 			expect(output).toContain("export class ApiService");
 		});
 
-		it("should generate only strict client when generationMode is client-strict", () => {
+		it("should generate only client when generateService is false", () => {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
-				generationMode: "client-strict",
+				generateService: false,
 			});
 
 			const output = generator.generateString();
 
 			expect(output).toContain("export class ApiClient");
 			expect(output).not.toContain("export class ApiService");
-			expect(output).not.toContain("Partial<");
+			// Client uses raw Playwright options
+			expect(output).toContain("options?:");
 		});
 
-		it("should generate only partial client when generationMode is client-partial", () => {
-			const generator = new PlaywrightGenerator({
-				input: fixtureFile,
-				generationMode: "client-partial",
-			});
-
-			const output = generator.generateString();
-
-			expect(output).toContain("export class ApiClient");
-			expect(output).not.toContain("export class ApiService");
-			expect(output).toContain("Partial<");
-		});
-
-		it("should throw error when outputService is used without client-service mode", () => {
+		it("should throw error when outputService is used with generateService false", () => {
 			expect(() => {
 				new PlaywrightGenerator({
 					input: fixtureFile,
 					output: TestUtils.getOutputPath("main.ts"),
 					outputService: TestUtils.getOutputPath("service.ts"),
-					generationMode: "client-strict",
+					generateService: false,
 				});
-			}).toThrow(/outputService is only allowed when generationMode is 'client-service'/);
+			}).toThrow(/outputService is only allowed when generateService is true/);
 		});
 	});
 
