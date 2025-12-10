@@ -20,9 +20,11 @@ describe("Schema Usage Analysis", () => {
 
 		it("should detect schemas used in request bodies", () => {
 			const output = generateOutput({
-				typeMode: "inferred",
 				request: {
 					typeMode: "native",
+				},
+				response: {
+					typeMode: "inferred",
 				},
 			});
 
@@ -32,7 +34,9 @@ describe("Schema Usage Analysis", () => {
 
 		it("should detect schemas used in responses", () => {
 			const output = generateOutput({
-				typeMode: "native",
+				request: {
+					typeMode: "native",
+				},
 				response: {
 					typeMode: "inferred",
 				},
@@ -45,7 +49,9 @@ describe("Schema Usage Analysis", () => {
 
 		it("should detect nested schema references", () => {
 			const output = generateOutput({
-				typeMode: "native",
+				request: {
+					typeMode: "native",
+				},
 				response: {
 					typeMode: "inferred",
 				},
