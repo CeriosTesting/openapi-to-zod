@@ -1,5 +1,13 @@
 # @cerios/openapi-to-zod-playwright
 
+## 0.1.3
+
+### Patch Changes
+
+- es-build fix
+- Updated dependencies
+  - @cerios/openapi-to-zod@0.1.1
+
 ## 0.1.2
 
 ### Patch Changes
