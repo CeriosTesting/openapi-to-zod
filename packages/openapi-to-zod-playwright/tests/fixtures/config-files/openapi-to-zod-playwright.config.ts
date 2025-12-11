@@ -11,12 +11,10 @@ const config: PlaywrightConfigFile = {
 	},
 	specs: [
 		{
-			name: "simple-api",
 			input: "tests/fixtures/simple.yaml",
 			output: "tests/output/simple-from-config.ts",
 		},
 		{
-			name: "complex-api",
 			input: "tests/fixtures/complex.yaml",
 			output: "tests/output/complex-from-config.ts",
 			outputClient: "tests/output/complex-client.ts",

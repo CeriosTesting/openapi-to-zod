@@ -15,8 +15,9 @@ interface EndpointInfo {
  * The client is a thin passthrough layer with no validation
  * Pure wrapper around Playwright's APIRequestContext with raw options
  * @param spec - OpenAPI specification
+ * @param className - Name for the generated client class (default: "ApiClient")
  */
-export function generateClientClass(spec: OpenAPISpec): string {
+export function generateClientClass(spec: OpenAPISpec, className: string = "ApiClient"): string {
 	const endpoints = extractEndpoints(spec);
 
 	if (endpoints.length === 0) {
@@ -33,12 +34,34 @@ export function generateClientClass(spec: OpenAPISpec): string {
 export type MultipartFormValue = string | number | boolean | ReadStream | { name: string; mimeType: string; buffer: Buffer };
 
 /**
+ * Serializes query parameters, converting arrays to comma-separated strings
+ * @param params - Query parameters object
+ * @returns Serialized params compatible with Playwright
+ */
+function serializeParams(params: { [key: string]: string | number | boolean | string[] | number[] | boolean[] } | URLSearchParams | string | undefined): { [key: string]: string | number | boolean } | URLSearchParams | string | undefined {
+	if (!params || typeof params === 'string' || params instanceof URLSearchParams) {
+		return params;
+	}
+
+	const serialized: { [key: string]: string | number | boolean } = {};
+	for (const [key, value] of Object.entries(params)) {
+		if (Array.isArray(value)) {
+			// Serialize arrays as comma-separated strings
+			serialized[key] = value.join(',');
+		} else {
+			serialized[key] = value;
+		}
+	}
+	return serialized;
+}
+
+/**
  * Options for API requests
  * Extends Playwright's APIRequestContext options with typed parameters
  * @property data - Request body data (JSON, text, or binary)
  * @property form - URL-encoded form data
  * @property multipart - Multipart form data for file uploads
- * @property params - Query string parameters
+ * @property params - Query string parameters (arrays will be serialized as comma-separated strings)
  * @property headers - HTTP headers
  * @property timeout - Request timeout in milliseconds
  * @property failOnStatusCode - Whether to fail on non-2xx status codes (default: true)
@@ -46,11 +69,11 @@ export type MultipartFormValue = string | number | boolean | ReadStream | { name
  * @property maxRedirects - Maximum number of redirects to follow (default: 20)
  * @property maxRetries - Maximum number of retries (default: 0)
  */
-export type ApiClientOptions = {
+export type ApiRequestContextOptions = {
 	data?: string | Buffer | any;
 	form?: { [key: string]: string | number | boolean } | FormData;
 	multipart?: FormData | { [key: string]: MultipartFormValue };
-	params?: { [key: string]: string | number | boolean } | URLSearchParams | string;
+	params?: { [key: string]: string | number | boolean | string[] | number[] | boolean[] } | URLSearchParams | string;
 	headers?: { [key: string]: string };
 	timeout?: number;
 	failOnStatusCode?: boolean;
@@ -64,7 +87,7 @@ export type ApiClientOptions = {
  * Pure wrapper around Playwright's APIRequestContext
  * Exposes path parameters and raw Playwright options
  */
-export class ApiClient {
+export class ${className} {
 	constructor(private readonly request: APIRequestContext) {}
 
 ${methods}
@@ -124,7 +147,7 @@ function generateClientMethod(endpoint: EndpointInfo): string {
 	}
 
 	// Add raw Playwright options parameter
-	params.push("options?: ApiClientOptions");
+	params.push("options?: ApiRequestContextOptions");
 
 	const paramList = params.join(", ");
 
@@ -135,7 +158,7 @@ function generateClientMethod(endpoint: EndpointInfo): string {
 		urlTemplate = urlTemplate.replace(`{${param}}`, `\${${sanitized}}`);
 	}
 
-	// Generate method body - pure passthrough
+	// Generate method body - serialize params if present
 	const methodLower = method.toLowerCase();
 
 	return `\t/**
@@ -143,6 +166,7 @@ function generateClientMethod(endpoint: EndpointInfo): string {
 	 * @returns Raw Playwright APIResponse
 	 */
 	async ${methodName}(${paramList}): Promise<APIResponse> {
-		return await this.request.${methodLower}(\`${urlTemplate}\`, options);
+		const serializedOptions = options ? { ...options, params: serializeParams(options.params) } : options;
+		return await this.request.${methodLower}(\`${urlTemplate}\`, serializedOptions);
 	}`;
 }

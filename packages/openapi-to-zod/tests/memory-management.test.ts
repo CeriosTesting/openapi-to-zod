@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { executeBatch } from "../src/batch-executor";
-import type { SpecConfig } from "../src/types";
+import type { GeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 /**
@@ -9,7 +9,7 @@ import { TestUtils } from "./utils/test-utils";
 describe("Memory Management", () => {
 	describe("Batch Executor Cleanup", () => {
 		it("should clean up memory after large batch execution", async () => {
-			const specs: SpecConfig[] = Array.from({ length: 15 }, (_, i) => ({
+			const specs: GeneratorOptions[] = Array.from({ length: 15 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`memory-test-${i}.ts`),
 			}));
@@ -33,7 +33,7 @@ describe("Memory Management", () => {
 		}, 30000);
 
 		it("should handle small batches without triggering cleanup", async () => {
-			const specs: SpecConfig[] = Array.from({ length: 5 }, (_, i) => ({
+			const specs: GeneratorOptions[] = Array.from({ length: 5 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`small-batch-${i}.ts`),
 			}));
@@ -45,7 +45,7 @@ describe("Memory Management", () => {
 		});
 
 		it("should handle very large batches efficiently", async () => {
-			const specs: SpecConfig[] = Array.from({ length: 25 }, (_, i) => ({
+			const specs: GeneratorOptions[] = Array.from({ length: 25 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`large-batch-${i}.ts`),
 			}));
@@ -75,7 +75,7 @@ describe("Memory Management", () => {
 
 			// Run 10 small batches
 			for (let batch = 0; batch < 10; batch++) {
-				const specs: SpecConfig[] = Array.from({ length: 3 }, (_, i) => ({
+				const specs: GeneratorOptions[] = Array.from({ length: 3 }, (_, i) => ({
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath(`repeat-batch-${batch}-${i}.ts`),
 				}));

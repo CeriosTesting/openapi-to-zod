@@ -6,7 +6,7 @@ import { generateEnum } from "./generators/enum-generator";
 import { generateJSDoc } from "./generators/jsdoc-generator";
 import { PropertyGenerator } from "./generators/property-generator";
 import type { GeneratorOptions, OpenAPISchema, OpenAPISpec, ResolvedOptions, TypeMode } from "./types";
-import { resolveRef, toCamelCase } from "./utils/name-utils";
+import { resolveRef, toCamelCase, toPascalCase } from "./utils/name-utils";
 
 type SchemaContext = "request" | "response" | "both";
 
@@ -122,10 +122,17 @@ export class ZodSchemaGenerator {
 		// First pass: generate enums
 		for (const [name, schema] of Object.entries(this.spec.components.schemas)) {
 			if (schema.enum) {
-				const typeMode = this.schemaTypeModeMap.get(name) || "inferred";
-				if (typeMode === "inferred") {
+				const context = this.schemaUsageMap.get(name);
+				const resolvedOptions = context === "response" ? this.responseOptions : this.requestOptions;
+
+				// For enums, use enumType option to determine generation strategy
+				if (resolvedOptions.enumType === "typescript") {
+					// Generate native TypeScript enum
+					this.generateNativeEnum(name, schema);
+				} else {
+					// Generate Zod enum - will create schema in second pass
 					const { enumCode } = generateEnum(name, schema.enum, {
-						enumType: this.options.enumType || "zod",
+						enumType: "zod",
 						prefix: this.options.prefix,
 						suffix: this.options.suffix,
 					});
@@ -134,9 +141,6 @@ export class ZodSchemaGenerator {
 						// Mark that we need Zod import for enum schemas
 						this.needsZodImport = true;
 					}
-				} else {
-					// Generate native enum
-					this.generateNativeEnum(name, schema);
 				}
 			}
 		}
@@ -145,6 +149,9 @@ export class ZodSchemaGenerator {
 		for (const [name, schema] of Object.entries(this.spec.components.schemas)) {
 			this.generateComponentSchema(name, schema);
 		}
+
+		// Third pass: generate query parameter schemas from path operations
+		this.generateQueryParameterSchemas();
 
 		// Sort schemas by dependencies
 		const orderedSchemaNames = this.topologicalSort();
@@ -164,30 +171,27 @@ export class ZodSchemaGenerator {
 			output.push("");
 		}
 
-		// Add enums
-		if (this.enums.size > 0 || this.nativeEnums.size > 0) {
-			output.push("// Enums");
-
-			// Zod enums first
-			for (const enumCode of this.enums.values()) {
-				output.push(enumCode);
-				output.push("");
-			}
-
-			// Native TypeScript enums
+		// Add native enums first (they have no dependencies and are referenced by value)
+		if (this.nativeEnums.size > 0) {
+			output.push("// Native Enums");
 			for (const enumCode of this.nativeEnums.values()) {
 				output.push(enumCode);
 				output.push("");
 			}
 		}
 
-		// Add schemas and types in dependency order (grouped by schema)
+		// Add schemas, types, and zod enums in dependency order (grouped by schema)
 		output.push("// Schemas and Types");
 		for (const name of orderedSchemaNames) {
+			const enumCode = this.enums.get(name);
 			const schemaCode = this.schemas.get(name);
 			const typeCode = this.types.get(name);
 
-			if (schemaCode) {
+			if (enumCode) {
+				// Zod enum schema
+				output.push(enumCode);
+				output.push("");
+			} else if (schemaCode) {
 				// Zod schema with inferred type
 				output.push(schemaCode);
 
@@ -608,10 +612,23 @@ export class ZodSchemaGenerator {
 
 		// Handle enums at the top level
 		if (schema.enum) {
-			if (typeMode === "inferred") {
-				const jsdoc = generateJSDoc(schema, name, { includeDescriptions: resolvedOptions.includeDescriptions });
+			const jsdoc = generateJSDoc(schema, name, { includeDescriptions: resolvedOptions.includeDescriptions });
+
+			// Use enumType to determine generation strategy
+			if (resolvedOptions.enumType === "typescript") {
+				// TypeScript enum - native enum was generated in first pass, now generate schema
+				const { schemaCode, typeCode } = generateEnum(name, schema.enum, {
+					enumType: "typescript",
+					prefix: this.options.prefix,
+					suffix: this.options.suffix,
+				});
+
+				const enumSchemaCode = `${jsdoc}${schemaCode}\n${typeCode}`;
+				this.schemas.set(name, enumSchemaCode);
+			} else {
+				// Zod enum
 				const { enumCode, schemaCode, typeCode } = generateEnum(name, schema.enum, {
-					enumType: resolvedOptions.enumType,
+					enumType: "zod",
 					prefix: this.options.prefix,
 					suffix: this.options.suffix,
 				});
@@ -623,7 +640,6 @@ export class ZodSchemaGenerator {
 				const enumSchemaCode = `${jsdoc}${schemaCode}\n${typeCode}`;
 				this.schemas.set(name, enumSchemaCode);
 			}
-			// Native enum already generated in first pass
 			return;
 		}
 
@@ -689,6 +705,186 @@ export class ZodSchemaGenerator {
 	}
 
 	/**
+	 * Generate query parameter schemas for each operation
+	 */
+	private generateQueryParameterSchemas(): void {
+		if (!this.spec.paths) {
+			return;
+		}
+
+		for (const [_path, pathItem] of Object.entries(this.spec.paths)) {
+			if (!pathItem || typeof pathItem !== "object") continue;
+
+			const methods = ["get", "post", "put", "patch", "delete", "head", "options"];
+
+			for (const method of methods) {
+				const operation = (pathItem as any)[method];
+				if (!operation) continue;
+
+				// Skip operations without operationId or parameters
+				if (!operation.operationId || !operation.parameters || !Array.isArray(operation.parameters)) {
+					continue;
+				}
+
+				// Filter for query parameters only
+				const queryParams = operation.parameters.filter(
+					(param: any) => param && typeof param === "object" && param.in === "query"
+				);
+
+				if (queryParams.length === 0) {
+					continue;
+				}
+
+				// Generate schema name from operationId
+				// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
+				const pascalOperationId = operation.operationId.includes("-")
+					? toPascalCase(operation.operationId)
+					: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
+				const schemaName = `${pascalOperationId}QueryParams`; // Initialize dependencies for this schema
+				if (!this.schemaDependencies.has(schemaName)) {
+					this.schemaDependencies.set(schemaName, new Set());
+				}
+
+				// Build object schema properties
+				const properties: Record<string, string> = {};
+				const required: string[] = [];
+
+				for (const param of queryParams) {
+					const paramName = param.name;
+					const isRequired = param.required === true;
+					const paramSchema = param.schema;
+
+					if (!paramSchema) continue;
+
+					// Generate Zod schema for this parameter
+					let zodType = this.generateQueryParamType(paramSchema, param);
+
+					// Handle arrays with serialization styles
+					if (paramSchema.type === "array" && paramSchema.items) {
+						const itemType = this.generateQueryParamType(paramSchema.items, param);
+
+						// Note: Query param arrays are sent as strings and need to be split on the client side
+						// The style is documented but validation is for the array type
+						zodType = `z.array(${itemType})`;
+
+						// Description is handled by addDescription below
+					} // Add description if available (before .optional())
+					if (param.description && this.requestOptions.includeDescriptions) {
+						if (this.requestOptions.useDescribe) {
+							zodType = `${zodType}.describe(${JSON.stringify(param.description)})`;
+						}
+					}
+
+					// Make optional if not required (don't add defaults)
+					if (!isRequired) {
+						zodType = `${zodType}.optional()`;
+					}
+
+					properties[paramName] = zodType;
+					if (isRequired) {
+						required.push(paramName);
+					}
+
+					// Track dependencies from schema references
+					if (paramSchema.$ref) {
+						const refName = resolveRef(paramSchema.$ref);
+						this.schemaDependencies.get(schemaName)?.add(refName);
+					}
+				}
+
+				// Generate the object schema code
+				const objectMode = this.requestOptions.mode;
+				const zodMethod = objectMode === "strict" ? "strictObject" : objectMode === "loose" ? "looseObject" : "object";
+
+				const propsCode = Object.entries(properties)
+					.map(([key, value]) => {
+						// Quote property names that contain special characters or are not valid identifiers
+						const needsQuotes = !/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key);
+						const quotedKey = needsQuotes ? `"${key}"` : key;
+						return `  ${quotedKey}: ${value}`;
+					})
+					.join(",\n");
+
+				const schemaCode = `z.${zodMethod}({\n${propsCode}\n})`; // Apply prefix/suffix to the operation name only, then add QueryParams and Schema
+				const operationName = pascalOperationId; // Already PascalCase
+				const prefixedName = this.options.prefix
+					? `${toPascalCase(this.options.prefix)}${operationName}`
+					: operationName;
+				const suffixedName = this.options.suffix ? `${prefixedName}${toPascalCase(this.options.suffix)}` : prefixedName;
+				const camelCaseSchemaName = `${suffixedName.charAt(0).toLowerCase() + suffixedName.slice(1)}QueryParamsSchema`;
+
+				// Generate JSDoc
+				const jsdoc = `/**\n * Query parameters for ${operation.operationId}\n */\n`;
+				const fullSchemaCode = `${jsdoc}export const ${camelCaseSchemaName} = ${schemaCode};`;
+
+				this.schemas.set(schemaName, fullSchemaCode);
+				this.needsZodImport = true;
+			}
+		}
+	}
+
+	/**
+	 * Generate Zod type for a query parameter schema
+	 */
+	private generateQueryParamType(schema: OpenAPISchema, param: any): string {
+		// Handle references
+		if (schema.$ref) {
+			const refName = resolveRef(schema.$ref);
+			const schemaName = toCamelCase(refName, { prefix: this.options.prefix, suffix: this.options.suffix });
+			return `${schemaName}Schema`;
+		}
+
+		// Handle enums
+		if (schema.enum) {
+			const enumValues = schema.enum.map(v => (typeof v === "string" ? `"${v}"` : v)).join(", ");
+			return `z.enum([${enumValues}])`;
+		}
+
+		// Handle primitive types
+		const type = schema.type;
+
+		if (type === "string") {
+			let zodType = "z.string()";
+			// Add string validations
+			if (schema.minLength !== undefined) zodType = `${zodType}.min(${schema.minLength})`;
+			if (schema.maxLength !== undefined) zodType = `${zodType}.max(${schema.maxLength})`;
+			if (schema.pattern) zodType = `${zodType}.regex(/${schema.pattern}/)`;
+			if (schema.format === "email") zodType = `${zodType}.email()`;
+			if (schema.format === "uri" || schema.format === "url") zodType = `${zodType}.url()`;
+			if (schema.format === "uuid") zodType = `${zodType}.uuid()`;
+			return zodType;
+		}
+
+		if (type === "number" || type === "integer") {
+			let zodType = type === "integer" ? "z.number().int()" : "z.number()";
+			// Add number validations
+			if (schema.minimum !== undefined) {
+				zodType = schema.exclusiveMinimum ? `${zodType}.gt(${schema.minimum})` : `${zodType}.gte(${schema.minimum})`;
+			}
+			if (schema.maximum !== undefined) {
+				zodType = schema.exclusiveMaximum ? `${zodType}.lt(${schema.maximum})` : `${zodType}.lte(${schema.maximum})`;
+			}
+			return zodType;
+		}
+
+		if (type === "boolean") {
+			return "z.boolean()";
+		}
+
+		if (type === "array" && schema.items) {
+			const itemType = this.generateQueryParamType(schema.items, param);
+			let arrayType = `z.array(${itemType})`;
+			// Add array validations
+			if (schema.minItems !== undefined) arrayType = `${arrayType}.min(${schema.minItems})`;
+			if (schema.maxItems !== undefined) arrayType = `${arrayType}.max(${schema.maxItems})`;
+			return arrayType;
+		}
+
+		// Fallback to z.unknown() for unhandled types
+		return "z.unknown()";
+	}
+
+	/**
 	 * Generate native TypeScript enum
 	 */
 	private generateNativeEnum(name: string, schema: OpenAPISchema): void {
@@ -702,8 +898,8 @@ export class ZodSchemaGenerator {
 			// Generate TypeScript enum with Enum suffix (no prefix/suffix)
 			const enumName = `${name}Enum`;
 			const members = schema.enum
-				.map((value, index) => {
-					const key = typeof value === "string" ? this.toEnumKey(value) : `Value${index}`;
+				.map(value => {
+					const key = typeof value === "string" ? this.toEnumKey(value) : `N${value}`;
 					const val = typeof value === "string" ? `"${value}"` : value;
 					return `  ${key} = ${val}`;
 				})
@@ -876,9 +1072,13 @@ export class ZodSchemaGenerator {
 		const visited = new Set<string>();
 		const visiting = new Set<string>();
 		const aliases: string[] = [];
+		const circularDeps = new Set<string>(); // Track schemas involved in circular dependencies
 
 		// Performance optimization: Cache schema and type code lookups
 		const codeCache = new Map<string, string>();
+		for (const [name, code] of this.enums) {
+			codeCache.set(name, code);
+		}
 		for (const [name, code] of this.schemas) {
 			codeCache.set(name, code);
 		}
@@ -891,7 +1091,8 @@ export class ZodSchemaGenerator {
 
 			// Detect circular dependencies
 			if (visiting.has(name)) {
-				// For circular deps, we'll just continue - Zod can handle forward references in many cases
+				// Mark this as a circular dependency but don't add it yet
+				circularDeps.add(name);
 				return;
 			}
 
@@ -919,7 +1120,7 @@ export class ZodSchemaGenerator {
 			const deps = this.schemaDependencies.get(name);
 			if (deps && deps.size > 0) {
 				for (const dep of deps) {
-					if (this.schemas.has(dep) || this.types.has(dep)) {
+					if (this.enums.has(dep) || this.schemas.has(dep) || this.types.has(dep)) {
 						visit(dep);
 					}
 				}
@@ -927,13 +1128,26 @@ export class ZodSchemaGenerator {
 
 			visiting.delete(name);
 			visited.add(name);
-			sorted.push(name);
+
+			// Don't add circular dependencies yet - they need special handling
+			if (!circularDeps.has(name)) {
+				sorted.push(name);
+			}
 		};
 
-		// Visit all schemas and types
-		const allNames = new Set([...this.schemas.keys(), ...this.types.keys()]);
+		// Visit all enums, schemas and types
+		const allNames = new Set([...this.enums.keys(), ...this.schemas.keys(), ...this.types.keys()]);
 		for (const name of allNames) {
 			visit(name);
+		}
+
+		// Add circular dependencies at the end (before aliases)
+		// This ensures they come after their non-circular dependencies
+		for (const name of circularDeps) {
+			if (!visited.has(name)) {
+				sorted.push(name);
+				visited.add(name);
+			}
 		}
 
 		// Add aliases at the end

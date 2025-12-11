@@ -8,5 +8,5 @@ export {
 	SpecValidationError,
 } from "./errors";
 export { ZodSchemaGenerator } from "./generator";
-export type { ConfigFile, ExecutionMode, GeneratorOptions, OpenAPISpec, SpecConfig } from "./types";
+export type { ConfigFile, ExecutionMode, GeneratorOptions, OpenAPISpec } from "./types";
 export { defineConfig } from "./types";

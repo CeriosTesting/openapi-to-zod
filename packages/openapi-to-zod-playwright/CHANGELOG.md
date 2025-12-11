@@ -1,5 +1,22 @@
 # @cerios/openapi-to-zod-playwright
 
+## 0.2.0
+
+### Minor Changes
+
+- Adds query parameter schema generation and fixes test configuration
+
+  - Generates typed query parameter schemas from OpenAPI path operations, improving type safety for API client methods. Query parameters with arrays are automatically serialized as comma-separated strings to match Playwright's expected format.
+
+  - Derives client and service class names from output file paths to support multiple API clients in the same project, avoiding hardcoded "ApiClient" and "ApiService" names.
+
+  - Fixes TypeScript enum generation to use z.nativeEnum() instead of z.enum() for proper validation. Improves schema dependency sorting to handle circular dependencies by placing them after their non-circular dependencies.
+
+### Patch Changes
+
+- Updated dependencies
+  - @cerios/openapi-to-zod@0.2.0
+
 ## 0.1.4
 
 ### Patch Changes

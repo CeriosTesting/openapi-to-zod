@@ -282,19 +282,19 @@ describe("ZodSchemaGenerator", () => {
 		});
 
 		it("should apply prefix to enum names", () => {
-			const output = generateFromComplex({ prefix: "api", enumType: "typescript" });
+			const output = generateFromComplex({ prefix: "api", enumType: "typescript", nativeEnumType: "enum" });
 
 			// Enum type names don't get prefix, but schema variables do
 			expect(output).toContain("export enum UserTypeEnum");
 			expect(output).toContain("export const apiUserTypeSchema");
+			expect(output).toContain("z.nativeEnum(UserTypeEnum)");
 		});
 
 		it("should apply suffix to enum names", () => {
-			const output = generateFromComplex({ suffix: "Enum", enumType: "typescript" });
+			const output = generateFromComplex({ suffix: "Enum", enumType: "typescript", nativeEnumType: "enum" });
 
 			expect(output).toContain("export enum UserTypeEnum");
 		});
-
 		it("should maintain camelCase for schema variables with prefix/suffix", () => {
 			const output = generateFromSimple({ prefix: "api", suffix: "Model" });
 

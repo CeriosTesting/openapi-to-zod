@@ -104,9 +104,9 @@ describe("Comprehensive Compilation Tests", () => {
 			generateAndTrack("enum-typescript", {
 				input: TestUtils.getFixturePath("complex.yaml"),
 				enumType: "typescript",
+				nativeEnumType: "enum",
 			});
 		});
-
 		it("should generate with nativeEnumType: union (native mode)", () => {
 			generateAndTrack("native-enum-union", {
 				input: TestUtils.getFixturePath("complex.yaml"),
@@ -293,6 +293,7 @@ describe("Comprehensive Compilation Tests", () => {
 				input: TestUtils.getFixturePath("complex.yaml"),
 				mode: "strict",
 				enumType: "typescript",
+				nativeEnumType: "enum",
 				includeDescriptions: true,
 				useDescribe: true,
 				showStats: true,

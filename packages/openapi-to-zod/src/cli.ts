@@ -5,7 +5,6 @@ import { executeBatch, getBatchExitCode } from "./batch-executor";
 import { CliOptionsError } from "./errors";
 import { ZodSchemaGenerator } from "./generator";
 import type { ExecutionMode, GeneratorOptions } from "./types";
-import { FilePath } from "./types";
 import { loadConfig, mergeCliWithConfig, mergeConfigWithDefaults } from "./utils/config-loader";
 
 /**
@@ -139,8 +138,8 @@ async function executeSingleSpecMode(options: z.infer<typeof CliOptionsSchema>):
 	}
 
 	const generatorOptions: GeneratorOptions = {
-		input: FilePath.from(options.input),
-		output: FilePath.from(options.output),
+		input: options.input,
+		output: options.output,
 		mode: options.mode,
 		includeDescriptions: options.descriptions,
 		enumType: options.enumType,

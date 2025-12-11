@@ -43,7 +43,7 @@ export function generateEnum(name: string, values: (string | number)[], options:
 			.join("\n");
 
 		const enumCode = `export enum ${enumName} {\n${enumEntries}\n}`;
-		const schemaCode = `export const ${schemaName} = z.enum(${enumName});`;
+		const schemaCode = `export const ${schemaName} = z.nativeEnum(${enumName});`;
 		const typeCode = `export type ${name} = z.infer<typeof ${schemaName}>;`;
 
 		return { enumCode, schemaCode, typeCode };

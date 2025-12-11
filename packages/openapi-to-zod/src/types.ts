@@ -1,27 +1,4 @@
 /**
- * Branded type for file paths to prevent string confusion
- */
-export type FilePath = string & { readonly __brand: "FilePath" };
-
-/**
- * Branded type for schema names
- */
-export type SchemaName = string & { readonly __brand: "SchemaName" };
-
-/**
- * Type guards and factories for branded types
- */
-export const FilePath = {
-	from: (path: string): FilePath => path as FilePath,
-	is: (value: unknown): value is FilePath => typeof value === "string" && value.length > 0,
-};
-
-export const SchemaName = {
-	from: (name: string): SchemaName => name as SchemaName,
-	is: (value: unknown): value is SchemaName => typeof value === "string" && /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(value),
-};
-
-/**
  * Type generation mode
  * - 'inferred': Generate Zod schemas with z.infer<typeof schema> types (default)
  * - 'native': Generate native TypeScript types without Zod schemas
@@ -239,17 +216,6 @@ export interface OpenAPISpec {
 export type ExecutionMode = "parallel" | "sequential";
 
 /**
- * Configuration for a single OpenAPI spec
- * Extends GeneratorOptions with all the same properties
- */
-export interface SpecConfig extends GeneratorOptions {
-	/**
-	 * Optional name/identifier for this spec (for logging purposes)
-	 */
-	name?: string;
-}
-
-/**
  * Root configuration file structure
  */
 export interface ConfigFile {
@@ -263,7 +229,7 @@ export interface ConfigFile {
 	 * Array of OpenAPI specifications to process
 	 * Each spec must have input and output paths
 	 */
-	specs: SpecConfig[];
+	specs: GeneratorOptions[];
 
 	/**
 	 * Execution mode for batch processing

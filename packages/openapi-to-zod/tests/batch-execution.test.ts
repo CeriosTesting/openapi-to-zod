@@ -1,20 +1,18 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { executeBatch, getBatchExitCode } from "../src/batch-executor";
-import type { SpecConfig } from "../src/types";
+import type { GeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Batch Execution", () => {
 	describe("Parallel Execution", () => {
 		it("should process multiple specs in parallel", async () => {
-			const specs: (SpecConfig & { output: string })[] = [
+			const specs: (GeneratorOptions & { output: string })[] = [
 				{
-					name: "simple",
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-parallel-simple.ts"),
 				},
 				{
-					name: "composition",
 					input: TestUtils.getFixturePath("composition.yaml"),
 					output: TestUtils.getOutputPath("batch-parallel-composition.ts"),
 				},
@@ -30,14 +28,12 @@ describe("Batch Execution", () => {
 		});
 
 		it("should collect all errors in parallel mode", async () => {
-			const specs: (SpecConfig & { output: string })[] = [
+			const specs: (GeneratorOptions & { output: string })[] = [
 				{
-					name: "invalid",
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-parallel-invalid.ts"),
 				},
 				{
-					name: "valid",
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-parallel-valid.ts"),
 				},
@@ -52,19 +48,16 @@ describe("Batch Execution", () => {
 		});
 
 		it("should continue processing all specs even if some fail", async () => {
-			const specs: (SpecConfig & { output: string })[] = [
+			const specs: (GeneratorOptions & { output: string })[] = [
 				{
-					name: "invalid-1",
 					input: TestUtils.getFixturePath("non-existent.yaml"),
 					output: TestUtils.getOutputPath("batch-invalid-1.ts"),
 				},
 				{
-					name: "valid",
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-valid.ts"),
 				},
 				{
-					name: "invalid-2",
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-invalid-2.ts"),
 				},
@@ -79,14 +72,12 @@ describe("Batch Execution", () => {
 
 	describe("Sequential Execution", () => {
 		it("should process multiple specs sequentially", async () => {
-			const specs: (SpecConfig & { output: string })[] = [
+			const specs: (GeneratorOptions & { output: string })[] = [
 				{
-					name: "simple",
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-sequential-simple.ts"),
 				},
 				{
-					name: "constraints",
 					input: TestUtils.getFixturePath("constraints.yaml"),
 					output: TestUtils.getOutputPath("batch-sequential-constraints.ts"),
 				},
@@ -100,14 +91,12 @@ describe("Batch Execution", () => {
 		});
 
 		it("should collect all errors in sequential mode", async () => {
-			const specs: SpecConfig[] = [
+			const specs: GeneratorOptions[] = [
 				{
-					name: "invalid",
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-sequential-invalid.ts"),
 				},
 				{
-					name: "valid",
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-sequential-valid.ts"),
 				},
@@ -120,19 +109,16 @@ describe("Batch Execution", () => {
 		});
 
 		it("should process specs in order and continue on failure", async () => {
-			const specs: SpecConfig[] = [
+			const specs: GeneratorOptions[] = [
 				{
-					name: "first",
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-seq-first.ts"),
 				},
 				{
-					name: "second-fails",
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-seq-second.ts"),
 				},
 				{
-					name: "third",
 					input: TestUtils.getFixturePath("composition.yaml"),
 					output: TestUtils.getOutputPath("batch-seq-third.ts"),
 				},
@@ -147,7 +133,7 @@ describe("Batch Execution", () => {
 
 	describe("Exit Code Handling", () => {
 		it("should return exit code 0 for all successful specs", async () => {
-			const specs: SpecConfig[] = [
+			const specs: GeneratorOptions[] = [
 				{
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-exit-success.ts"),
@@ -159,7 +145,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should return exit code 1 if any spec fails", async () => {
-			const specs: SpecConfig[] = [
+			const specs: GeneratorOptions[] = [
 				{
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-exit-mixed-1.ts"),
@@ -177,9 +163,8 @@ describe("Batch Execution", () => {
 
 	describe("Error Reporting", () => {
 		it("should report error messages without stack traces", async () => {
-			const specs: SpecConfig[] = [
+			const specs: GeneratorOptions[] = [
 				{
-					name: "invalid-file",
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-error-report.ts"),
 				},
@@ -198,8 +183,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should handle large batch of specs", async () => {
-			const specs: SpecConfig[] = Array.from({ length: 10 }, (_, i) => ({
-				name: `spec-${i}`,
+			const specs: GeneratorOptions[] = Array.from({ length: 10 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`batch-large-${i}.ts`),
 			}));

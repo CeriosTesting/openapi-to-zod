@@ -217,8 +217,8 @@ describe("Multi-Content-Type Support", () => {
 
 			const output = generator.generateString();
 
-			// Should define ApiClientOptions type with all properties
-			expect(output).toContain("export type ApiClientOptions");
+			// Should define ApiRequestContextOptions type with all properties
+			expect(output).toContain("export type ApiRequestContextOptions");
 			expect(output).toContain("data?:");
 			expect(output).toContain("form?:");
 			expect(output).toContain("multipart?:");
@@ -230,7 +230,7 @@ describe("Multi-Content-Type Support", () => {
 				output.indexOf("export class ApiClient"),
 				output.indexOf("export class ApiService")
 			);
-			expect(clientSection).toContain("options?: ApiClientOptions");
+			expect(clientSection).toContain("options?: ApiRequestContextOptions");
 		});
 
 		it("should allow client to accept any Playwright option", () => {
@@ -242,8 +242,8 @@ describe("Multi-Content-Type Support", () => {
 
 			const output = generator.generateString();
 
-			// ApiClientOptions should include Playwright request options
-			expect(output).toContain("export type ApiClientOptions");
+			// ApiRequestContextOptions should include Playwright request options
+			expect(output).toContain("export type ApiRequestContextOptions");
 			expect(output).toContain("timeout?:");
 			expect(output).toContain("failOnStatusCode?:");
 
@@ -252,7 +252,7 @@ describe("Multi-Content-Type Support", () => {
 				output.indexOf("export class ApiClient"),
 				output.indexOf("export class ApiService")
 			);
-			expect(clientSection).toContain("options?: ApiClientOptions");
+			expect(clientSection).toContain("options?: ApiRequestContextOptions");
 		});
 	});
 });

@@ -1,5 +1,6 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
+import { toPascalCase } from "../utils//string-utils";
 
 interface ResponseInfo {
 	statusCode: string;
@@ -19,6 +20,7 @@ interface EndpointInfo {
 	parameters?: any[];
 	requestBody?: any;
 	responses: ResponseInfo[];
+	queryParamSchemaName?: string; // Name of the generated query parameter schema
 }
 
 /**
@@ -92,8 +94,17 @@ function deduplicateSuffixes(suffixes: string[]): string[] {
  * Generates the ApiService class code
  * The service layer handles content-type mapping and response validation
  * Separate methods for each request content-type and status code combination
+ * @param spec - OpenAPI specification
+ * @param schemaImports - Set to collect schema import names
+ * @param className - Name for the generated service class (default: "ApiService")
+ * @param clientClassName - Name of the client class to inject (default: "ApiClient")
  */
-export function generateServiceClass(spec: OpenAPISpec, schemaImports: Set<string>): string {
+export function generateServiceClass(
+	spec: OpenAPISpec,
+	schemaImports: Set<string>,
+	className: string = "ApiService",
+	clientClassName: string = "ApiClient"
+): string {
 	const endpoints = extractEndpoints(spec);
 
 	if (endpoints.length === 0) {
@@ -108,8 +119,8 @@ export function generateServiceClass(spec: OpenAPISpec, schemaImports: Set<strin
  * Separate methods for each request content-type and status code
  * Response validation with Zod schemas
  */
-export class ApiService {
-	constructor(private readonly client: ApiClient) {}
+export class ${className} {
+	constructor(private readonly client: ${clientClassName}) {}
 
 ${methods}
 }
@@ -202,6 +213,22 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 				}
 			}
 
+			// Check if operation has query parameters
+			let queryParamSchemaName: string | undefined;
+			if (operation.operationId && operation.parameters && Array.isArray(operation.parameters)) {
+				const hasQueryParams = operation.parameters.some(
+					(param: any) => param && typeof param === "object" && param.in === "query"
+				);
+				if (hasQueryParams) {
+					// Generate schema name matching the base generator pattern
+					// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
+					const pascalOperationId = operation.operationId.includes("-")
+						? toPascalCase(operation.operationId)
+						: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
+					queryParamSchemaName = `${pascalOperationId}QueryParams`;
+				}
+			}
+
 			endpoints.push({
 				path,
 				method: method.toUpperCase(),
@@ -210,6 +237,7 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 				parameters: operation.parameters,
 				requestBody: operation.requestBody,
 				responses,
+				queryParamSchemaName,
 			});
 		}
 	}
@@ -425,12 +453,19 @@ function generateServiceMethod(
 	if (needsOptions) {
 		const optionsProps: string[] = [];
 
-		// Add query parameters (renamed to params)
+		// Add query parameters with typed schema if available
 		if (hasQueryParams) {
-			optionsProps.push("params?: { [key: string]: string | number | boolean } | URLSearchParams | string");
+			if (endpoint.queryParamSchemaName) {
+				// Use the typed query parameter schema
+				schemaImports.add(endpoint.queryParamSchemaName);
+				optionsProps.push(`params?: ${endpoint.queryParamSchemaName}`);
+			} else {
+				// Fallback to generic params
+				optionsProps.push("params?: { [key: string]: string | number | boolean } | URLSearchParams | string");
+			}
 		}
 
-		// Add headers
+		// Add headers (keep generic)
 		if (hasHeaderParams) {
 			optionsProps.push("headers?: { [key: string]: string }");
 		}
@@ -474,7 +509,6 @@ function generateServiceMethod(
 		const typeName = response.schemaName.endsWith("Schema") ? response.schemaName.slice(0, -6) : response.schemaName;
 		returnType = `Promise<${typeName}>`;
 		schemaImports.add(response.schemaName);
-		schemaImports.add(typeName);
 	} else if (response?.hasBody && response.inlineSchema) {
 		const inlineInfo = generateInlineSchemaCode(response.inlineSchema);
 		if (inlineInfo) {
@@ -499,7 +533,7 @@ function generateServiceMethod(
 				? "options"
 				: "{}";
 
-	// Build validation code
+	// Build validation code (for response only, not query params)
 	const validationCode: string[] = [];
 
 	// Add client call

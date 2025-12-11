@@ -8,12 +8,6 @@ export {
 	SpecValidationError,
 } from "./errors";
 export { PlaywrightGenerator } from "./playwright-generator";
-export type {
-	FilePath,
-	PlaywrightConfigFile,
-	PlaywrightGeneratorOptions,
-	PlaywrightSpecConfig,
-	SchemaName,
-} from "./types";
+export type { PlaywrightConfigFile, PlaywrightGeneratorOptions } from "./types";
 export { defineConfig } from "./types";
 export { loadConfig, mergeCliWithConfig, mergeConfigWithDefaults } from "./utils/config-loader";

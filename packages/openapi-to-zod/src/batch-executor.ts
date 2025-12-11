@@ -1,12 +1,12 @@
 import { ConfigurationError } from "./errors";
 import { ZodSchemaGenerator } from "./generator";
-import type { ExecutionMode, SpecConfig } from "./types";
+import type { ExecutionMode, GeneratorOptions } from "./types";
 
 /**
  * Result of processing a single spec
  */
 interface SpecResult {
-	spec: SpecConfig;
+	spec: GeneratorOptions;
 	success: boolean;
 	error?: string;
 }
@@ -24,11 +24,9 @@ interface BatchExecutionSummary {
 /**
  * Process a single spec and return result with error handling
  */
-async function processSpec(spec: SpecConfig, index: number, total: number): Promise<SpecResult> {
-	const specName = spec.name || spec.input;
-
+async function processSpec(spec: GeneratorOptions, index: number, total: number): Promise<SpecResult> {
 	// Live progress to stdout
-	console.log(`Processing [${index + 1}/${total}] ${specName}...`);
+	console.log(`Processing [${index + 1}/${total}] ${spec.input}...`);
 
 	try {
 		const generator = new ZodSchemaGenerator(spec);
@@ -56,7 +54,7 @@ async function processSpec(spec: SpecConfig, index: number, total: number): Prom
  * Execute specs in parallel using Promise.allSettled
  * Continues processing all specs even if some fail
  */
-async function executeParallel(specs: SpecConfig[]): Promise<SpecResult[]> {
+async function executeParallel(specs: GeneratorOptions[]): Promise<SpecResult[]> {
 	console.log(`\nExecuting ${specs.length} spec(s) in parallel...\n`);
 
 	const promises = specs.map((spec, index) => processSpec(spec, index, specs.length));
@@ -81,7 +79,7 @@ async function executeParallel(specs: SpecConfig[]): Promise<SpecResult[]> {
  * Execute specs sequentially one at a time
  * Continues processing all specs even if some fail
  */
-async function executeSequential(specs: SpecConfig[]): Promise<SpecResult[]> {
+async function executeSequential(specs: GeneratorOptions[]): Promise<SpecResult[]> {
 	console.log(`\nExecuting ${specs.length} spec(s) sequentially...\n`);
 
 	const results: SpecResult[] = [];
@@ -109,8 +107,7 @@ function printSummary(summary: BatchExecutionSummary): void {
 		console.log("\nFailed specs:");
 		for (const result of summary.results) {
 			if (!result.success) {
-				const specName = result.spec.name || result.spec.input;
-				console.error(`  ✗ ${specName}`);
+				console.error(`  ✗ ${result.spec.input}`);
 				console.error(`    Error: ${result.error}`);
 			}
 		}
@@ -128,7 +125,7 @@ function printSummary(summary: BatchExecutionSummary): void {
  * @throws Never throws - collects all errors and reports them
  */
 export async function executeBatch(
-	specs: SpecConfig[],
+	specs: GeneratorOptions[],
 	executionMode: ExecutionMode = "parallel"
 ): Promise<BatchExecutionSummary> {
 	if (specs.length === 0) {

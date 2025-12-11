@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ConfigFile, GeneratorOptions, SpecConfig } from "../src/types";
+import type { ConfigFile, GeneratorOptions } from "../src/types";
 import { loadConfig, mergeCliWithConfig, mergeConfigWithDefaults } from "../src/utils/config-loader";
 import { TestUtils } from "./utils/test-utils";
 
@@ -113,7 +113,7 @@ describe("Config Loading", () => {
 
 	describe("mergeCliWithConfig", () => {
 		it("should override config options with CLI options", () => {
-			const specConfig: SpecConfig = {
+			const GeneratorOptions: GeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "normal",
@@ -126,7 +126,7 @@ describe("Config Loading", () => {
 				prefix: "cli",
 			};
 
-			const merged = mergeCliWithConfig(specConfig, cliOptions);
+			const merged = mergeCliWithConfig(GeneratorOptions, cliOptions);
 
 			expect(merged.mode).toBe("strict");
 			expect(merged.prefix).toBe("cli");
@@ -135,7 +135,7 @@ describe("Config Loading", () => {
 		});
 
 		it("should ignore undefined CLI options", () => {
-			const specConfig: SpecConfig = {
+			const GeneratorOptions: GeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "normal",
@@ -147,20 +147,20 @@ describe("Config Loading", () => {
 				prefix: "test",
 			};
 
-			const merged = mergeCliWithConfig(specConfig, cliOptions);
+			const merged = mergeCliWithConfig(GeneratorOptions, cliOptions);
 
 			expect(merged.mode).toBe("normal");
 			expect(merged.prefix).toBe("test");
 		});
 
 		it("should handle empty CLI options", () => {
-			const specConfig: SpecConfig = {
+			const GeneratorOptions: GeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "loose",
 			};
 
-			const merged = mergeCliWithConfig(specConfig, {});
+			const merged = mergeCliWithConfig(GeneratorOptions, {});
 
 			expect(merged.mode).toBe("loose");
 			expect(merged.input).toBe("api.yaml");

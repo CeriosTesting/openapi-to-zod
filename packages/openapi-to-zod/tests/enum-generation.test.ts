@@ -44,15 +44,17 @@ describe("Enum Generation", () => {
 
 	describe("TypeScript Enums", () => {
 		function generateWithTSEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
+			const outputFile = `enum-ts-${fixture.replace(".yaml", "")}.ts`;
 			const generator = new ZodSchemaGenerator({
 				input: TestUtils.getFixturePath(fixture),
-				output: TestUtils.getOutputPath("enum-ts.ts"),
+				output: TestUtils.getOutputPath(outputFile),
 				mode: "normal",
 				enumType: "typescript",
+				nativeEnumType: "enum",
 				...options,
 			});
 			generator.generate();
-			return readFileSync(TestUtils.getOutputPath("enum-ts.ts"), "utf-8");
+			return readFileSync(TestUtils.getOutputPath(outputFile), "utf-8");
 		}
 
 		it("should generate TypeScript enums when specified", () => {
@@ -66,7 +68,7 @@ describe("Enum Generation", () => {
 		it("should reference TypeScript enums in schemas", () => {
 			const output = generateWithTSEnum("simple.yaml");
 
-			expect(output).toContain("z.enum(StatusEnum)");
+			expect(output).toContain("z.nativeEnum(StatusEnum)");
 		});
 
 		it("should include type inference for TypeScript enums", () => {
@@ -92,15 +94,17 @@ describe("Enum Generation", () => {
 
 	describe("Enum Naming", () => {
 		function generateWithTSEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
+			const outputFile = `enum-naming-${fixture.replace(".yaml", "")}.ts`;
 			const generator = new ZodSchemaGenerator({
 				input: TestUtils.getFixturePath(fixture),
-				output: TestUtils.getOutputPath("enum-ts.ts"),
+				output: TestUtils.getOutputPath(outputFile),
 				mode: "normal",
 				enumType: "typescript",
+				nativeEnumType: "enum",
 				...options,
 			});
 			generator.generate();
-			return readFileSync(TestUtils.getOutputPath("enum-ts.ts"), "utf-8");
+			return readFileSync(TestUtils.getOutputPath(outputFile), "utf-8");
 		}
 
 		it("should convert enum values to PascalCase for TypeScript enums", () => {
@@ -131,15 +135,17 @@ describe("Enum Generation", () => {
 		}
 
 		function generateWithTSEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
+			const outputFile = `enum-edge-${fixture.replace(".yaml", "")}.ts`;
 			const generator = new ZodSchemaGenerator({
 				input: TestUtils.getFixturePath(fixture),
-				output: TestUtils.getOutputPath("enum-ts.ts"),
+				output: TestUtils.getOutputPath(outputFile),
 				mode: "normal",
 				enumType: "typescript",
+				nativeEnumType: "enum",
 				...options,
 			});
 			generator.generate();
-			return readFileSync(TestUtils.getOutputPath("enum-ts.ts"), "utf-8");
+			return readFileSync(TestUtils.getOutputPath(outputFile), "utf-8");
 		}
 
 		it("should handle single value enum", () => {

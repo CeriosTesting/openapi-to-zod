@@ -1,14 +1,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { executeBatch } from "../src/batch-executor";
-import type { SpecConfig } from "../src/types";
+import type { GeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Batch Execution with Request/Response Options", () => {
 	it("should process multiple specs with different request/response options", async () => {
-		const specs: (SpecConfig & { output: string })[] = [
+		const specs: (GeneratorOptions & { output: string })[] = [
 			{
-				name: "Mixed TypeMode",
 				input: TestUtils.getFixturePath("type-mode.yaml"),
 				output: TestUtils.getOutputPath("batch-mixed-typemode.ts"),
 				request: {
@@ -20,7 +19,6 @@ describe("Batch Execution with Request/Response Options", () => {
 				},
 			},
 			{
-				name: "Native Requests",
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath("batch-native-requests.ts"),
 				request: {
@@ -29,7 +27,6 @@ describe("Batch Execution with Request/Response Options", () => {
 				nativeEnumType: "enum",
 			},
 			{
-				name: "All Inferred (Default)",
 				input: TestUtils.getFixturePath("composition.yaml"),
 				output: TestUtils.getOutputPath("batch-inferred-responses.ts"),
 				mode: "normal",
@@ -67,15 +64,13 @@ describe("Batch Execution with Request/Response Options", () => {
 			includeDescriptions: true,
 		};
 
-		const specs: (SpecConfig & { output: string })[] = [
+		const specs: (GeneratorOptions & { output: string })[] = [
 			{
-				name: "Uses defaults",
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath("batch-mixed-typemode.ts"),
 				...defaults,
 			},
 			{
-				name: "Overrides with native requests",
 				input: TestUtils.getFixturePath("composition.yaml"),
 				output: TestUtils.getOutputPath("batch-native-requests.ts"),
 				...defaults,
@@ -100,9 +95,8 @@ describe("Batch Execution with Request/Response Options", () => {
 	});
 
 	it("should handle complex nested options in batch mode", async () => {
-		const specs: (SpecConfig & { output: string })[] = [
+		const specs: (GeneratorOptions & { output: string })[] = [
 			{
-				name: "Complex Config",
 				input: TestUtils.getFixturePath("type-mode.yaml"),
 				output: TestUtils.getOutputPath("batch-mixed-typemode.ts"),
 				mode: "normal", // Root mode

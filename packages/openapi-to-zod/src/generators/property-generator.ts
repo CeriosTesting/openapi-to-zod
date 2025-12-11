@@ -412,7 +412,8 @@ export class PropertyGenerator {
 				{
 					passthrough: needsPassthrough,
 					discriminatorMapping: schema.discriminator?.mapping,
-				}
+				},
+				currentSchema
 			);
 
 			// Apply unevaluatedProperties if specified
@@ -437,7 +438,8 @@ export class PropertyGenerator {
 				{
 					passthrough: needsPassthrough,
 					discriminatorMapping: schema.discriminator?.mapping,
-				}
+				},
+				currentSchema
 			);
 
 			// Apply unevaluatedProperties if specified

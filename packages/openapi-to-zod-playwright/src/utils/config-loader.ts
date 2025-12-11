@@ -1,6 +1,6 @@
 import { cosmiconfig, type Loader } from "cosmiconfig";
 import { z } from "zod";
-import type { PlaywrightConfigFile, PlaywrightGeneratorOptions, PlaywrightSpecConfig } from "../types";
+import type { PlaywrightConfigFile, PlaywrightGeneratorOptions } from "../types";
 
 /**
  * Zod schema for strict validation of Playwright config files
@@ -180,9 +180,9 @@ export async function loadConfig(configPath?: string): Promise<PlaywrightConfigF
  * Automatically enforces schemaType: "all" for all specs
  *
  * @param config - Validated Playwright configuration file
- * @returns Array of fully resolved PlaywrightSpecConfig objects with schemaType enforced to "all"
+ * @returns Array of fully resolved PlaywrightGeneratorOptions objects with schemaType enforced to "all"
  */
-export function mergeConfigWithDefaults(config: PlaywrightConfigFile): PlaywrightSpecConfig[] {
+export function mergeConfigWithDefaults(config: PlaywrightConfigFile): PlaywrightGeneratorOptions[] {
 	if (!config?.specs || !Array.isArray(config.specs)) {
 		throw new Error("Invalid config: specs array is required");
 	}
@@ -191,7 +191,7 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): Playwrigh
 
 	return config.specs.map(spec => {
 		// Deep merge: spec options override defaults
-		const merged: PlaywrightSpecConfig = {
+		const merged: PlaywrightGeneratorOptions = {
 			// Apply defaults first
 			mode: defaults.mode,
 			includeDescriptions: defaults.includeDescriptions,
@@ -225,7 +225,7 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): Playwrigh
  * @returns Merged PlaywrightGeneratorOptions with CLI taking precedence and schemaType enforced
  */
 export function mergeCliWithConfig(
-	specConfig: PlaywrightSpecConfig,
+	specConfig: PlaywrightGeneratorOptions,
 	cliOptions: Partial<PlaywrightGeneratorOptions>
 ): PlaywrightGeneratorOptions {
 	// CLI options override everything, but schemaType is always "all"

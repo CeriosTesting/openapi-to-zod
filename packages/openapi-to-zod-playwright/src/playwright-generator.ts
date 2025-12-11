@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, relative } from "node:path";
+import { basename, dirname, extname, relative } from "node:path";
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { ZodSchemaGenerator } from "@cerios/openapi-to-zod";
 import { parse } from "yaml";
@@ -8,6 +8,7 @@ import { generateClientClass } from "./generators/client-generator";
 import { generateServiceClass } from "./generators/service-generator";
 import type { PlaywrightGeneratorOptions } from "./types";
 import { LRUCache } from "./utils/lru-cache";
+import { toPascalCase } from "./utils/string-utils";
 
 /**
  * Main generator class for Playwright API clients
@@ -156,24 +157,17 @@ export class PlaywrightGenerator {
 	 * @returns The generated TypeScript code including schemas, client, and service
 	 */
 	generateString(): string {
-		try {
-			// Ensure spec is parsed
-			if (!this.spec) {
-				this.spec = this.parseSpec();
-			}
-
-			const schemasString = this.generateSchemasString();
-			const clientString = this.generateClientString();
-			const includeService = this.options.generateService ?? true;
-			const serviceString = includeService ? this.generateServiceString() : "";
-
-			return this.combineIntoSingleFile(schemasString, clientString, serviceString);
-		} finally {
-			// Memory optimization: Clear spec after generation for large specs
-			if (this.spec && JSON.stringify(this.spec).length > 100000) {
-				this.spec = null;
-			}
+		// Ensure spec is parsed
+		if (!this.spec) {
+			this.spec = this.parseSpec();
 		}
+
+		const schemasString = this.generateSchemasString();
+		const clientString = this.generateClientString();
+		const includeService = this.options.generateService ?? true;
+		const serviceString = includeService ? this.generateServiceString() : "";
+
+		return this.combineIntoSingleFile(schemasString, clientString, serviceString);
 	}
 
 	/**
@@ -200,7 +194,8 @@ export class PlaywrightGenerator {
 			this.spec = this.parseSpec();
 		}
 
-		return generateClientClass(this.spec);
+		const clientClassName = this.deriveClassName(this.options.outputClient || this.options.output, "Client");
+		return generateClientClass(this.spec, clientClassName);
 	}
 
 	/**
@@ -214,7 +209,9 @@ export class PlaywrightGenerator {
 		}
 
 		const schemaImports = new Set<string>();
-		return generateServiceClass(this.spec, schemaImports);
+		const serviceClassName = this.deriveClassName(this.options.outputService || this.options.output, "Service");
+		const clientClassName = this.deriveClassName(this.options.outputClient || this.options.output, "Client");
+		return generateServiceClass(this.spec, schemaImports, serviceClassName, clientClassName);
 	}
 
 	/**
@@ -337,7 +334,7 @@ export class PlaywrightGenerator {
 		const clientString = this.generateClientString();
 
 		// Client is a passthrough and doesn't need schema imports
-		return `import type { APIRequestContext, APIResponse } from "@playwright/test";\n\n${clientString}`;
+		return `import type { APIRequestContext, APIResponse } from "@playwright/test";\n${clientString}`;
 	}
 
 	/**
@@ -348,15 +345,30 @@ export class PlaywrightGenerator {
 		const relativeImportMain = this.generateRelativeImport(servicePath, mainPath);
 		const relativeImportClient = this.generateRelativeImport(servicePath, clientPath);
 
+		// Derive the client class name from the client file path
+		const clientClassName = this.deriveClassName(clientPath, "Client");
+
 		// Extract schema/type names and filter to only those used in service
 		const allSchemas = this.extractSchemaNames();
-		const usedSchemas = allSchemas.filter(schemaName => serviceString.includes(schemaName));
 
-		// Separate schemas (values) from types (type-only imports)
-		// Schemas end with "Schema" and are used as values for .parse()
-		// Types are TypeScript types only
-		const schemaValues = usedSchemas.filter(name => name.endsWith("Schema"));
-		const schemaTypes = usedSchemas.filter(name => !name.endsWith("Schema"));
+		// Schemas ending with "Schema" are used as values for .parse()
+		const schemaValues = allSchemas.filter(name => name.endsWith("Schema") && serviceString.includes(name));
+
+		// For types, import those used in:
+		// 1. Return type annotations: Promise<TypeName>
+		// 2. Parameter types (e.g., request bodies): data: TypeName
+		// 3. Query parameter types: params?: TypeName
+		const schemaTypes = allSchemas.filter(name => {
+			if (name.endsWith("Schema")) return false; // Skip schemas
+			if (!serviceString.includes(name)) return false; // Must appear in the code
+			// Match return types, parameter types, or query param types
+			const returnPattern = new RegExp(`Promise<${name}(?:\\[\\])?>`);
+			const paramPattern = new RegExp(`(?:data|form|multipart)\\??:\\s*${name}\\b`);
+			const queryParamPattern = new RegExp(`params\\??:\\s*${name}\\b`);
+			return (
+				returnPattern.test(serviceString) || paramPattern.test(serviceString) || queryParamPattern.test(serviceString)
+			);
+		});
 
 		let schemaImportStatement = "";
 		if (schemaValues.length > 0) {
@@ -369,7 +381,7 @@ export class PlaywrightGenerator {
 		// Only import ApiClientOptions/MultipartFormValue if service uses them
 		const usesOptions = serviceString.includes("ApiClientOptions");
 		const usesMultipart = serviceString.includes("MultipartFormValue");
-		const clientImports = ["ApiClient"];
+		const clientImports = [clientClassName];
 		if (usesOptions) clientImports.push("type ApiClientOptions");
 		if (usesMultipart) clientImports.push("type MultipartFormValue");
 
@@ -419,5 +431,39 @@ export class PlaywrightGenerator {
 		}
 
 		return Array.from(names);
+	}
+
+	/**
+	 * Derive a class name from an output file path
+	 * Examples:
+	 *   "api-client.ts" + "Client" -> "ApiClient"
+	 *   "my-api-client.ts" + "Client" -> "MyApiClient"
+	 *   "user-service.ts" + "Service" -> "UserService"
+	 *   "tests/output/petstore.ts" + "Client" -> "PetstoreClient"
+	 */
+	private deriveClassName(filePath: string | undefined, suffix: "Client" | "Service"): string {
+		if (!filePath) {
+			return suffix === "Client" ? "ApiClient" : "ApiService";
+		}
+
+		// Extract filename without extension
+		const fileName = basename(filePath, extname(filePath));
+
+		// Remove common suffixes to avoid duplication (e.g., "api-client" -> "api")
+		const baseName = fileName
+			.replace(/-client$/i, "")
+			.replace(/-service$/i, "")
+			.replace(/client$/i, "")
+			.replace(/service$/i, "");
+
+		// Convert to PascalCase and append suffix
+		const pascalName = toPascalCase(baseName);
+
+		// If the name already ends with the suffix, don't duplicate
+		if (pascalName.endsWith(suffix)) {
+			return pascalName;
+		}
+
+		return `${pascalName}${suffix}`;
 	}
 }

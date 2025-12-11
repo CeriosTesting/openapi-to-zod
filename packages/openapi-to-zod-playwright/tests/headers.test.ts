@@ -30,16 +30,16 @@ describe("Headers", () => {
 	it("should use raw Playwright options with headers", () => {
 		const output = generateOutput();
 
-		// Client should define ApiClientOptions type with headers
-		expect(output).toContain("export type ApiClientOptions");
+		// Client should define ApiRequestContextOptions type with headers
+		expect(output).toContain("export type ApiRequestContextOptions");
 		expect(output).toContain("headers?:");
 
-		// Client methods should use ApiClientOptions
+		// Client methods should use ApiRequestContextOptions
 		const clientSection = output.substring(
 			output.indexOf("export class ApiClient"),
 			output.lastIndexOf("export class")
 		);
-		expect(clientSection).toContain("options?: ApiClientOptions");
+		expect(clientSection).toContain("options?: ApiRequestContextOptions");
 	});
 
 	it("should generate methods for endpoints with headers", () => {

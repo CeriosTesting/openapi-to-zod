@@ -1,0 +1,110 @@
+openapi: 3.0.0
+info:
+  title: Query Parameters Validation API
+  version: 1.0.0
+paths:
+  /api/users:
+    get:
+      operationId: searchUsers
+      summary: Find users with typed query parameters
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: age
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [admin, user, guest]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+  /api/posts/{postId}:
+    get:
+      operationId: getPost
+      summary: Get post with path and query params
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: includeComments
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: commentLimit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+  /api/simple:
+    get:
+      operationId: getSimple
+      summary: Endpoint without query parameters
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+components:
+  schemas:
+    UserList:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string

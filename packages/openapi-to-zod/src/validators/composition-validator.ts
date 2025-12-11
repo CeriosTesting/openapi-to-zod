@@ -19,7 +19,8 @@ export function generateUnion(
 	discriminator: string | undefined,
 	isNullable: boolean,
 	context: CompositionValidatorContext,
-	options?: UnionOptions
+	options?: UnionOptions,
+	currentSchema?: string
 ): string {
 	if (discriminator) {
 		// Apply discriminator mapping if provided
@@ -29,7 +30,7 @@ export function generateUnion(
 		}
 
 		// Use discriminated union for better type inference
-		let schemaStrings = resolvedSchemas.map(s => context.generatePropertySchema(s));
+		let schemaStrings = resolvedSchemas.map(s => context.generatePropertySchema(s, currentSchema));
 		if (options?.passthrough) {
 			schemaStrings = schemaStrings.map(s => (s.includes(".catchall(") ? s : `${s}.catchall(z.unknown())`));
 		}
@@ -37,7 +38,7 @@ export function generateUnion(
 		return wrapNullable(union, isNullable);
 	}
 
-	let schemaStrings = schemas.map(s => context.generatePropertySchema(s));
+	let schemaStrings = schemas.map(s => context.generatePropertySchema(s, currentSchema));
 	if (options?.passthrough) {
 		schemaStrings = schemaStrings.map(s => (s.includes(".catchall(") ? s : `${s}.catchall(z.unknown())`));
 	}

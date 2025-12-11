@@ -34,6 +34,7 @@ describe("Integration Tests", () => {
 				output: outputPath,
 				mode: "normal",
 				enumType: "typescript",
+				nativeEnumType: "enum",
 			};
 
 			const generator = new ZodSchemaGenerator(options);

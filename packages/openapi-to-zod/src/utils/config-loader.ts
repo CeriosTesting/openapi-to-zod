@@ -1,6 +1,6 @@
 import { cosmiconfig, type Loader } from "cosmiconfig";
 import { z } from "zod";
-import type { ConfigFile, GeneratorOptions, SpecConfig } from "../types";
+import type { ConfigFile, GeneratorOptions } from "../types";
 
 /**
  * Zod schema for strict validation of config files
@@ -171,9 +171,9 @@ export async function loadConfig(configPath?: string): Promise<ConfigFile> {
  * CLI arguments have highest precedence and are merged separately in CLI layer
  *
  * @param config - Validated configuration file
- * @returns Array of fully resolved SpecConfig objects
+ * @returns Array of fully resolved GeneratorOptions objects
  */
-export function mergeConfigWithDefaults(config: ConfigFile): SpecConfig[] {
+export function mergeConfigWithDefaults(config: ConfigFile): GeneratorOptions[] {
 	if (!config?.specs || !Array.isArray(config.specs)) {
 		throw new Error("Invalid config: specs array is required");
 	}
@@ -182,7 +182,7 @@ export function mergeConfigWithDefaults(config: ConfigFile): SpecConfig[] {
 
 	return config.specs.map(spec => {
 		// Deep merge: spec options override defaults
-		const merged: SpecConfig = {
+		const merged: GeneratorOptions = {
 			// Apply defaults first
 			mode: defaults.mode,
 			includeDescriptions: defaults.includeDescriptions,
@@ -209,7 +209,10 @@ export function mergeConfigWithDefaults(config: ConfigFile): SpecConfig[] {
  * @param cliOptions - Options provided via CLI arguments
  * @returns Merged GeneratorOptions with CLI taking precedence
  */
-export function mergeCliWithConfig(specConfig: SpecConfig, cliOptions: Partial<GeneratorOptions>): GeneratorOptions {
+export function mergeCliWithConfig(
+	specConfig: GeneratorOptions,
+	cliOptions: Partial<GeneratorOptions>
+): GeneratorOptions {
 	// CLI options override everything
 	return {
 		...specConfig,
