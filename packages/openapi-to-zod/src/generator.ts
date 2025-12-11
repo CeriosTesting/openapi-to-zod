@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { parse } from "yaml";
 import { ConfigurationError, FileOperationError, SchemaGenerationError, SpecValidationError } from "./errors";
 import { generateEnum } from "./generators/enum-generator";
@@ -208,6 +209,16 @@ export class ZodSchemaGenerator {
 	}
 
 	/**
+	 * Ensure directory exists for a file path
+	 */
+	private ensureDirectoryExists(filePath: string): void {
+		const dir = dirname(filePath);
+		if (!existsSync(dir)) {
+			mkdirSync(dir, { recursive: true });
+		}
+	}
+
+	/**
 	 * Generate the complete output file
 	 */
 	generate(): void {
@@ -219,6 +230,7 @@ export class ZodSchemaGenerator {
 			);
 		}
 		const output = this.generateString();
+		this.ensureDirectoryExists(this.options.output);
 		writeFileSync(this.options.output, output);
 	}
 

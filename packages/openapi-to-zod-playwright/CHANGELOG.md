@@ -1,5 +1,13 @@
 # @cerios/openapi-to-zod-playwright
 
+## 0.1.4
+
+### Patch Changes
+
+- Prevents file write errors when output directories don't exist by creating them recursively before writing generated files.
+- Updated dependencies
+  - @cerios/openapi-to-zod@0.1.2
+
 ## 0.1.3
 
 ### Patch Changes

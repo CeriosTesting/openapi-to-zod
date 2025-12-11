@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative } from "node:path";
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { ZodSchemaGenerator } from "@cerios/openapi-to-zod";
@@ -50,6 +50,16 @@ export class PlaywrightGenerator {
 	}
 
 	/**
+	 * Ensure directory exists for a file path
+	 */
+	private ensureDirectoryExists(filePath: string): void {
+		const dir = dirname(filePath);
+		if (!existsSync(dir)) {
+			mkdirSync(dir, { recursive: true });
+		}
+	}
+
+	/**
 	 * Generate the complete output file(s)
 	 * Handles splitting into multiple files based on outputClient and outputService options
 	 */
@@ -83,6 +93,7 @@ export class PlaywrightGenerator {
 			if (!hasClientSplit && !hasServiceSplit) {
 				// Strategy 1: Everything in one file (default)
 				const output = this.combineIntoSingleFile(schemasString, clientString, serviceString);
+				this.ensureDirectoryExists(this.options.output);
 				writeFileSync(this.options.output, output, "utf-8");
 				console.log(`✓ Successfully generated ${this.options.output}`);
 			} else if (hasClientSplit && !hasServiceSplit) {
@@ -99,6 +110,8 @@ export class PlaywrightGenerator {
 					: schemasString;
 				const clientOutput = this.generateClientFile();
 
+				this.ensureDirectoryExists(this.options.output);
+				this.ensureDirectoryExists(outputClient);
 				writeFileSync(this.options.output, mainOutput, "utf-8");
 				writeFileSync(outputClient, clientOutput, "utf-8");
 				console.log(`✓ Successfully generated ${this.options.output}`);
@@ -120,6 +133,9 @@ export class PlaywrightGenerator {
 				}
 				const clientOutput = this.generateClientFile();
 				const serviceOutput = this.generateServiceFile(outputService, this.options.output, outputClient);
+				this.ensureDirectoryExists(this.options.output);
+				this.ensureDirectoryExists(outputClient);
+				this.ensureDirectoryExists(outputService);
 				writeFileSync(this.options.output, schemasString, "utf-8");
 				writeFileSync(outputClient, clientOutput, "utf-8");
 				writeFileSync(outputService, serviceOutput, "utf-8");
