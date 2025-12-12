@@ -1,5 +1,17 @@
 # @cerios/openapi-to-zod-playwright
 
+## 0.3.0
+
+### Minor Changes
+
+- - Simplifies generator logic by removing CLI option merging and focusing solely on config-based generation with better error messages when config files are missing.
+  - Adds interactive --init command to guide users through creating config files with prompts for input/output paths, format selection (TypeScript/JSON), and optional commonly-used defaults.
+
+### Patch Changes
+
+- Updated dependencies
+  - @cerios/openapi-to-zod@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
