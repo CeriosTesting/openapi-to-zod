@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, extname, relative } from "node:path";
+import { basename, dirname, extname, normalize, relative } from "node:path";
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { ZodSchemaGenerator } from "@cerios/openapi-to-zod";
 import { parse } from "yaml";
@@ -47,7 +47,8 @@ export class PlaywrightGenerator {
 	 * Ensure directory exists for a file path
 	 */
 	private ensureDirectoryExists(filePath: string): void {
-		const dir = dirname(filePath);
+		const normalizedPath = normalize(filePath);
+		const dir = dirname(normalizedPath);
 		if (!existsSync(dir)) {
 			mkdirSync(dir, { recursive: true });
 		}
@@ -90,39 +91,44 @@ export class PlaywrightGenerator {
 				this.spec = this.parseSpec();
 			}
 
+			// Normalize paths for cross-platform compatibility
+			const normalizedOutput = normalize(output);
+			const normalizedClient = outputClient ? normalize(outputClient) : undefined;
+			const normalizedService = outputService ? normalize(outputService) : undefined;
+
 			// Always generate schemas
 			const schemasString = this.generateSchemasString();
-			this.ensureDirectoryExists(output);
-			writeFileSync(output, schemasString, "utf-8");
+			this.ensureDirectoryExists(normalizedOutput);
+			writeFileSync(normalizedOutput, schemasString, "utf-8");
 
 			let generatedComponents = "schemas";
 
 			// Conditionally generate client
-			if (outputClient) {
+			if (normalizedClient) {
 				const clientOutput = this.generateClientFile();
-				this.ensureDirectoryExists(outputClient);
-				writeFileSync(outputClient, clientOutput, "utf-8");
+				this.ensureDirectoryExists(normalizedClient);
+				writeFileSync(normalizedClient, clientOutput, "utf-8");
 				generatedComponents += " + client";
-				console.log(`✓ Generated ${outputClient}`);
+				console.log(`✓ Generated ${normalizedClient}`);
 			}
 
 			// Conditionally generate service (validation already ensures outputClient exists)
-			if (outputService) {
-				// TypeScript doesn't know validation ensures outputClient exists, so we check explicitly
-				if (!outputClient) {
+			if (normalizedService) {
+				// TypeScript doesn't know validation ensures normalizedClient exists, so we check explicitly
+				if (!normalizedClient) {
 					throw new ConfigurationError("Service generation requires client. This should have been caught earlier.", {
 						outputService,
 						outputClient: undefined,
 					});
 				}
-				const serviceOutput = this.generateServiceFile(outputService, output, outputClient);
-				this.ensureDirectoryExists(outputService);
-				writeFileSync(outputService, serviceOutput, "utf-8");
+				const serviceOutput = this.generateServiceFile(normalizedService, normalizedOutput, normalizedClient);
+				this.ensureDirectoryExists(normalizedService);
+				writeFileSync(normalizedService, serviceOutput, "utf-8");
 				generatedComponents += " + service";
-				console.log(`✓ Generated ${outputService}`);
+				console.log(`✓ Generated ${normalizedService}`);
 			}
 
-			console.log(`✓ Generated ${output} (${generatedComponents})`);
+			console.log(`✓ Generated ${normalizedOutput} (${generatedComponents})`);
 		} catch (error) {
 			throw new ClientGenerationError(
 				`Failed to generate Playwright client: ${error instanceof Error ? error.message : String(error)}`,
