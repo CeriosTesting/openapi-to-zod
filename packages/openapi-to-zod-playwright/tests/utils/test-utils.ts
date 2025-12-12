@@ -11,11 +11,15 @@ export const fixturesDir = path.join(__dirname, "..", "fixtures");
  */
 export const TestUtils = {
 	getOutputPath(outputFileName: string): string {
-		return path.join(outputDir, outputFileName);
+		// Normalize the filename to handle cross-platform path separators
+		// This ensures backslashes in test paths work on Linux/macOS
+		const normalizedFileName = outputFileName.replace(/\\/g, path.sep);
+		return path.join(outputDir, normalizedFileName);
 	},
 
 	getFixturePath(fixtureName: string): string {
-		return path.join(fixturesDir, fixtureName);
+		const normalizedFileName = fixtureName.replace(/\\/g, path.sep);
+		return path.join(fixturesDir, normalizedFileName);
 	},
 
 	getConfigPath(configFileName: string): string {

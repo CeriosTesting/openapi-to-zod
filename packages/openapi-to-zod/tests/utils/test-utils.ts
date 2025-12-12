@@ -8,19 +8,27 @@ import type { GeneratorOptions } from "../../src/types";
  */
 export const TestUtils = {
 	getConfigPath(configFileName: string): string {
-		return path.join(__dirname, "..", "fixtures", "config-files", configFileName);
+		// Normalize the filename to handle cross-platform path separators
+		const normalizedFileName = configFileName.replace(/\\/g, path.sep);
+		return path.join(__dirname, "..", "fixtures", "config-files", normalizedFileName);
 	},
 
 	getOutputPath(outputFileName: string): string {
-		return path.join(__dirname, "..", "output", outputFileName);
+		// Normalize the filename to handle cross-platform path separators
+		const normalizedFileName = outputFileName.replace(/\\/g, path.sep);
+		return path.join(__dirname, "..", "output", normalizedFileName);
 	},
 
 	getFixturePath(fixtureName: string): string {
-		return path.join(__dirname, "..", "fixtures", fixtureName);
+		// Normalize the filename to handle cross-platform path separators
+		const normalizedFileName = fixtureName.replace(/\\/g, path.sep);
+		return path.join(__dirname, "..", "fixtures", normalizedFileName);
 	},
 
 	getDistPath(distFileName: string): string {
-		return path.join(__dirname, "..", "..", "dist", distFileName);
+		// Normalize the filename to handle cross-platform path separators
+		const normalizedFileName = distFileName.replace(/\\/g, path.sep);
+		return path.join(__dirname, "..", "..", "dist", normalizedFileName);
 	},
 
 	cleanupTestOutput(outputFileName: string): () => void {
