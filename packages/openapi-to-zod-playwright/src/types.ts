@@ -2,7 +2,11 @@ import type { GeneratorOptions } from "@cerios/openapi-to-zod";
 
 /**
  * Generator options for Playwright client generation
- * Enforces that both request and response schemas are generated
+ *
+ * File Splitting Architecture:
+ * - Schemas (main output): Always generated, contains Zod schemas and TypeScript types
+ * - Client (outputClient): Optional, Playwright API passthrough wrapper
+ * - Service (outputService): Optional, type-safe validation layer (requires outputClient)
  */
 export interface PlaywrightGeneratorOptions extends Omit<GeneratorOptions, "schemaType"> {
 	/**
@@ -11,39 +15,58 @@ export interface PlaywrightGeneratorOptions extends Omit<GeneratorOptions, "sche
 	input: string;
 
 	/**
-	 * Output file path for generated code (schemas + types always included)
-	 * Optional when using string generation methods (generateString, etc.)
+	 * Output file path for schemas and types (always generated)
+	 * Contains Zod validation schemas and TypeScript type definitions
 	 * Required when calling generate() to write to a file
+	 * Optional when using generateString() for testing
 	 */
 	output?: string;
 
 	/**
-	 * Optional output file path for client class
-	 * If provided, client will be written to this file instead of main output
-	 * Requires imports from main output file
+	 * Optional: Output file path for client class
+	 *
+	 * When specified:
+	 * - Generates a Playwright API passthrough client in a separate file
+	 * - Client provides thin wrapper around Playwright's APIRequestContext
+	 * - No schema imports needed (pure passthrough)
+	 *
+	 * When omitted:
+	 * - Only schemas and types are generated
+	 * - Use this when you only need validation schemas
 	 */
 	outputClient?: string;
 
 	/**
-	 * Optional output file path for service class
-	 * If provided, service will be written to this file instead of main output
-	 * Requires imports from main output and client files
-	 * Only applicable when generateService is true
+	 * Optional: Output file path for service class
+	 *
+	 * When specified:
+	 * - Generates a type-safe validation service in a separate file
+	 * - Service uses client for API calls and validates responses with Zod
+	 * - REQUIRES outputClient to be specified (service depends on client)
+	 * - Imports schemas from main output and client class from outputClient
+	 *
+	 * When omitted:
+	 * - No service layer is generated
+	 *
+	 * Note: You cannot generate service without client
 	 */
 	outputService?: string;
 
 	/**
-	 * Whether to generate service class in addition to client
-	 * @default true
-	 */
-	generateService?: boolean;
-
-	/**
 	 * Whether to validate request body data with Zod schemas in service methods
-	 * Only applicable when generateService is true
 	 * @default false
 	 */
 	validateServiceRequest?: boolean;
+
+	/**
+	 * Base path to prepend to all API endpoints
+	 * Useful for API versioning or common path prefixes
+	 * Note: This applies to all operations in the spec. For different base paths,
+	 * use separate config specs (one per API version).
+	 * @example "/api/v1" -> GET /api/v1/users
+	 * @default undefined (no base path)
+	 */
+	basePath?: string;
 
 	/**
 	 * Schema type is always "all" for Playwright generator
@@ -79,7 +102,17 @@ export interface PlaywrightConfigFile {
 /**
  * Helper function for type-safe config file creation
  * Provides IDE autocomplete and type checking for Playwright config files
- * Note: schemaType is always "all" for Playwright generator (both request/response schemas required)
+ *
+ * File Splitting Examples:
+ *
+ * 1. Schemas only (no client, no service):
+ *    { input: 'api.yaml', output: 'schemas.ts' }
+ *
+ * 2. Schemas + Client (separate files):
+ *    { input: 'api.yaml', output: 'schemas.ts', outputClient: 'client.ts' }
+ *
+ * 3. Schemas + Client + Service (all separate):
+ *    { input: 'api.yaml', output: 'schemas.ts', outputClient: 'client.ts', outputService: 'service.ts' }
  *
  * @example
  * ```typescript
@@ -88,16 +121,18 @@ export interface PlaywrightConfigFile {
  * export default defineConfig({
  *   defaults: {
  *     mode: 'strict',
- *     includeDescriptions: true,
- *     generateService: true
+ *     includeDescriptions: true
  *   },
  *   specs: [
- *     { input: 'api-v1.yaml', output: 'tests/api-v1.ts' },
+ *     // Schemas only
+ *     { input: 'api-v1.yaml', output: 'tests/schemas.ts' },
+ *
+ *     // Schemas + Client + Service (full setup)
  *     {
  *       input: 'api-v2.yaml',
- *       output: 'tests/api-v2.ts',
- *       outputClient: 'tests/api-v2-client.ts',
- *       outputService: 'tests/api-v2-service.ts'
+       output: 'tests/schemas.ts',
+       outputClient: 'tests/client.ts',
+       outputService: 'tests/service.ts'
  *     }
  *   ]
  * });

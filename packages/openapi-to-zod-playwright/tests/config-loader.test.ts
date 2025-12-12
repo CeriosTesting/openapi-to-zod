@@ -11,7 +11,6 @@ describe("Config Loading - Playwright", () => {
 			expect(config).toBeDefined();
 			expect(config.specs).toHaveLength(2);
 			expect(config.defaults?.mode).toBe("strict");
-			expect(config.defaults?.generateService).toBe(true);
 			expect(config.defaults?.validateServiceRequest).toBe(false);
 			expect(config.executionMode).toBe("parallel");
 		});
@@ -22,7 +21,6 @@ describe("Config Loading - Playwright", () => {
 			expect(config).toBeDefined();
 			expect(config.specs).toHaveLength(2);
 			expect(config.defaults?.mode).toBe("strict");
-			expect(config.defaults?.generateService).toBe(true);
 			expect(config.executionMode).toBe("parallel");
 		});
 
@@ -64,7 +62,6 @@ describe("Config Loading - Playwright", () => {
 					includeDescriptions: true,
 					enumType: "zod",
 					showStats: false,
-					generateService: true,
 					validateServiceRequest: false,
 				},
 				specs: [
@@ -79,13 +76,11 @@ describe("Config Loading - Playwright", () => {
 			expect(merged[0].mode).toBe("strict");
 			expect(merged[0].includeDescriptions).toBe(true);
 			expect(merged[0].showStats).toBe(false);
-			expect(merged[0].generateService).toBe(true);
 			expect(merged[0].validateServiceRequest).toBe(false);
 
 			// Second spec should override mode
 			expect(merged[1].mode).toBe("normal");
 			expect(merged[1].includeDescriptions).toBe(true);
-			expect(merged[1].generateService).toBe(true);
 		});
 
 		it("should enforce schemaType: 'all' for all specs", () => {
@@ -125,7 +120,6 @@ describe("Config Loading - Playwright", () => {
 					prefix: "default",
 					suffix: "dto",
 					mode: "strict",
-					generateService: true,
 					outputClient: "default-client.ts",
 				},
 				specs: [
@@ -153,8 +147,8 @@ describe("Config Loading - Playwright", () => {
 		it("should handle Playwright-specific options", () => {
 			const config: PlaywrightConfigFile = {
 				defaults: {
-					generateService: false,
 					validateServiceRequest: true,
+					outputClient: "client.ts",
 				},
 				specs: [
 					{
@@ -164,18 +158,18 @@ describe("Config Loading - Playwright", () => {
 					{
 						input: "api2.yaml",
 						output: "api2.ts",
-						generateService: true,
 						validateServiceRequest: false,
+						outputClient: "api2-client.ts",
 					},
 				],
 			};
 
 			const merged = mergeConfigWithDefaults(config);
 
-			expect(merged[0].generateService).toBe(false);
 			expect(merged[0].validateServiceRequest).toBe(true);
-			expect(merged[1].generateService).toBe(true);
+			expect(merged[0].outputClient).toBe("client.ts");
 			expect(merged[1].validateServiceRequest).toBe(false);
+			expect(merged[1].outputClient).toBe("api2-client.ts");
 		});
 	});
 
@@ -187,21 +181,18 @@ describe("Config Loading - Playwright", () => {
 				mode: "normal",
 				includeDescriptions: true,
 				enumType: "zod",
-				generateService: true,
 				schemaType: "all",
 			};
 
 			const cliOptions: Partial<PlaywrightGeneratorOptions> = {
 				mode: "strict",
 				prefix: "cli",
-				generateService: false,
 			};
 
 			const merged = mergeCliWithConfig(specConfig, cliOptions);
 
 			expect(merged.mode).toBe("strict");
 			expect(merged.prefix).toBe("cli");
-			expect(merged.generateService).toBe(false);
 			expect(merged.includeDescriptions).toBe(true);
 			expect(merged.input).toBe("api.yaml");
 		});
@@ -264,7 +255,6 @@ describe("Config Loading - Playwright", () => {
 			const specConfig: PlaywrightGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
-				generateService: true,
 				validateServiceRequest: false,
 				schemaType: "all",
 			};
@@ -280,10 +270,8 @@ describe("Config Loading - Playwright", () => {
 			expect(merged.outputClient).toBe("custom-client.ts");
 			expect(merged.outputService).toBe("custom-service.ts");
 			expect(merged.validateServiceRequest).toBe(true);
-			expect(merged.generateService).toBe(true);
 		});
 	});
-
 	describe("Config priority order", () => {
 		it("should respect precedence: CLI > per-spec > defaults", () => {
 			const config: PlaywrightConfigFile = {
@@ -291,7 +279,6 @@ describe("Config Loading - Playwright", () => {
 					mode: "normal",
 					prefix: "default",
 					showStats: true,
-					generateService: false,
 				},
 				specs: [
 					{
@@ -299,11 +286,9 @@ describe("Config Loading - Playwright", () => {
 						output: "api.ts",
 						mode: "strict",
 						suffix: "model",
-						generateService: true,
 					},
 				],
 			};
-
 			const merged = mergeConfigWithDefaults(config);
 			const withCli = mergeCliWithConfig(merged[0], {
 				prefix: "cli",
@@ -319,12 +304,9 @@ describe("Config Loading - Playwright", () => {
 			// Per-spec wins over defaults
 			expect(withCli.mode).toBe("strict");
 			expect(withCli.suffix).toBe("model");
-			expect(withCli.generateService).toBe(true);
 
 			// Defaults used when not overridden
-			expect(withCli.showStats).toBe(true);
-
-			// schemaType always enforced
+			expect(withCli.showStats).toBe(true); // schemaType always enforced
 			expect(withCli.schemaType).toBe("all");
 		});
 	});

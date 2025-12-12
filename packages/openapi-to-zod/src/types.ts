@@ -13,11 +13,9 @@ export type TypeMode = "inferred" | "native";
 export type NativeEnumType = "union" | "enum";
 
 /**
- * Options that can be overridden per request/response context
- * These options override root-level options when specified.
- * Resolution order: root options → request/response overrides (nested wins silently)
+ * Common options shared by both request and response contexts
  */
-export interface RequestResponseOptions {
+interface CommonSchemaOptions {
 	/**
 	 * Object validation mode
 	 * - 'strict': Uses z.strictObject() - no additional properties allowed
@@ -43,11 +41,17 @@ export interface RequestResponseOptions {
 	 * Whether to include descriptions as JSDoc comments
 	 */
 	includeDescriptions?: boolean;
+}
 
+/**
+ * Request-specific options that can override root-level options
+ * Requests support native TypeScript type generation as an alternative to Zod schemas
+ */
+export interface RequestOptions extends CommonSchemaOptions {
 	/**
-	 * Type generation mode (only for requests)
+	 * Type generation mode
 	 * - 'inferred': Generate Zod schemas with z.infer types (default)
-	 * - 'native': Generate native TypeScript types
+	 * - 'native': Generate native TypeScript types without Zod validation
 	 */
 	typeMode?: TypeMode;
 
@@ -57,6 +61,14 @@ export interface RequestResponseOptions {
 	 * - 'enum': Generate TypeScript enums
 	 */
 	nativeEnumType?: NativeEnumType;
+}
+
+/**
+ * Response-specific options that can override root-level options
+ * Responses always use Zod schemas for runtime validation
+ */
+export interface ResponseOptions extends CommonSchemaOptions {
+	// Responses don't support typeMode - always generate Zod schemas
 }
 
 export interface GeneratorOptions {
@@ -135,14 +147,16 @@ export interface GeneratorOptions {
 	/**
 	 * Request-specific options that override root-level options
 	 * Applied when schemas are used in request contexts
+	 * Supports native TypeScript type generation
 	 */
-	request?: Partial<RequestResponseOptions>;
+	request?: RequestOptions;
 
 	/**
 	 * Response-specific options that override root-level options
 	 * Applied when schemas are used in response contexts
+	 * Always generates Zod schemas for runtime validation
 	 */
-	response?: Partial<RequestResponseOptions>;
+	response?: ResponseOptions;
 }
 
 export interface OpenAPISchema {

@@ -9,7 +9,7 @@ describe("Headers", () => {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
 		});
-		return generator.generateString();
+		return generator.generateClientString();
 	}
 
 	it("should include headers option in client methods", () => {
@@ -35,11 +35,7 @@ describe("Headers", () => {
 		expect(output).toContain("headers?:");
 
 		// Client methods should use ApiRequestContextOptions
-		const clientSection = output.substring(
-			output.indexOf("export class ApiClient"),
-			output.lastIndexOf("export class")
-		);
-		expect(clientSection).toContain("options?: ApiRequestContextOptions");
+		expect(output).toContain("options?: ApiRequestContextOptions");
 	});
 
 	it("should generate methods for endpoints with headers", () => {

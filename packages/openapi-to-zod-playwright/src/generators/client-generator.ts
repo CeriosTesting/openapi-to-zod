@@ -1,6 +1,51 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
 
+/**
+ * Normalizes a base path by ensuring it has a leading slash and no trailing slash
+ * Returns undefined for empty strings, single slash, or undefined values
+ * @param basePath - The base path to normalize
+ * @returns Normalized base path or undefined
+ */
+function normalizeBasePath(basePath?: string): string | undefined {
+	if (!basePath || basePath === "/" || basePath.trim() === "") {
+		return undefined;
+	}
+
+	let normalized = basePath.trim();
+	// Ensure leading slash
+	if (!normalized.startsWith("/")) {
+		normalized = `/${normalized}`;
+	}
+	// Remove trailing slash
+	if (normalized.endsWith("/")) {
+		normalized = normalized.slice(0, -1);
+	}
+
+	return normalized;
+}
+
+/**
+ * Constructs the full path by combining base path with endpoint path
+ * Ensures proper slash handling to avoid double slashes
+ * @param basePath - The normalized base path (optional)
+ * @param path - The endpoint path from OpenAPI spec
+ * @returns The complete path
+ */
+function constructFullPath(basePath: string | undefined, path: string): string {
+	if (!basePath) {
+		return path;
+	}
+
+	// Ensure path has leading slash
+	let normalizedPath = path.trim();
+	if (!normalizedPath.startsWith("/")) {
+		normalizedPath = `/${normalizedPath}`;
+	}
+
+	return basePath + normalizedPath;
+}
+
 interface EndpointInfo {
 	path: string;
 	method: string;
@@ -16,15 +61,17 @@ interface EndpointInfo {
  * Pure wrapper around Playwright's APIRequestContext with raw options
  * @param spec - OpenAPI specification
  * @param className - Name for the generated client class (default: "ApiClient")
+ * @param basePath - Optional base path to prepend to all endpoints
  */
-export function generateClientClass(spec: OpenAPISpec, className: string = "ApiClient"): string {
+export function generateClientClass(spec: OpenAPISpec, className: string = "ApiClient", basePath?: string): string {
 	const endpoints = extractEndpoints(spec);
 
 	if (endpoints.length === 0) {
 		return "";
 	}
 
-	const methods = endpoints.map(endpoint => generateClientMethod(endpoint)).join("\n\n");
+	const normalizedBasePath = normalizeBasePath(basePath);
+	const methods = endpoints.map(endpoint => generateClientMethod(endpoint, normalizedBasePath)).join("\n\n");
 
 	return `import type { ReadStream } from "node:fs";
 
@@ -134,7 +181,7 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 /**
  * Generates a single client method - pure passthrough to Playwright
  */
-function generateClientMethod(endpoint: EndpointInfo): string {
+function generateClientMethod(endpoint: EndpointInfo, basePath?: string): string {
 	const { path, method, methodName, pathParams } = endpoint;
 
 	// Build parameter list
@@ -151,8 +198,11 @@ function generateClientMethod(endpoint: EndpointInfo): string {
 
 	const paramList = params.join(", ");
 
+	// Construct full path with base path if provided
+	const fullPath = constructFullPath(basePath, path);
+
 	// Build URL with path parameter interpolation
-	let urlTemplate = path;
+	let urlTemplate = fullPath;
 	for (const param of pathParams) {
 		const sanitized = sanitizeParamName(param);
 		urlTemplate = urlTemplate.replace(`{${param}}`, `\${${sanitized}}`);
@@ -162,7 +212,7 @@ function generateClientMethod(endpoint: EndpointInfo): string {
 	const methodLower = method.toLowerCase();
 
 	return `\t/**
-	 * ${method} ${path}
+	 * ${method} ${fullPath}
 	 * @returns Raw Playwright APIResponse
 	 */
 	async ${methodName}(${paramList}): Promise<APIResponse> {

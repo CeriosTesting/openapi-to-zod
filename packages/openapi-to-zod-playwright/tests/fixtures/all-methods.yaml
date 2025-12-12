@@ -1,0 +1,151 @@
+openapi: 3.0.0
+info:
+  title: All HTTP Methods API
+  version: 1.0.0
+paths:
+  /resource/{id}:
+    get:
+      operationId: getResource
+      summary: Get resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    post:
+      operationId: createResource
+      summary: Create resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    put:
+      operationId: updateResource
+      summary: Update resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    patch:
+      operationId: patchResource
+      summary: Patch resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourcePatch'
+      responses:
+        '200':
+          description: Patched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+    delete:
+      operationId: deleteResource
+      summary: Delete resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+    head:
+      operationId: headResource
+      summary: Head resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+    options:
+      operationId: optionsResource
+      summary: Options resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  methods:
+                    type: array
+                    items:
+                      type: string
+components:
+  schemas:
+    Resource:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        value:
+          type: number
+    ResourcePatch:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: number

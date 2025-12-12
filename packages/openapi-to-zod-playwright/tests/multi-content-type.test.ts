@@ -11,8 +11,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixtureFile,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// POST /users with JSON content type - single content type so no suffix
 			expect(serviceSection).toContain("async postUsers");
@@ -23,8 +22,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixtureFile,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Service method should have data in options parameter
 			expect(serviceSection).toMatch(/async postUsers\w*\([^)]*options[^)]*:\s*\{[^}]*data:/);
@@ -35,8 +33,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixtureFile,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Service calls client with options
 			expect(serviceSection).toContain("this.client.postUsers");
@@ -52,8 +49,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Should generate postLogin method (method+path, single content type no suffix)
 			expect(serviceSection).toContain("async postLogin");
@@ -66,8 +62,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Service method should have form in options parameter
 			expect(serviceSection).toMatch(/async postLogin\w*\([^)]*options[^)]*:\s*\{[^}]*form:/);
@@ -80,8 +75,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Service calls client with options
 			expect(serviceSection).toContain("this.client.postLogin");
@@ -97,8 +91,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Should generate postUpload method (method+path, single content type no suffix)
 			expect(serviceSection).toContain("async postUpload");
@@ -111,8 +104,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Service method should have multipart in options parameter
 			expect(serviceSection).toMatch(/async postUpload\w*\([^)]*options[^)]*:\s*\{[^}]*multipart:/);
@@ -125,8 +117,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Service calls client with options
 			expect(serviceSection).toContain("this.client.postUpload");
@@ -142,8 +133,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Should generate both postUsersJson and postUsersForm with suffixes
 			expect(serviceSection).toContain("async postUsersJson");
@@ -157,12 +147,8 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const clientSection = output.substring(
-				output.indexOf("export class ApiClient"),
-				output.indexOf("export class ApiService")
-			);
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const clientSection = generator.generateClientString();
+			const serviceSection = generator.generateServiceString();
 
 			// Client should have one method
 			expect(clientSection).toContain("async postUsers(");
@@ -178,8 +164,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// JSON method should have data in options
 			expect(serviceSection).toMatch(/async postUsersJson\w*\([^)]*options[^)]*:\s*\{[^}]*data:/);
@@ -197,8 +182,7 @@ describe("Multi-Content-Type Support", () => {
 				input: fixture,
 			});
 
-			const output = generator.generateString();
-			const serviceSection = output.substring(output.indexOf("export class ApiService"));
+			const serviceSection = generator.generateServiceString();
 
 			// Service method should have both data and params in options (params is optional)
 			expect(serviceSection).toContain("async postSearch(options: {");
@@ -215,21 +199,17 @@ describe("Multi-Content-Type Support", () => {
 				input: fixtureFile,
 			});
 
-			const output = generator.generateString();
+			const clientSection = generator.generateClientString();
 
 			// Should define ApiRequestContextOptions type with all properties
-			expect(output).toContain("export type ApiRequestContextOptions");
-			expect(output).toContain("data?:");
-			expect(output).toContain("form?:");
-			expect(output).toContain("multipart?:");
-			expect(output).toContain("params?:");
-			expect(output).toContain("headers?:");
+			expect(clientSection).toContain("export type ApiRequestContextOptions");
+			expect(clientSection).toContain("data?:");
+			expect(clientSection).toContain("form?:");
+			expect(clientSection).toContain("multipart?:");
+			expect(clientSection).toContain("params?:");
+			expect(clientSection).toContain("headers?:");
 
 			// Client methods should use the type
-			const clientSection = output.substring(
-				output.indexOf("export class ApiClient"),
-				output.indexOf("export class ApiService")
-			);
 			expect(clientSection).toContain("options?: ApiRequestContextOptions");
 		});
 
@@ -240,18 +220,14 @@ describe("Multi-Content-Type Support", () => {
 				input: fixtureFile,
 			});
 
-			const output = generator.generateString();
+			const clientSection = generator.generateClientString();
 
 			// ApiRequestContextOptions should include Playwright request options
-			expect(output).toContain("export type ApiRequestContextOptions");
-			expect(output).toContain("timeout?:");
-			expect(output).toContain("failOnStatusCode?:");
+			expect(clientSection).toContain("export type ApiRequestContextOptions");
+			expect(clientSection).toContain("timeout?:");
+			expect(clientSection).toContain("failOnStatusCode?:");
 
 			// Client methods should use the type
-			const clientSection = output.substring(
-				output.indexOf("export class ApiClient"),
-				output.indexOf("export class ApiService")
-			);
 			expect(clientSection).toContain("options?: ApiRequestContextOptions");
 		});
 	});

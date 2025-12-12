@@ -1,0 +1,94 @@
+openapi: 3.0.0
+info:
+  title: Multi Parameter API
+  version: 1.0.0
+paths:
+  /organizations/{orgId}/projects/{projectId}/tasks/{taskId}:
+    get:
+      operationId: getTask
+      summary: Get a specific task
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /organizations/{orgId}/members/{memberId}:
+    get:
+      operationId: getMember
+      summary: Get organization member
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Member details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+  /users/{userId}:
+    get:
+      operationId: getUser
+      summary: Get user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string

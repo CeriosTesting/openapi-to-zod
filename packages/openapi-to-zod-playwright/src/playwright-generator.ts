@@ -12,7 +12,7 @@ import { toPascalCase } from "./utils/string-utils";
 
 /**
  * Main generator class for Playwright API clients
- * Generates Zod schemas, then appends client and service classes
+ * Supports file splitting: schemas (always), client (optional), service (optional, requires client)
  */
 export class PlaywrightGenerator {
 	private options: PlaywrightGeneratorOptions & { schemaType: "all" };
@@ -29,12 +29,6 @@ export class PlaywrightGenerator {
 			throw new FileOperationError(`Input file not found: ${options.input}`, options.input);
 		}
 
-		// Validate outputService only allowed when generateService is true
-		const generateService = options.generateService ?? true;
-		if (options.outputService && !generateService) {
-			throw new FileOperationError("outputService is only allowed when generateService is true", options.outputService);
-		}
-
 		this.options = {
 			mode: options.mode || "normal",
 			enumType: options.enumType || "zod",
@@ -45,7 +39,6 @@ export class PlaywrightGenerator {
 			prefix: options.prefix || "",
 			suffix: options.suffix || "",
 			...options,
-			generateService,
 			schemaType: "all", // Always enforce all schemas
 		};
 	}
@@ -61,8 +54,10 @@ export class PlaywrightGenerator {
 	}
 
 	/**
-	 * Generate the complete output file(s)
-	 * Handles splitting into multiple files based on outputClient and outputService options
+	 * Generate output files with mandatory file splitting
+	 * - Main file: Always contains schemas and types
+	 * - Client file: Optional, generated when outputClient is specified
+	 * - Service file: Optional, generated when outputService is specified (requires outputClient)
 	 */
 	generate(): void {
 		if (!this.options.output) {
@@ -73,101 +68,67 @@ export class PlaywrightGenerator {
 			);
 		}
 
+		// Validation: service requires client
+		if (this.options.outputService && !this.options.outputClient) {
+			throw new ConfigurationError(
+				"Service generation requires client. Service class depends on client class for API calls. " +
+					"Please specify outputClient path when using outputService.",
+				{
+					outputService: this.options.outputService,
+					outputClient: undefined,
+				}
+			);
+		}
+
 		console.log(`Generating Playwright client for ${this.options.input}...`);
 
 		try {
-			const { outputClient, outputService, generateService } = this.options;
-			const hasClientSplit = !!outputClient;
-			const hasServiceSplit = !!outputService;
+			const { output, outputClient, outputService } = this.options;
 
 			// Ensure spec is parsed
 			if (!this.spec) {
 				this.spec = this.parseSpec();
 			}
 
-			// Generate base components
+			// Always generate schemas
 			const schemasString = this.generateSchemasString();
-			const includeService = generateService ?? true;
-			const clientString = this.generateClientString();
-			const serviceString = includeService ? this.generateServiceString() : "";
+			this.ensureDirectoryExists(output);
+			writeFileSync(output, schemasString, "utf-8");
 
-			if (!hasClientSplit && !hasServiceSplit) {
-				// Strategy 1: Everything in one file (default)
-				const output = this.combineIntoSingleFile(schemasString, clientString, serviceString);
-				this.ensureDirectoryExists(this.options.output);
-				writeFileSync(this.options.output, output, "utf-8");
-				console.log(`✓ Successfully generated ${this.options.output}`);
-			} else if (hasClientSplit && !hasServiceSplit) {
-				// Strategy 2: Schemas (+ service if applicable) in main, client separate
-				if (!outputClient) {
-					throw new ConfigurationError("outputClient is required when using client split output mode", {
-						hasClientSplit,
-						hasServiceSplit,
-						generateService: this.options.generateService,
-					});
-				}
-				const mainOutput = includeService
-					? this.combineIntoSingleFile(schemasString, "", serviceString)
-					: schemasString;
-				const clientOutput = this.generateClientFile();
+			let generatedComponents = "schemas";
 
-				this.ensureDirectoryExists(this.options.output);
-				this.ensureDirectoryExists(outputClient);
-				writeFileSync(this.options.output, mainOutput, "utf-8");
-				writeFileSync(outputClient, clientOutput, "utf-8");
-				console.log(`✓ Successfully generated ${this.options.output}`);
-				console.log(`✓ Successfully generated ${outputClient}`);
-			} else {
-				// Strategy 3: All files separate (schemas, client, service)
-				if (!outputClient) {
-					throw new ConfigurationError("outputClient is required when using split output mode", {
-						hasClientSplit,
-						hasServiceSplit,
-						generateService: this.options.generateService,
-					});
-				}
-				if (!outputService) {
-					throw new ConfigurationError(
-						"outputService is required when using split output mode with service generation",
-						{ hasClientSplit, hasServiceSplit, generateService: this.options.generateService }
-					);
-				}
+			// Conditionally generate client
+			if (outputClient) {
 				const clientOutput = this.generateClientFile();
-				const serviceOutput = this.generateServiceFile(outputService, this.options.output, outputClient);
-				this.ensureDirectoryExists(this.options.output);
 				this.ensureDirectoryExists(outputClient);
-				this.ensureDirectoryExists(outputService);
-				writeFileSync(this.options.output, schemasString, "utf-8");
 				writeFileSync(outputClient, clientOutput, "utf-8");
-				writeFileSync(outputService, serviceOutput, "utf-8");
-				console.log(`✓ Successfully generated ${this.options.output}`);
-				console.log(`✓ Successfully generated ${outputClient}`);
-				console.log(`✓ Successfully generated ${outputService}`);
+				generatedComponents += " + client";
+				console.log(`✓ Generated ${outputClient}`);
 			}
+
+			// Conditionally generate service (validation already ensures outputClient exists)
+			if (outputService) {
+				// TypeScript doesn't know validation ensures outputClient exists, so we check explicitly
+				if (!outputClient) {
+					throw new ConfigurationError("Service generation requires client. This should have been caught earlier.", {
+						outputService,
+						outputClient: undefined,
+					});
+				}
+				const serviceOutput = this.generateServiceFile(outputService, output, outputClient);
+				this.ensureDirectoryExists(outputService);
+				writeFileSync(outputService, serviceOutput, "utf-8");
+				generatedComponents += " + service";
+				console.log(`✓ Generated ${outputService}`);
+			}
+
+			console.log(`✓ Generated ${output} (${generatedComponents})`);
 		} catch (error) {
 			throw new ClientGenerationError(
 				`Failed to generate Playwright client: ${error instanceof Error ? error.message : String(error)}`,
 				error instanceof Error ? error : undefined
 			);
 		}
-	}
-
-	/**
-	 * Generate the complete output as a string (without writing to file)
-	 * @returns The generated TypeScript code including schemas, client, and service
-	 */
-	generateString(): string {
-		// Ensure spec is parsed
-		if (!this.spec) {
-			this.spec = this.parseSpec();
-		}
-
-		const schemasString = this.generateSchemasString();
-		const clientString = this.generateClientString();
-		const includeService = this.options.generateService ?? true;
-		const serviceString = includeService ? this.generateServiceString() : "";
-
-		return this.combineIntoSingleFile(schemasString, clientString, serviceString);
 	}
 
 	/**
@@ -195,7 +156,7 @@ export class PlaywrightGenerator {
 		}
 
 		const clientClassName = this.deriveClassName(this.options.outputClient || this.options.output, "Client");
-		return generateClientClass(this.spec, clientClassName);
+		return generateClientClass(this.spec, clientClassName, this.options.basePath);
 	}
 
 	/**
@@ -288,57 +249,29 @@ export class PlaywrightGenerator {
 	}
 
 	/**
-	 * Helper method to combine schemas, client, and service into single file
-	 */
-	private combineIntoSingleFile(schemasString: string, clientString: string, serviceString: string): string {
-		// Only import expect if service is being generated
-		const includeService = this.options.generateService ?? true;
-		const expectImport = includeService ? 'import { expect } from "@playwright/test";\n' : "";
-		const playwrightImports = `import type { APIRequestContext, APIResponse } from "@playwright/test";\n${expectImport}\n`;
-
-		// Insert Playwright imports after existing imports
-		let output = this.insertPlaywrightImports(schemasString, playwrightImports);
-
-		// Append classes at the end
-		output += `\n${clientString}`;
-		if (serviceString) {
-			output += `\n${serviceString}`;
-		}
-
-		return output;
-	}
-
-	/**
-	 * Helper method to insert Playwright imports after existing imports
-	 */
-	private insertPlaywrightImports(content: string, playwrightImports: string): string {
-		const importRegex = /^import\s+.*?;$/gm;
-		const matches = [...content.matchAll(importRegex)];
-
-		if (matches.length > 0) {
-			const lastImport = matches[matches.length - 1];
-			if (lastImport.index !== undefined) {
-				const insertPos = lastImport.index + lastImport[0].length + 1;
-				return content.slice(0, insertPos) + playwrightImports + content.slice(insertPos);
-			}
-		}
-
-		// No imports found, add at the beginning
-		return playwrightImports + content;
-	}
-
-	/**
-	 * Generate client file with proper imports
+	 * Generate client file with proper imports and statistics
 	 */
 	private generateClientFile(): string {
 		const clientString = this.generateClientString();
 
+		const output: string[] = [];
+
+		// Add statistics if enabled
+		if (this.options.showStats === true) {
+			output.push(...this.generateClientStats());
+			output.push("");
+		}
+
 		// Client is a passthrough and doesn't need schema imports
-		return `import type { APIRequestContext, APIResponse } from "@playwright/test";\n${clientString}`;
+		output.push(`import type { APIRequestContext, APIResponse } from "@playwright/test";`);
+		output.push("");
+		output.push(clientString);
+
+		return output.join("\n");
 	}
 
 	/**
-	 * Generate service file with proper imports
+	 * Generate service file with proper imports and statistics
 	 */
 	private generateServiceFile(servicePath: string, mainPath: string, clientPath: string): string {
 		const serviceString = this.generateServiceString();
@@ -370,6 +303,14 @@ export class PlaywrightGenerator {
 			);
 		});
 
+		const output: string[] = [];
+
+		// Add statistics if enabled
+		if (this.options.showStats === true) {
+			output.push(...this.generateServiceStats(schemaValues.length, schemaTypes.length));
+			output.push("");
+		}
+
 		let schemaImportStatement = "";
 		if (schemaValues.length > 0) {
 			schemaImportStatement += `import { ${schemaValues.join(", ")} } from "${relativeImportMain}";\n`;
@@ -378,14 +319,23 @@ export class PlaywrightGenerator {
 			schemaImportStatement += `import type { ${schemaTypes.join(", ")} } from "${relativeImportMain}";\n`;
 		}
 
-		// Only import ApiClientOptions/MultipartFormValue if service uses them
-		const usesOptions = serviceString.includes("ApiClientOptions");
+		// Only import ApiRequestContextOptions/MultipartFormValue if service uses them
+		const usesOptions = serviceString.includes("ApiRequestContextOptions");
 		const usesMultipart = serviceString.includes("MultipartFormValue");
 		const clientImports = [clientClassName];
-		if (usesOptions) clientImports.push("type ApiClientOptions");
+		if (usesOptions) clientImports.push("type ApiRequestContextOptions");
 		if (usesMultipart) clientImports.push("type MultipartFormValue");
 
-		return `import { z } from "zod";\nimport { expect } from "@playwright/test";\nimport { ${clientImports.join(", ")} } from "${relativeImportClient}";\n${schemaImportStatement}\n${serviceString}`;
+		output.push(`import { z } from "zod";`);
+		output.push(`import { expect } from "@playwright/test";`);
+		output.push(`import { ${clientImports.join(", ")} } from "${relativeImportClient}";`);
+		if (schemaImportStatement) {
+			output.push(schemaImportStatement.trim());
+		}
+		output.push("");
+		output.push(serviceString);
+
+		return output.join("\n");
 	}
 
 	/**
@@ -431,6 +381,134 @@ export class PlaywrightGenerator {
 		}
 
 		return Array.from(names);
+	}
+
+	/**
+	 * Generate statistics for client file
+	 */
+	private generateClientStats(): string[] {
+		if (!this.spec) {
+			this.spec = this.parseSpec();
+		}
+
+		const endpoints = this.extractEndpointsFromSpec();
+		const httpMethods = new Set<string>();
+		const pathParams = new Set<string>();
+
+		for (const endpoint of endpoints) {
+			httpMethods.add(endpoint.method.toUpperCase());
+			for (const param of endpoint.pathParams) {
+				pathParams.add(param);
+			}
+		}
+
+		return [
+			"// Auto-generated by @cerios/openapi-to-zod-playwright",
+			"// Do not edit this file manually",
+			"",
+			"// Client Statistics:",
+			`//   Total endpoints: ${endpoints.length}`,
+			`//   HTTP methods: ${Array.from(httpMethods).sort().join(", ")}`,
+			`//   Unique path parameters: ${pathParams.size}`,
+			`//   Generated at: ${new Date().toISOString()}`,
+		];
+	}
+
+	/**
+	 * Generate statistics for service file
+	 */
+	private generateServiceStats(schemaImports: number, typeImports: number): string[] {
+		if (!this.spec) {
+			this.spec = this.parseSpec();
+		}
+
+		const endpoints = this.extractEndpointsFromSpec();
+		const withValidation = endpoints.filter(e => e.responses.some(r => r.schemaName)).length;
+		const withQueryParams = endpoints.filter(e => e.queryParamSchemaName).length;
+
+		return [
+			"// Auto-generated by @cerios/openapi-to-zod-playwright",
+			"// Do not edit this file manually",
+			"",
+			"// Service Statistics:",
+			`//   Total methods: ${endpoints.length}`,
+			`//   With response validation: ${withValidation}`,
+			`//   With query parameters: ${withQueryParams}`,
+			`//   Schema imports: ${schemaImports}`,
+			`//   Type imports: ${typeImports}`,
+			`//   Generated at: ${new Date().toISOString()}`,
+		];
+	}
+
+	/**
+	 * Extract endpoints from spec (helper for statistics)
+	 */
+	private extractEndpointsFromSpec(): Array<{
+		path: string;
+		method: string;
+		methodName: string;
+		pathParams: string[];
+		queryParamSchemaName?: string;
+		responses: Array<{ schemaName?: string }>;
+	}> {
+		if (!this.spec?.paths) return [];
+
+		const endpoints: Array<{
+			path: string;
+			method: string;
+			methodName: string;
+			pathParams: string[];
+			queryParamSchemaName?: string;
+			responses: Array<{ schemaName?: string }>;
+		}> = [];
+
+		for (const [path, pathItem] of Object.entries(this.spec.paths)) {
+			if (!pathItem) continue;
+
+			const methods = ["get", "post", "put", "patch", "delete", "head", "options"] as const;
+
+			for (const method of methods) {
+				const operation = pathItem[method];
+				if (!operation) continue;
+
+				// Extract path parameters
+				const pathParams = (path.match(/\{([^}]+)\}/g) || []).map(p => p.slice(1, -1));
+
+				// Check for query parameters
+				const queryParamSchemaName = operation.parameters?.some(
+					(p: any) => p.in === "query" || p.$ref?.includes("/parameters/")
+				)
+					? "queryParams"
+					: undefined;
+
+				// Extract response schemas
+				const responses =
+					operation.responses &&
+					Object.values(operation.responses)
+						.map((response: any) => {
+							const content = response.content;
+							if (!content) return { schemaName: undefined };
+
+							const jsonContent = content["application/json"];
+							if (!jsonContent?.schema?.$ref) return { schemaName: undefined };
+
+							const refParts = jsonContent.schema.$ref.split("/");
+							return { schemaName: refParts[refParts.length - 1] };
+						})
+						.filter(r => r.schemaName);
+
+				endpoints.push({
+					path,
+					method,
+					methodName: `${method}${path.replace(/\{[^}]+\}/g, "param")}`,
+					pathParams,
+					queryParamSchemaName,
+					responses: responses || [],
+				});
+			}
+		}
+
+		return endpoints;
 	}
 
 	/**

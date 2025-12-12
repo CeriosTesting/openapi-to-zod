@@ -542,7 +542,7 @@ function generateServiceMethod(
 
 	// Add status validation
 	validationCode.push(`\t\t// Validate status code`);
-	validationCode.push(`\t\texpect(response.status()).toBe(${statusCode});`);
+	validationCode.push(`\t\texpect(response.status(), await response.text()).toBe(${statusCode});`);
 	validationCode.push("");
 
 	// Add response validation

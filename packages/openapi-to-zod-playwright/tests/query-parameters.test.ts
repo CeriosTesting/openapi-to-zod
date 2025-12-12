@@ -5,43 +5,43 @@ import { TestUtils } from "./utils/test-utils";
 describe("Query Parameters", () => {
 	const fixtureFile = TestUtils.getFixturePath("query-params-api.yaml");
 
-	function generateOutput(): string {
+	function generateClientOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
 		});
-		return generator.generateString();
+		return generator.generateClientString();
 	}
 
 	it("should include params parameter option in client methods", () => {
-		const output = generateOutput();
+		const output = generateClientOutput();
 
 		// Client now uses raw Playwright params type
 		expect(output).toContain("params?:");
 	});
 
 	it("should handle optional params", () => {
-		const output = generateOutput();
+		const output = generateClientOutput();
 
 		// Params should be optional in options
-		expect(output).toContain("options?: {");
+		expect(output).toContain("options?: ApiRequestContextOptions");
 		expect(output).toContain("params?:");
 	});
 
 	it("should use Playwright's params type", () => {
-		const output = generateOutput();
+		const output = generateClientOutput();
 
 		// Should use Playwright's params type signature
 		expect(output).toContain("params?:");
 	});
 
 	it("should generate method for endpoint with query params", () => {
-		const output = generateOutput();
+		const output = generateClientOutput();
 
 		expect(output).toContain("async getUsers(");
 	});
 
 	it("should pass params to request in client", () => {
-		const output = generateOutput();
+		const output = generateClientOutput();
 
 		// Client should pass params in the options
 		expect(output).toContain("params?:");

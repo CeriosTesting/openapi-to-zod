@@ -5,15 +5,16 @@ import { TestUtils } from "./utils/test-utils";
 describe("Imports", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-	it("should include Playwright imports in single file mode", () => {
+	it("should not include Playwright imports in schemas-only output", () => {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 
-		expect(output).toContain('import type { APIRequestContext, APIResponse } from "@playwright/test"');
-		expect(output).toContain('import { expect } from "@playwright/test"');
+		// Schemas should not have Playwright imports
+		expect(output).not.toContain('import type { APIRequestContext, APIResponse } from "@playwright/test"');
+		expect(output).not.toContain('import { expect } from "@playwright/test"');
 	});
 
 	it("should include Zod import", () => {
@@ -21,7 +22,7 @@ describe("Imports", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 		expect(output).toContain('import { z } from "zod"');
 	});
 
@@ -30,7 +31,7 @@ describe("Imports", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 
 		// Imports should be at the top
 		const lines = output.split("\n");
@@ -43,19 +44,16 @@ describe("Imports", () => {
 		expect(firstNonImportIndex).toBeGreaterThan(firstImportIndex);
 	});
 
-	it("should handle type imports vs value imports", () => {
+	it("should include Playwright imports in client file", () => {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const clientString = generator.generateClientString();
 
-		// Type imports should use "import type"
-		expect(output).toContain("import type { APIRequestContext, APIResponse }");
-
-		// Value imports should not use "import type"
-		expect(output).toContain('import { expect } from "@playwright/test"');
-		expect(output).toContain('import { z } from "zod"');
+		// Client should reference Playwright types (imports added by generateClientFile)
+		expect(clientString).toContain("APIRequestContext");
+		expect(clientString).toContain("APIResponse");
 	});
 
 	it("should include proper imports in split files", () => {

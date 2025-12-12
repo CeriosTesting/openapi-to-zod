@@ -22,13 +22,47 @@ npm install @cerios/openapi-to-zod-playwright @playwright/test zod
 
 ## Quick Start
 
-### Generate Client
+### 1. Initialize Configuration
 
 ```bash
-openapi-to-zod-playwright -i openapi.yaml -o src/api-client.ts
+npx openapi-to-zod-playwright --init
 ```
 
-### Use in Tests
+This will guide you through creating a configuration file:
+
+```
+? Input OpenAPI file path: openapi.yaml
+? Output TypeScript file path: tests/api-client.ts
+? Config file format: TypeScript (recommended)
+? Include commonly-used defaults? Yes
+```
+
+Creates `openapi-to-zod-playwright.config.ts`:
+
+```typescript
+import { defineConfig } from '@cerios/openapi-to-zod-playwright';
+
+export default defineConfig({
+  defaults: {
+    mode: 'normal',
+    validateServiceRequest: false,
+  },
+  specs: [
+    {
+      input: 'openapi.yaml',
+      output: 'tests/api-client.ts',
+    },
+  ],
+});
+```
+
+### 2. Generate Client
+
+```bash
+npx openapi-to-zod-playwright
+```
+
+### 3. Use in Tests
 
 ```typescript
 import { test, expect } from '@playwright/test';
@@ -121,39 +155,45 @@ Examples:
 - **Multiple responses**: Status code suffix per method (e.g., `postUsers200()`, `postUsers201()`)
 - **Error methods**: `Error` suffix for testing failures (e.g., `getUsersByUserIdError()`)
 
-## CLI Options
+## CLI Usage
 
-### Direct CLI Usage
+### Initialize a New Config File
 
 ```bash
-openapi-to-zod-playwright [options]
-
-Options:
-  -c, --config <path>         Path to configuration file
-  -i, --input <path>          Input OpenAPI specification file
-  -o, --output <path>         Output file path
-  -m, --mode <mode>           Validation mode: strict, normal, loose (default: "normal")
-  --request-type-mode <mode>  Request type mode: inferred or native (responses always inferred)
-  --enum-type <type>          Enum type: zod, typescript (default: "zod")
-  --no-descriptions           Exclude JSDoc descriptions
-  --use-describe              Add .describe() for runtime descriptions
-  --no-stats                  Hide generation statistics
-  -p, --prefix <prefix>       Prefix for schema names
-  --suffix <suffix>           Suffix for schema names
-  -h, --help                  Display help
-  -v, --version               Display version
+npx openapi-to-zod-playwright --init
 ```
 
-You can either:
-- Use `-i` and `-o` flags for direct generation
-- Use `-c` flag to specify a config file
-- Use a config file with auto-discovery (no flags needed)
+Interactive prompts guide you through:
+- Input OpenAPI file path
+- Output file path
+- Config format (TypeScript or JSON)
+- Whether to include common defaults
 
-### Configuration File
+### Generate from Config
 
-For better organization and multiple spec generation, create a config file:
+```bash
+# Auto-discovers openapi-to-zod-playwright.config.{ts,json}
+npx openapi-to-zod-playwright
 
-**`openapi-to-zod-playwright.config.ts`** (TypeScript):
+# Or specify config file explicitly
+npx openapi-to-zod-playwright --config path/to/config.ts
+```
+
+### Other Commands
+
+```bash
+# Display version
+npx openapi-to-zod-playwright --version
+
+# Display help
+npx openapi-to-zod-playwright --help
+```
+
+## Configuration File
+
+### TypeScript Configuration (Recommended)
+
+**`openapi-to-zod-playwright.config.ts`**:
 
 ```typescript
 import { defineConfig } from '@cerios/openapi-to-zod-playwright';
@@ -162,7 +202,6 @@ export default defineConfig({
   defaults: {
     mode: 'strict',
     includeDescriptions: true,
-    generateService: true,
     showStats: false
   },
   specs: [
@@ -174,7 +213,7 @@ export default defineConfig({
       input: 'specs/api-v2.yaml',
       output: 'src/generated/api-v2.ts',
       outputClient: 'src/generated/api-v2-client.ts',
-      outputService: 'src/generated/api-v2-service.ts',
+      outputService: 'src/generated/api-v2-service.ts', // Automatically enables service generation
       mode: 'normal',
       prefix: 'v2'
     }
@@ -183,14 +222,15 @@ export default defineConfig({
 });
 ```
 
-**`openapi-to-zod-playwright.config.json`** (JSON):
+### JSON Configuration
+
+**`openapi-to-zod-playwright.config.json`**:
 
 ```json
 {
   "defaults": {
     "mode": "strict",
     "includeDescriptions": true,
-    "generateService": true,
     "showStats": false
   },
   "specs": [
@@ -209,26 +249,38 @@ export default defineConfig({
 }
 ```
 
-Then simply run:
-
-```bash
-# Auto-discovers config file
-npx openapi-to-zod-playwright
-
-# Or specify config file explicitly
-npx openapi-to-zod-playwright -c path/to/config.ts
-
-# CLI options override config values
-npx openapi-to-zod-playwright -c config.ts --mode strict
-```
-
-### Config File Options
+### Configuration Options
 
 - **`defaults`**: Default options applied to all specs
 - **`specs`**: Array of spec configurations (per-spec options override defaults)
 - **`executionMode`**: `"parallel"` (default) or `"serial"`
 
-Each spec can override any default option. CLI flags have the highest priority and override both config and defaults.
+Each spec supports all generator options. See the [Configuration Reference](#configuration-reference) below.
+
+## Migration from v1.x
+
+**Breaking Change:** CLI options have been removed in v2.0. You must use a configuration file.
+
+### Before (v1.x)
+
+```bash
+openapi-to-zod-playwright -i openapi.yaml -o src/api.ts --mode strict
+```
+
+### After (v2.0)
+
+1. Run `--init` to create a config file:
+
+```bash
+npx openapi-to-zod-playwright --init
+```
+
+2. Customize the generated config file as needed
+3. Run without options:
+
+```bash
+npx openapi-to-zod-playwright
+```
 
 ## Response Handling
 

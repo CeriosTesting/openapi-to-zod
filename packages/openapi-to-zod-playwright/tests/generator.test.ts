@@ -5,88 +5,94 @@ import { TestUtils } from "./utils/test-utils";
 describe("PlaywrightGenerator", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-	function generateOutput(): string {
-		const generator = new PlaywrightGenerator({
-			input: fixtureFile,
-		});
-		return generator.generateString();
-	}
-
 	it("should generate schemas, client, and service classes", () => {
-		const output = generateOutput();
+		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
+		const generator = new PlaywrightGenerator({ input: fixtureFile });
+
+		const schemasOutput = generator.generateSchemasString();
+		const clientOutput = generator.generateClientString();
+		const serviceOutput = generator.generateServiceString();
 
 		// Check for Zod schemas
-		expect(output).toContain("export const userSchema");
-		expect(output).toContain("export const createUserRequestSchema");
-		expect(output).toContain("export const errorSchema");
+		expect(schemasOutput).toContain("export const userSchema");
+		expect(schemasOutput).toContain("export const createUserRequestSchema");
+		expect(schemasOutput).toContain("export const errorSchema");
 
-		// Check for Playwright imports
-		expect(output).toContain('import type { APIRequestContext, APIResponse } from "@playwright/test"');
-		expect(output).toContain('import { expect } from "@playwright/test"');
+		// Check for Playwright imports in client
+		expect(clientOutput).toContain("APIRequestContext");
+		expect(clientOutput).toContain("APIResponse");
+
+		// Check for Playwright imports in service
+		expect(serviceOutput).toContain("expect");
 
 		// Check for Zod import (in schemas section)
-		expect(output).toContain('import { z } from "zod"');
+		expect(schemasOutput).toContain('import { z } from "zod"');
 
 		// Check for ApiClient class
-		expect(output).toContain("export class ApiClient");
-		expect(output).toContain("constructor(private readonly request: APIRequestContext)");
+		expect(clientOutput).toContain("export class ApiClient");
+		expect(clientOutput).toContain("constructor(private readonly request: APIRequestContext)");
 
 		// Check for ApiService class
-		expect(output).toContain("export class ApiService");
-		expect(output).toContain("constructor(private readonly client: ApiClient)");
+		expect(serviceOutput).toContain("export class ApiService");
+		expect(serviceOutput).toContain("constructor(private readonly client: ApiClient)");
 	});
 
 	it("should generate client methods with correct names", () => {
-		const output = generateOutput();
+		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
+		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const clientOutput = generator.generateClientString();
 
 		// Check client method names
-		expect(output).toContain("async getUsers(");
-		expect(output).toContain("async postUsers(");
-		expect(output).toContain("async getUsersByUserId(userId: string");
-		expect(output).toContain("async deleteUsersByUserId(userId: string");
+		expect(clientOutput).toContain("async getUsers(");
+		expect(clientOutput).toContain("async postUsers(");
+		expect(clientOutput).toContain("async getUsersByUserId(userId: string");
+		expect(clientOutput).toContain("async deleteUsersByUserId(userId: string");
 	});
 
 	it("should generate service methods with content-type handling", () => {
-		const output = generateOutput();
+		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
+		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const serviceOutput = generator.generateServiceString();
 
 		// Service methods should exist
-		expect(output).toContain("async getUsers");
-		expect(output).toContain("async postUsers");
-		expect(output).toContain("async getUsersByUserId");
-		expect(output).toContain("async deleteUsersByUserId");
+		expect(serviceOutput).toContain("async getUsers");
+		expect(serviceOutput).toContain("async postUsers");
+		expect(serviceOutput).toContain("async getUsersByUserId");
+		expect(serviceOutput).toContain("async deleteUsersByUserId");
 
 		// Service methods call client
-		const serviceSection = output.substring(output.indexOf("export class ApiService"));
-		expect(serviceSection).toContain("this.client.");
+		expect(serviceOutput).toContain("this.client.");
 	});
 
 	it("should use expect for status validation", () => {
-		const output = generateOutput();
+		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
+		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const serviceOutput = generator.generateServiceString();
 
 		// Check for Playwright expect usage
-		expect(output).toContain("expect(response.status()).toBe(200)");
-		expect(output).toContain("expect(response.status()).toBe(201)");
-		expect(output).toContain("expect(response.status()).toBe(204)");
+		expect(serviceOutput).toContain("expect(response.status(), await response.text()).toBe(200)");
+		expect(serviceOutput).toContain("expect(response.status(), await response.text()).toBe(201)");
+		expect(serviceOutput).toContain("expect(response.status(), await response.text()).toBe(204)");
 	});
 
 	it("should return void for 204 responses", () => {
-		const output = generateOutput();
+		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
+		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const serviceOutput = generator.generateServiceString();
 
 		// DELETE returns 204 with void
-		expect(output).toContain("async deleteUsersByUserId(userId: string): Promise<void>");
-		expect(output).toContain("return;");
+		expect(serviceOutput).toContain("async deleteUsersByUserId(userId: string): Promise<void>");
+		expect(serviceOutput).toContain("return;");
 	});
 
 	it("should use raw Playwright options in client methods", () => {
-		const output = generateOutput();
+		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
+		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const clientOutput = generator.generateClientString();
 
 		// Client methods should use raw Playwright options
-		const clientSection = output.substring(
-			output.indexOf("export class ApiClient"),
-			output.indexOf("export class ApiService")
-		);
-		expect(clientSection).toContain("options?:");
-		expect(clientSection).toContain("async postUsers(");
+		expect(clientOutput).toContain("options?:");
+		expect(clientOutput).toContain("async postUsers(");
 	});
 
 	describe("String Generation Methods", () => {
@@ -140,19 +146,20 @@ describe("PlaywrightGenerator", () => {
 			expect(serviceString).not.toContain("export class ApiClient");
 		});
 
-		it("should generate complete output as string", () => {
+		it("should generate schemas-only output as string", () => {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
 			});
 
-			const completeString = generator.generateString();
+			const completeString = generator.generateSchemasString();
 
-			// Should contain everything
+			// Should contain schemas and types only
 			expect(completeString).toContain("export const userSchema");
 			expect(completeString).toContain('import { z } from "zod"');
-			expect(completeString).toContain('import type { APIRequestContext, APIResponse } from "@playwright/test"');
-			expect(completeString).toContain("export class ApiClient");
-			expect(completeString).toContain("export class ApiService");
+			// Should NOT contain client or service
+			expect(completeString).not.toContain('import type { APIRequestContext, APIResponse } from "@playwright/test"');
+			expect(completeString).not.toContain("export class ApiClient");
+			expect(completeString).not.toContain("export class ApiService");
 		});
 
 		it("should work without output path when using string methods", () => {
@@ -164,7 +171,7 @@ describe("PlaywrightGenerator", () => {
 			const schemas = generator.generateSchemasString();
 			const client = generator.generateClientString();
 			const service = generator.generateServiceString();
-			const complete = generator.generateString();
+			const complete = generator.generateSchemasString();
 
 			expect(schemas).toBeTruthy();
 			expect(client).toBeTruthy();
@@ -206,7 +213,7 @@ describe("PlaywrightGenerator", () => {
 				output: TestUtils.getOutputPath("test.ts"),
 			});
 
-			expect(() => generator.generateString()).toThrow(/Failed to parse OpenAPI specification/);
+			expect(() => generator.generateSchemasString()).toThrow(/Failed to parse OpenAPI specification/);
 		});
 	});
 });

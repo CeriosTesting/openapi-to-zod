@@ -9,7 +9,14 @@ describe("HTTP Methods", () => {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
 		});
-		return generator.generateString();
+		return generator.generateClientString();
+	}
+
+	function generateServiceOutput(): string {
+		const generator = new PlaywrightGenerator({
+			input: fixtureFile,
+		});
+		return generator.generateServiceString();
 	}
 
 	it("should generate GET methods", () => {
@@ -55,8 +62,9 @@ describe("HTTP Methods", () => {
 	});
 
 	it("should generate client and service classes", () => {
-		const output = generateOutput();
-		expect(output).toContain("export class ApiClient");
-		expect(output).toContain("export class ApiService");
+		const clientOutput = generateOutput();
+		const serviceOutput = generateServiceOutput();
+		expect(clientOutput).toContain("export class ApiClient");
+		expect(serviceOutput).toContain("export class ApiService");
 	});
 });

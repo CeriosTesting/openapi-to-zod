@@ -61,7 +61,7 @@ describe("Query Parameter Types in Service Methods", () => {
 
 	it("should include query parameter types (not schemas)", () => {
 		const generator = new PlaywrightGenerator({ input: schemaPath, output: "test.ts" });
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 
 		// Check that output includes query param types
 		expect(output).toContain("SearchUsersQueryParams");

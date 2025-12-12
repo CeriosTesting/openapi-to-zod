@@ -23,12 +23,7 @@ describe("Schema Usage Analysis", () => {
 				request: {
 					typeMode: "native",
 				},
-				response: {
-					typeMode: "inferred",
-				},
-			});
-
-			// CreateUserRequest is used in POST requestBody, should be native
+			}); // CreateUserRequest is used in POST requestBody, should be native
 			expect(output).toContain("export type CreateUserRequest = {");
 		});
 
@@ -37,12 +32,7 @@ describe("Schema Usage Analysis", () => {
 				request: {
 					typeMode: "native",
 				},
-				response: {
-					typeMode: "inferred",
-				},
-			});
-
-			// User is used in GET response, should be Zod schema
+			}); // User is used in GET response, should be Zod schema
 			expect(output).toContain("export const userSchema =");
 			expect(output).toContain("z.object(");
 		});
@@ -52,12 +42,7 @@ describe("Schema Usage Analysis", () => {
 				request: {
 					typeMode: "native",
 				},
-				response: {
-					typeMode: "inferred",
-				},
-			});
-
-			// UserProfile is referenced by User (response schema)
+			}); // UserProfile is referenced by User (response schema)
 			// So UserProfile should also use response mode
 			expect(output).toContain("export const userProfileSchema =");
 

@@ -24,9 +24,7 @@ const PlaywrightGeneratorOptionsSchema = z.strictObject({
 	output: z.string().optional(),
 	outputClient: z.string().optional(),
 	outputService: z.string().optional(),
-	generateService: z.boolean().optional(),
 	validateServiceRequest: z.boolean().optional(),
-	includeDescriptions: z.boolean().optional(),
 	enumType: z.enum(["zod", "typescript"]).optional(),
 	useDescribe: z.boolean().optional(),
 	prefix: z.string().optional(),
@@ -36,6 +34,7 @@ const PlaywrightGeneratorOptionsSchema = z.strictObject({
 	request: RequestResponseOptionsSchema.optional(),
 	response: RequestResponseOptionsSchema.optional(),
 	name: z.string().optional(),
+	basePath: z.string().optional(),
 	// schemaType is not included - always "all" for Playwright
 });
 
@@ -56,6 +55,7 @@ const PlaywrightConfigFileSchema = z.strictObject({
 			validateServiceRequest: z.boolean().optional(),
 			outputClient: z.string().optional(),
 			outputService: z.string().optional(),
+			basePath: z.string().optional(),
 		})
 		.optional(),
 	specs: z.array(PlaywrightGeneratorOptionsSchema).min(1, "At least one spec is required"),
@@ -200,7 +200,6 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): Playwrigh
 			prefix: defaults.prefix,
 			suffix: defaults.suffix,
 			showStats: defaults.showStats,
-			generateService: defaults.generateService,
 			validateServiceRequest: defaults.validateServiceRequest,
 			outputClient: defaults.outputClient,
 			outputService: defaults.outputService,

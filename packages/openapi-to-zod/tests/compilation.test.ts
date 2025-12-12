@@ -61,9 +61,6 @@ describe("Comprehensive Compilation Tests", () => {
 				request: {
 					typeMode: "inferred",
 				},
-				response: {
-					typeMode: "inferred",
-				},
 			});
 		});
 
@@ -71,9 +68,6 @@ describe("Comprehensive Compilation Tests", () => {
 			generateAndTrack("typemode-native", {
 				input: TestUtils.getFixturePath("complex.yaml"),
 				request: {
-					typeMode: "native",
-				},
-				response: {
 					typeMode: "native",
 				},
 			});
@@ -84,9 +78,6 @@ describe("Comprehensive Compilation Tests", () => {
 				input: TestUtils.getFixturePath("type-mode.yaml"),
 				request: {
 					typeMode: "native",
-				},
-				response: {
-					typeMode: "inferred",
 				},
 			});
 		});
@@ -114,21 +105,12 @@ describe("Comprehensive Compilation Tests", () => {
 					typeMode: "native",
 					nativeEnumType: "union",
 				},
-				response: {
-					typeMode: "native",
-					nativeEnumType: "union",
-				},
 			});
 		});
-
 		it("should generate with nativeEnumType: enum (native mode)", () => {
 			generateAndTrack("native-enum-enum", {
 				input: TestUtils.getFixturePath("complex.yaml"),
 				request: {
-					typeMode: "native",
-					nativeEnumType: "enum",
-				},
-				response: {
 					typeMode: "native",
 					nativeEnumType: "enum",
 				},
@@ -302,12 +284,8 @@ describe("Comprehensive Compilation Tests", () => {
 				request: {
 					typeMode: "inferred",
 				},
-				response: {
-					typeMode: "inferred",
-				},
 			});
 		});
-
 		it("should generate with native types and all features", () => {
 			generateAndTrack("native-all-features", {
 				input: TestUtils.getFixturePath("complex.yaml"),
@@ -317,10 +295,6 @@ describe("Comprehensive Compilation Tests", () => {
 				prefix: "v1",
 				suffix: "type",
 				request: {
-					typeMode: "native",
-					nativeEnumType: "enum",
-				},
-				response: {
 					typeMode: "native",
 					nativeEnumType: "enum",
 				},
@@ -337,7 +311,6 @@ describe("Comprehensive Compilation Tests", () => {
 					includeDescriptions: false,
 				},
 				response: {
-					typeMode: "inferred",
 					mode: "loose",
 					useDescribe: true,
 					includeDescriptions: true,

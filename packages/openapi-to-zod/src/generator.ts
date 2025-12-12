@@ -246,6 +246,12 @@ export class ZodSchemaGenerator {
 	private resolveOptionsForContext(context: "request" | "response"): ResolvedOptions {
 		const contextOptions = context === "request" ? this.options.request : this.options.response;
 
+		// For nativeEnumType, only access it from request options since ResponseOptions doesn't have it
+		const nativeEnumType =
+			context === "request"
+				? (this.options.request?.nativeEnumType ?? this.options.nativeEnumType ?? "union")
+				: (this.options.nativeEnumType ?? "union");
+
 		return {
 			mode: contextOptions?.mode ?? this.options.mode ?? "normal",
 			enumType: contextOptions?.enumType ?? this.options.enumType ?? "zod",
@@ -253,8 +259,8 @@ export class ZodSchemaGenerator {
 			includeDescriptions: contextOptions?.includeDescriptions ?? this.options.includeDescriptions ?? true,
 			// Response schemas always use 'inferred' mode (Zod schemas are required)
 			// Request schemas can optionally use 'native' mode
-			typeMode: context === "response" ? "inferred" : (contextOptions?.typeMode ?? "inferred"),
-			nativeEnumType: contextOptions?.nativeEnumType ?? this.options.nativeEnumType ?? "union",
+			typeMode: context === "response" ? "inferred" : (this.options.request?.typeMode ?? "inferred"),
+			nativeEnumType,
 		};
 	}
 

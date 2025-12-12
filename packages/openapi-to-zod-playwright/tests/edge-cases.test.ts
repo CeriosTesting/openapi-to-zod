@@ -11,7 +11,7 @@ describe("Edge Cases", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 
 		// Should generate basic structure even with no endpoints
 		// Empty spec won't have schemas or client methods
@@ -25,7 +25,7 @@ describe("Edge Cases", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 
 		// Should generate schemas but no client/service methods since no paths
 		expect(output).toContain("userSchema");
@@ -38,7 +38,7 @@ describe("Edge Cases", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 		expect(output).toBeTruthy();
 	});
 
@@ -49,9 +49,9 @@ describe("Edge Cases", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
-		expect(output).toBeTruthy();
-		expect(output).toContain(
+		const clientOutput = generator.generateClientString();
+		expect(clientOutput).toBeTruthy();
+		expect(clientOutput).toContain(
 			"getApiV1OrganizationsByOrgIdTeamsByTeamIdProjectsByProjectIdRepositoriesByRepoIdBranchesByBranchIdCommitsByCommitIdFilesByFileId"
 		);
 	});
@@ -63,10 +63,10 @@ describe("Edge Cases", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
-		expect(output).toBeTruthy();
-		expect(output).toContain("getUserProfiles");
-		expect(output).toContain("getUserSettings");
+		const clientOutput = generator.generateClientString();
+		expect(clientOutput).toBeTruthy();
+		expect(clientOutput).toContain("getUserProfiles");
+		expect(clientOutput).toContain("getUserSettings");
 	});
 
 	it("should handle circular references in schemas", () => {
@@ -76,11 +76,12 @@ describe("Edge Cases", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const schemasOutput = generator.generateSchemasString();
+		const clientOutput = generator.generateClientString();
 
 		// Schema generator handles circular refs - check it generates
-		expect(output).toContain("treeNodeSchema");
-		expect(output).toContain("export class ApiClient");
+		expect(schemasOutput).toContain("treeNodeSchema");
+		expect(clientOutput).toContain("export class ApiClient");
 	});
 
 	it("should handle very deeply nested schemas", () => {
@@ -90,7 +91,7 @@ describe("Edge Cases", () => {
 			input: fixtureFile,
 		});
 
-		const output = generator.generateString();
+		const output = generator.generateSchemasString();
 		expect(output).toBeTruthy();
 		expect(output).toContain("level1Schema");
 	});
@@ -118,7 +119,7 @@ describe("Edge Cases", () => {
 			const generator = new PlaywrightGenerator({
 				input: fixtureFile,
 			});
-			generator.generateString();
+			generator.generateSchemasString();
 		}).toThrow();
 	});
 });
@@ -133,7 +134,7 @@ describe("Performance", () => {
 			input: fixtureFile,
 		});
 
-		generator.generateString();
+		generator.generateSchemasString();
 
 		const endTime = Date.now();
 		const duration = endTime - startTime;
@@ -151,11 +152,11 @@ describe("Performance", () => {
 
 		// Generate multiple times
 		for (let i = 0; i < 100; i++) {
-			generator.generateString();
+			generator.generateSchemasString();
 		}
 
 		// Should complete without errors
-		expect(generator.generateString()).toBeTruthy();
+		expect(generator.generateSchemasString()).toBeTruthy();
 	});
 
 	it("should cache spec parsing for repeated generations", () => {
@@ -167,9 +168,9 @@ describe("Performance", () => {
 		});
 
 		// Generate multiple times - should use caching internally
-		const output1 = generator.generateString();
-		const output2 = generator.generateString();
-		const output3 = generator.generateString();
+		const output1 = generator.generateSchemasString();
+		const output2 = generator.generateSchemasString();
+		const output3 = generator.generateSchemasString();
 
 		// All outputs should be identical (demonstrating cache consistency)
 		expect(output1).toBe(output2);

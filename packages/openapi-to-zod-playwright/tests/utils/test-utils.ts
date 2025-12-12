@@ -42,6 +42,6 @@ export const TestUtils = {
 			input: this.getFixturePath(fixtureName),
 			...options,
 		});
-		return generator.generateString();
+		return generator.generateSchemasString();
 	},
 } as const;

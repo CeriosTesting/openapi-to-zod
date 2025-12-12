@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { PlaywrightGenerator } from "../src/playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
-describe("Content Type Handling", () => {
+describe("Content-Type Handling", () => {
 	const fixtureFile = TestUtils.getFixturePath("content-types-api.yaml");
 
 	function generateOutput(): string {
 		const generator = new PlaywrightGenerator({
 			input: fixtureFile,
 		});
-		return generator.generateString();
+		return generator.generateClientString();
 	}
 
 	it("should handle multiple content types", () => {
@@ -37,10 +37,12 @@ describe("Content Type Handling", () => {
 	});
 
 	it("should generate valid TypeScript code", () => {
-		const output = generateOutput();
+		const clientOutput = generateOutput();
+		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const schemasOutput = generator.generateSchemasString();
 
 		// Should compile without errors
-		expect(output).toContain("export class ApiClient");
-		expect(output).toContain('import { z } from "zod"');
+		expect(clientOutput).toContain("export class ApiClient");
+		expect(schemasOutput).toContain('import { z } from "zod"');
 	});
 });
