@@ -834,14 +834,14 @@ All errors include:
 
 ## API Reference
 
-### `generateZodSchemas(options: GeneratorOptions): void`
+### `generateZodSchemas(options: OpenApiGeneratorOptions): void`
 
 Main function to generate schemas.
 
 #### Options
 
 ```typescript
-interface GeneratorOptions {
+interface OpenApiGeneratorOptions {
   /**
    * Object validation mode
    * - 'strict': Uses z.strictObject() - no additional properties allowed

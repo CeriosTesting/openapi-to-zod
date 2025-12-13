@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Advanced Features", () => {
@@ -7,7 +7,7 @@ describe("Advanced Features", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should generate service methods that extract parameters", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -20,7 +20,7 @@ describe("Advanced Features", () => {
 		});
 
 		it("should generate client methods with raw Playwright options", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -36,7 +36,7 @@ describe("Advanced Features", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should generate client-service by default", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -48,7 +48,7 @@ describe("Advanced Features", () => {
 		});
 
 		it("should always generate both client and service", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -63,7 +63,7 @@ describe("Advanced Features", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should handle outputClient option with relative imports", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -80,7 +80,7 @@ describe("Advanced Features", () => {
 		});
 
 		it("should handle outputService option with relative imports", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -104,7 +104,7 @@ describe("Advanced Features", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should respect mode option", () => {
-			const strictGenerator = new PlaywrightGenerator({
+			const strictGenerator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				mode: "strict",
 			});
@@ -114,7 +114,7 @@ describe("Advanced Features", () => {
 		});
 
 		it("should respect requestTypeMode option", () => {
-			const nativeGenerator = new PlaywrightGenerator({
+			const nativeGenerator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				request: {
 					typeMode: "native",
@@ -126,7 +126,7 @@ describe("Advanced Features", () => {
 			expect(output).toContain("z.object(");
 		});
 		it("should respect enumType option", () => {
-			const tsEnumGenerator = new PlaywrightGenerator({
+			const tsEnumGenerator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				enumType: "typescript",
 			});
@@ -137,7 +137,7 @@ describe("Advanced Features", () => {
 		});
 
 		it("should respect prefix and suffix options", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				prefix: "api",
 				suffix: "Dto",
@@ -148,12 +148,12 @@ describe("Advanced Features", () => {
 		});
 
 		it("should respect includeDescriptions option", () => {
-			const withDescriptions = new PlaywrightGenerator({
+			const withDescriptions = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				includeDescriptions: true,
 			});
 
-			const withoutDescriptions = new PlaywrightGenerator({
+			const withoutDescriptions = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				includeDescriptions: false,
 			});
@@ -170,7 +170,7 @@ describe("Advanced Features", () => {
 		});
 
 		it("should respect useDescribe option", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				useDescribe: true,
 			});
@@ -181,12 +181,12 @@ describe("Advanced Features", () => {
 		});
 
 		it("should respect showStats option", () => {
-			const withStats = new PlaywrightGenerator({
+			const withStats = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
 
-			const withoutStats = new PlaywrightGenerator({
+			const withoutStats = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: false,
 			});

@@ -1,6 +1,6 @@
 import { cosmiconfig, type Loader } from "cosmiconfig";
 import { z } from "zod";
-import type { ConfigFile, GeneratorOptions } from "../types";
+import type { ConfigFile, OpenApiGeneratorOptions } from "../types";
 
 /**
  * Zod schema for strict validation of config files
@@ -18,7 +18,7 @@ const RequestResponseOptionsSchema = z.strictObject({
 	nativeEnumType: NativeEnumTypeSchema.optional(),
 });
 
-const GeneratorOptionsSchema = z.strictObject({
+const OpenApiGeneratorOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
 	input: z.string(),
 	output: z.string(),
@@ -51,7 +51,7 @@ const ConfigFileSchema = z.strictObject({
 			response: RequestResponseOptionsSchema.optional(),
 		})
 		.optional(),
-	specs: z.array(GeneratorOptionsSchema).min(1, "At least one spec is required"),
+	specs: z.array(OpenApiGeneratorOptionsSchema).min(1, "At least one spec is required"),
 	executionMode: z.enum(["parallel", "sequential"]).optional(),
 });
 
@@ -171,9 +171,9 @@ export async function loadConfig(configPath?: string): Promise<ConfigFile> {
  * CLI arguments have highest precedence and are merged separately in CLI layer
  *
  * @param config - Validated configuration file
- * @returns Array of fully resolved GeneratorOptions objects
+ * @returns Array of fully resolved OpenApiGeneratorOptions objects
  */
-export function mergeConfigWithDefaults(config: ConfigFile): GeneratorOptions[] {
+export function mergeConfigWithDefaults(config: ConfigFile): OpenApiGeneratorOptions[] {
 	if (!config?.specs || !Array.isArray(config.specs)) {
 		throw new Error("Invalid config: specs array is required");
 	}
@@ -182,7 +182,7 @@ export function mergeConfigWithDefaults(config: ConfigFile): GeneratorOptions[] 
 
 	return config.specs.map(spec => {
 		// Deep merge: spec options override defaults
-		const merged: GeneratorOptions = {
+		const merged: OpenApiGeneratorOptions = {
 			// Apply defaults first
 			mode: defaults.mode,
 			includeDescriptions: defaults.includeDescriptions,
@@ -207,15 +207,15 @@ export function mergeConfigWithDefaults(config: ConfigFile): GeneratorOptions[] 
  *
  * @param specConfig - Configuration from config file (with defaults already applied)
  * @param cliOptions - Options provided via CLI arguments
- * @returns Merged GeneratorOptions with CLI taking precedence
+ * @returns Merged OpenApiGeneratorOptions with CLI taking precedence
  */
 export function mergeCliWithConfig(
-	specConfig: GeneratorOptions,
-	cliOptions: Partial<GeneratorOptions>
-): GeneratorOptions {
+	specConfig: OpenApiGeneratorOptions,
+	cliOptions: Partial<OpenApiGeneratorOptions>
+): OpenApiGeneratorOptions {
 	// CLI options override everything
 	return {
 		...specConfig,
 		...Object.fromEntries(Object.entries(cliOptions).filter(([_, v]) => v !== undefined)),
-	} as GeneratorOptions;
+	} as OpenApiGeneratorOptions;
 }

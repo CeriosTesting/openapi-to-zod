@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Split Files - Path Edge Cases", () => {
@@ -28,7 +28,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Same directory scenarios", () => {
 		it("should handle all files in same directory with ./ imports", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("api-schemas.ts"),
 				outputClient: TestUtils.getOutputPath("api-client.ts"),
@@ -55,7 +55,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("One level up/down scenarios", () => {
 		it("should handle client one level down from schemas", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("schemas.ts"),
 				outputClient: TestUtils.getOutputPath("clients/api-client.ts"),
@@ -73,7 +73,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle schemas one level down from client", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("nested/schemas.ts"),
 				outputClient: TestUtils.getOutputPath("client.ts"),
@@ -90,7 +90,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle all files one level down in different subdirs", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("nested/schemas/main.ts"),
 				outputClient: TestUtils.getOutputPath("nested/clients/api.ts"),
@@ -109,7 +109,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Deep nesting scenarios", () => {
 		it("should handle deeply nested schemas with shallow client", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("deep/nested/structure/schemas.ts"),
 				outputClient: TestUtils.getOutputPath("client.ts"),
@@ -125,7 +125,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle shallow schemas with deeply nested client and service", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("schemas.ts"),
 				outputClient: TestUtils.getOutputPath("deep/nested/client/api.ts"),
@@ -143,7 +143,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle all files deeply nested in parallel structures", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("a/b/c/schemas.ts"),
 				outputClient: TestUtils.getOutputPath("a/b/d/client.ts"),
@@ -162,7 +162,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Complex cross-directory scenarios", () => {
 		it("should handle schema at root, client deep, service deeper", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("root-schemas.ts"),
 				outputClient: TestUtils.getOutputPath("clients/v1/api-client.ts"),
@@ -180,7 +180,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle completely divergent paths", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("a/schemas/main.ts"),
 				outputClient: TestUtils.getOutputPath("clients/b/api.ts"),
@@ -200,7 +200,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Windows vs Unix path handling", () => {
 		it("should normalize backslashes to forward slashes in imports", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("schemas\\types\\main.ts"),
 				outputClient: TestUtils.getOutputPath("clients\\api\\client.ts"),
@@ -220,7 +220,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Class name derivation with paths", () => {
 		it("should derive correct class names from nested file paths", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("api/v1/schemas.ts"),
 				outputClient: TestUtils.getOutputPath("api/v1/petstore-client.ts"),
@@ -239,7 +239,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle different naming patterns across directories", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("core/types.ts"),
 				outputClient: TestUtils.getOutputPath("http/my-api-client.ts"),
@@ -260,7 +260,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Import type detection", () => {
 		it("should correctly detect ApiRequestContextOptions usage in service", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("schemas.ts"),
 				outputClient: TestUtils.getOutputPath("clients/api.ts"),
@@ -279,7 +279,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should conditionally import MultipartFormValue when used", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("schemas.ts"),
 				outputClient: TestUtils.getOutputPath("nested/client.ts"),
@@ -300,7 +300,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Error handling", () => {
 		it("should handle relative path when files share common ancestor", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("shared/api/schemas.ts"),
 				outputClient: TestUtils.getOutputPath("shared/clients/api.ts"),
@@ -319,7 +319,7 @@ describe("Split Files - Path Edge Cases", () => {
 
 	describe("Real-world directory structures", () => {
 		it("should handle typical src/tests split structure", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("schemas/generated/api.ts"),
 				outputClient: TestUtils.getOutputPath("clients/generated/api-client.ts"),
@@ -335,7 +335,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle monorepo packages structure", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("schemas/api/types.ts"),
 				outputClient: TestUtils.getOutputPath("clients/http/api.ts"),
@@ -351,7 +351,7 @@ describe("Split Files - Path Edge Cases", () => {
 		});
 
 		it("should handle lib/src/generated pattern", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("deep/lib/generated/schemas.ts"),
 				outputClient: TestUtils.getOutputPath("deep/src/api/client.ts"),

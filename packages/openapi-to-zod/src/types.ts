@@ -71,7 +71,7 @@ export interface ResponseOptions extends CommonSchemaOptions {
 	// Responses don't support typeMode - always generate Zod schemas
 }
 
-export interface GeneratorOptions {
+export interface OpenApiGeneratorOptions {
 	/**
 	 * Object validation mode
 	 * - 'strict': Uses z.strictObject() - no additional properties allowed
@@ -237,13 +237,13 @@ export interface ConfigFile {
 	 * Global default options applied to all specs
 	 * Can be overridden by individual spec configurations
 	 */
-	defaults?: Partial<Omit<GeneratorOptions, "input" | "output">>;
+	defaults?: Partial<Omit<OpenApiGeneratorOptions, "input" | "output">>;
 
 	/**
 	 * Array of OpenAPI specifications to process
 	 * Each spec must have input and output paths
 	 */
-	specs: GeneratorOptions[];
+	specs: OpenApiGeneratorOptions[];
 
 	/**
 	 * Execution mode for batch processing

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Content-Type Handling", () => {
 	const fixtureFile = TestUtils.getFixturePath("content-types-api.yaml");
 
 	function generateOutput(): string {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		return generator.generateClientString();
@@ -38,7 +38,7 @@ describe("Content-Type Handling", () => {
 
 	it("should generate valid TypeScript code", () => {
 		const clientOutput = generateOutput();
-		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 		const schemasOutput = generator.generateSchemasString();
 
 		// Should compile without errors

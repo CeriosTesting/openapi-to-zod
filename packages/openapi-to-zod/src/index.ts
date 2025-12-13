@@ -7,6 +7,6 @@ export {
 	SchemaGenerationError,
 	SpecValidationError,
 } from "./errors";
-export { ZodSchemaGenerator } from "./generator";
-export type { ConfigFile, ExecutionMode, GeneratorOptions, OpenAPISpec } from "./types";
+export { OpenApiGenerator } from "./openapi-generator";
+export type { ConfigFile, ExecutionMode, OpenAPISpec, OpenApiGeneratorOptions } from "./types";
 export { defineConfig } from "./types";

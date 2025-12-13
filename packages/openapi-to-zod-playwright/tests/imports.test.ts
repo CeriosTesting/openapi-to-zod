@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Imports", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 	it("should not include Playwright imports in schemas-only output", () => {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -18,7 +18,7 @@ describe("Imports", () => {
 	});
 
 	it("should include Zod import", () => {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -27,7 +27,7 @@ describe("Imports", () => {
 	});
 
 	it("should organize imports correctly", () => {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -45,7 +45,7 @@ describe("Imports", () => {
 	});
 
 	it("should include Playwright imports in client file", () => {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -57,7 +57,7 @@ describe("Imports", () => {
 	});
 
 	it("should include proper imports in split files", () => {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 

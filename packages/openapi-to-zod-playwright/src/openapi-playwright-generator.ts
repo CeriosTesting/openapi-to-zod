@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, normalize, relative } from "node:path";
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
-import { ZodSchemaGenerator } from "@cerios/openapi-to-zod";
+import { OpenApiGenerator } from "@cerios/openapi-to-zod";
 import { parse } from "yaml";
 import { ClientGenerationError, ConfigurationError, FileOperationError, SpecValidationError } from "./errors";
 import { generateClientClass } from "./generators/client-generator";
 import { generateServiceClass } from "./generators/service-generator";
-import type { PlaywrightGeneratorOptions } from "./types";
+import type { OpenApiPlaywrightOpenApiGeneratorOptions } from "./types";
 import { LRUCache } from "./utils/lru-cache";
 import { toPascalCase } from "./utils/string-utils";
 
@@ -14,12 +14,12 @@ import { toPascalCase } from "./utils/string-utils";
  * Main generator class for Playwright API clients
  * Supports file splitting: schemas (always), client (optional), service (optional, requires client)
  */
-export class PlaywrightGenerator {
-	private options: PlaywrightGeneratorOptions & { schemaType: "all" };
+export class OpenApiPlaywrightGenerator {
+	private options: OpenApiPlaywrightOpenApiGeneratorOptions & { schemaType: "all" };
 	private spec: OpenAPISpec | null = null;
 	private static specCache = new LRUCache<string, OpenAPISpec>(50); // Cache for parsed specs
 
-	constructor(options: PlaywrightGeneratorOptions) {
+	constructor(options: OpenApiPlaywrightOpenApiGeneratorOptions) {
 		// Input validation
 		if (!options.input) {
 			throw new FileOperationError("Input path is required", "");
@@ -147,7 +147,7 @@ export class PlaywrightGenerator {
 			this.spec = this.parseSpec();
 		}
 
-		const schemaGenerator = new ZodSchemaGenerator(this.options);
+		const schemaGenerator = new OpenApiGenerator(this.options);
 		return schemaGenerator.generateString();
 	}
 
@@ -187,7 +187,7 @@ export class PlaywrightGenerator {
 	 */
 	private parseSpec(): OpenAPISpec {
 		// Check cache first for performance
-		const cached = PlaywrightGenerator.specCache.get(this.options.input);
+		const cached = OpenApiPlaywrightGenerator.specCache.get(this.options.input);
 		if (cached) {
 			return cached;
 		}
@@ -238,7 +238,7 @@ export class PlaywrightGenerator {
 			}
 
 			// Cache the parsed spec for performance
-			PlaywrightGenerator.specCache.set(this.options.input, spec);
+			OpenApiPlaywrightGenerator.specCache.set(this.options.input, spec);
 			return spec;
 		} catch (error) {
 			if (error instanceof SpecValidationError) {

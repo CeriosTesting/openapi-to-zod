@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 /**
@@ -8,8 +8,8 @@ import { TestUtils } from "./utils/test-utils";
  * Covers: title, examples, descriptions, JSDoc generation, .describe() runtime
  */
 describe("Metadata and Documentation", () => {
-	function generateOutput(options?: Partial<GeneratorOptions>): string {
-		const generator = new ZodSchemaGenerator({
+	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath("documentation.yaml"),
 			...options,
 		});

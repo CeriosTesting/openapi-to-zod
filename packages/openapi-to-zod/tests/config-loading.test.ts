@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ConfigFile, GeneratorOptions } from "../src/types";
+import type { ConfigFile, OpenApiGeneratorOptions } from "../src/types";
 import { loadConfig, mergeCliWithConfig, mergeConfigWithDefaults } from "../src/utils/config-loader";
 import { TestUtils } from "./utils/test-utils";
 
@@ -113,7 +113,7 @@ describe("Config Loading", () => {
 
 	describe("mergeCliWithConfig", () => {
 		it("should override config options with CLI options", () => {
-			const GeneratorOptions: GeneratorOptions = {
+			const OpenApiGeneratorOptions: OpenApiGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "normal",
@@ -121,12 +121,12 @@ describe("Config Loading", () => {
 				enumType: "zod",
 			};
 
-			const cliOptions: Partial<GeneratorOptions> = {
+			const cliOptions: Partial<OpenApiGeneratorOptions> = {
 				mode: "strict",
 				prefix: "cli",
 			};
 
-			const merged = mergeCliWithConfig(GeneratorOptions, cliOptions);
+			const merged = mergeCliWithConfig(OpenApiGeneratorOptions, cliOptions);
 
 			expect(merged.mode).toBe("strict");
 			expect(merged.prefix).toBe("cli");
@@ -135,32 +135,32 @@ describe("Config Loading", () => {
 		});
 
 		it("should ignore undefined CLI options", () => {
-			const GeneratorOptions: GeneratorOptions = {
+			const OpenApiGeneratorOptions: OpenApiGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "normal",
 				showStats: true,
 			};
 
-			const cliOptions: Partial<GeneratorOptions> = {
+			const cliOptions: Partial<OpenApiGeneratorOptions> = {
 				mode: undefined,
 				prefix: "test",
 			};
 
-			const merged = mergeCliWithConfig(GeneratorOptions, cliOptions);
+			const merged = mergeCliWithConfig(OpenApiGeneratorOptions, cliOptions);
 
 			expect(merged.mode).toBe("normal");
 			expect(merged.prefix).toBe("test");
 		});
 
 		it("should handle empty CLI options", () => {
-			const GeneratorOptions: GeneratorOptions = {
+			const OpenApiGeneratorOptions: OpenApiGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "loose",
 			};
 
-			const merged = mergeCliWithConfig(GeneratorOptions, {});
+			const merged = mergeCliWithConfig(OpenApiGeneratorOptions, {});
 
 			expect(merged.mode).toBe("loose");
 			expect(merged.input).toBe("api.yaml");

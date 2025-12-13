@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 /**
@@ -8,7 +8,7 @@ import { TestUtils } from "./utils/test-utils";
 describe("LRU Cache Performance", () => {
 	describe("Pattern Cache in String Validator", () => {
 		it("should cache regex patterns for reuse", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("constraints.yaml"),
 				showStats: false, // Disable stats to avoid timestamp differences
 			});
@@ -23,7 +23,7 @@ describe("LRU Cache Performance", () => {
 			expect(output2).toBe(output3);
 		});
 		it("should handle schemas with many pattern constraints efficiently", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("constraints.yaml"),
 			});
 
@@ -43,7 +43,7 @@ describe("LRU Cache Performance", () => {
 
 		it("should not cause memory issues with many unique patterns", () => {
 			// Test that cache eviction works by generating schemas with many patterns
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("complex.yaml"),
 			});
 
@@ -59,7 +59,7 @@ describe("LRU Cache Performance", () => {
 
 	describe("Schema Cache in Property Generator", () => {
 		it("should cache generated property schemas", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("simple.yaml"),
 			});
 
@@ -77,7 +77,7 @@ describe("LRU Cache Performance", () => {
 		});
 
 		it("should handle schemas with repeated property types", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("complex.yaml"),
 			});
 
@@ -92,7 +92,7 @@ describe("LRU Cache Performance", () => {
 			const memBefore = process.memoryUsage().heapUsed;
 
 			for (let i = 0; i < 50; i++) {
-				const generator = new ZodSchemaGenerator({
+				const generator = new OpenApiGenerator({
 					input: TestUtils.getFixturePath("simple.yaml"),
 				});
 				generator.generateString();
@@ -113,7 +113,7 @@ describe("LRU Cache Performance", () => {
 
 	describe("Cache Performance with Complex Schemas", () => {
 		it("should handle circular references efficiently", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("circular.yaml"),
 			});
 
@@ -126,7 +126,7 @@ describe("LRU Cache Performance", () => {
 		});
 
 		it("should handle large schemas without performance degradation", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("complex.yaml"),
 			});
 
@@ -139,7 +139,7 @@ describe("LRU Cache Performance", () => {
 		});
 
 		it("should maintain performance across multiple calls", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("simple.yaml"),
 			});
 

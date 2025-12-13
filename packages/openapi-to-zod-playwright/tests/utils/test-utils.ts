@@ -1,7 +1,7 @@
 import { existsSync, unlinkSync } from "node:fs";
 import path from "node:path";
-import { PlaywrightGenerator } from "../../src/playwright-generator";
-import type { PlaywrightGeneratorOptions } from "../../src/types";
+import { OpenApiPlaywrightGenerator } from "../../src/openapi-playwright-generator";
+import type { OpenApiPlaywrightOpenApiGeneratorOptions } from "../../src/types";
 
 export const outputDir = path.join(__dirname, "..", "output");
 export const fixturesDir = path.join(__dirname, "..", "fixtures");
@@ -41,8 +41,8 @@ export const TestUtils = {
 	 * @param options - Partial generator options to merge with defaults
 	 * @returns Generated Playwright client string
 	 */
-	generateClient(fixtureName: string, options?: Partial<PlaywrightGeneratorOptions>): string {
-		const generator = new PlaywrightGenerator({
+	generateClient(fixtureName: string, options?: Partial<OpenApiPlaywrightOpenApiGeneratorOptions>): string {
+		const generator = new OpenApiPlaywrightGenerator({
 			input: this.getFixturePath(fixtureName),
 			...options,
 		});

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { executeBatch } from "../src/batch-executor";
-import type { GeneratorOptions } from "../src/types";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 /**
@@ -9,7 +9,7 @@ import { TestUtils } from "./utils/test-utils";
 describe("Memory Management", () => {
 	describe("Batch Executor Cleanup", () => {
 		it("should clean up memory after large batch execution", async () => {
-			const specs: GeneratorOptions[] = Array.from({ length: 15 }, (_, i) => ({
+			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 15 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`memory-test-${i}.ts`),
 			}));
@@ -33,7 +33,7 @@ describe("Memory Management", () => {
 		}, 30000);
 
 		it("should handle small batches without triggering cleanup", async () => {
-			const specs: GeneratorOptions[] = Array.from({ length: 5 }, (_, i) => ({
+			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 5 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`small-batch-${i}.ts`),
 			}));
@@ -45,7 +45,7 @@ describe("Memory Management", () => {
 		});
 
 		it("should handle very large batches efficiently", async () => {
-			const specs: GeneratorOptions[] = Array.from({ length: 25 }, (_, i) => ({
+			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 25 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`large-batch-${i}.ts`),
 			}));
@@ -75,7 +75,7 @@ describe("Memory Management", () => {
 
 			// Run 10 small batches
 			for (let batch = 0; batch < 10; batch++) {
-				const specs: GeneratorOptions[] = Array.from({ length: 3 }, (_, i) => ({
+				const specs: OpenApiGeneratorOptions[] = Array.from({ length: 3 }, (_, i) => ({
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath(`repeat-batch-${batch}-${i}.ts`),
 				}));
@@ -98,10 +98,10 @@ describe("Memory Management", () => {
 
 	describe("Generator Memory Usage", () => {
 		it("should not leak memory with repeated single generations", async () => {
-			const { ZodSchemaGenerator } = await import("../src/generator.js");
+			const { OpenApiGenerator } = await import("../src/openapi-generator.js");
 			const memBefore = process.memoryUsage().heapUsed;
 			for (let i = 0; i < 100; i++) {
-				const generator = new ZodSchemaGenerator({
+				const generator = new OpenApiGenerator({
 					input: TestUtils.getFixturePath("simple.yaml"),
 				});
 				generator.generateString();
@@ -120,9 +120,9 @@ describe("Memory Management", () => {
 		});
 
 		it("should handle complex schemas without memory issues", async () => {
-			const { ZodSchemaGenerator } = await import("../src/generator.js");
+			const { OpenApiGenerator } = await import("../src/openapi-generator.js");
 			for (let i = 0; i < 10; i++) {
-				const generator = new ZodSchemaGenerator({
+				const generator = new OpenApiGenerator({
 					input: TestUtils.getFixturePath("complex.yaml"),
 				});
 				generator.generateString();

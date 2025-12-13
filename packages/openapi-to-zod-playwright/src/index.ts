@@ -4,10 +4,10 @@ export {
 	CliOptionsError,
 	ConfigValidationError,
 	FileOperationError,
-	PlaywrightGeneratorError,
+	OpenApiPlaywrightGeneratorError,
 	SpecValidationError,
 } from "./errors";
-export { PlaywrightGenerator } from "./playwright-generator";
-export type { PlaywrightConfigFile, PlaywrightGeneratorOptions } from "./types";
+export { OpenApiPlaywrightGenerator } from "./openapi-playwright-generator";
+export type { OpenApiPlaywrightOpenApiGeneratorOptions, PlaywrightConfigFile } from "./types";
 export { defineConfig } from "./types";
 export { loadConfig, mergeCliWithConfig, mergeConfigWithDefaults } from "./utils/config-loader";

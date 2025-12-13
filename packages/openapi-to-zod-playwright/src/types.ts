@@ -1,4 +1,4 @@
-import type { GeneratorOptions } from "@cerios/openapi-to-zod";
+import type { OpenApiGeneratorOptions } from "@cerios/openapi-to-zod";
 
 /**
  * Generator options for Playwright client generation
@@ -8,7 +8,7 @@ import type { GeneratorOptions } from "@cerios/openapi-to-zod";
  * - Client (outputClient): Optional, Playwright API passthrough wrapper
  * - Service (outputService): Optional, type-safe validation layer (requires outputClient)
  */
-export interface PlaywrightGeneratorOptions extends Omit<GeneratorOptions, "schemaType"> {
+export interface OpenApiPlaywrightOpenApiGeneratorOptions extends Omit<OpenApiGeneratorOptions, "schemaType"> {
 	/**
 	 * Input OpenAPI specification file path (YAML or JSON)
 	 */
@@ -84,13 +84,13 @@ export interface PlaywrightConfigFile {
 	 * Global default options applied to all specs
 	 * Can be overridden by individual spec configurations
 	 */
-	defaults?: Partial<Omit<PlaywrightGeneratorOptions, "input" | "output">>;
+	defaults?: Partial<Omit<OpenApiPlaywrightOpenApiGeneratorOptions, "input" | "output">>;
 
 	/**
 	 * Array of OpenAPI specifications to process
 	 * Each spec must have input and output paths
 	 */
-	specs: PlaywrightGeneratorOptions[];
+	specs: OpenApiPlaywrightOpenApiGeneratorOptions[];
 
 	/**
 	 * Execution mode for batch processing

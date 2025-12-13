@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 /**
@@ -9,8 +9,8 @@ import { TestUtils } from "./utils/test-utils";
 describe("String Generation Methods", () => {
 	const fixturePath = TestUtils.getFixturePath("simple.yaml");
 
-	function generateOutput(options?: Partial<GeneratorOptions>): string {
-		const generator = new ZodSchemaGenerator({
+	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+		const generator = new OpenApiGenerator({
 			input: fixturePath,
 			...options,
 		});
@@ -32,7 +32,7 @@ describe("String Generation Methods", () => {
 	});
 
 	it("should throw error when calling generate() without output path", () => {
-		const generator = new ZodSchemaGenerator({
+		const generator = new OpenApiGenerator({
 			input: fixturePath,
 		});
 

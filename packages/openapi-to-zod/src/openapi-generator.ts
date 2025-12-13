@@ -5,18 +5,18 @@ import { ConfigurationError, FileOperationError, SchemaGenerationError, SpecVali
 import { generateEnum } from "./generators/enum-generator";
 import { generateJSDoc } from "./generators/jsdoc-generator";
 import { PropertyGenerator } from "./generators/property-generator";
-import type { GeneratorOptions, OpenAPISchema, OpenAPISpec, ResolvedOptions, TypeMode } from "./types";
+import type { OpenAPISchema, OpenAPISpec, OpenApiGeneratorOptions, ResolvedOptions, TypeMode } from "./types";
 import { resolveRef, toCamelCase, toPascalCase } from "./utils/name-utils";
 
 type SchemaContext = "request" | "response" | "both";
 
-export class ZodSchemaGenerator {
+export class OpenApiGenerator {
 	private schemas: Map<string, string> = new Map();
 	private types: Map<string, string> = new Map();
 	private enums: Map<string, string> = new Map();
 	private nativeEnums: Map<string, string> = new Map();
 	private schemaDependencies: Map<string, Set<string>> = new Map();
-	private options: GeneratorOptions;
+	private options: OpenApiGeneratorOptions;
 	private spec: OpenAPISpec;
 	private propertyGenerator: PropertyGenerator;
 	private schemaUsageMap: Map<string, SchemaContext> = new Map();
@@ -25,7 +25,7 @@ export class ZodSchemaGenerator {
 	private responseOptions: ResolvedOptions;
 	private needsZodImport = false;
 
-	constructor(options: GeneratorOptions) {
+	constructor(options: OpenApiGeneratorOptions) {
 		// Validate input path early
 		if (!options.input) {
 			throw new ConfigurationError("Input path is required", { providedOptions: options });

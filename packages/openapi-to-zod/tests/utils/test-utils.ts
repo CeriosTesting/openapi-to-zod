@@ -1,7 +1,7 @@
 import { existsSync, unlinkSync } from "node:fs";
 import path from "node:path";
-import { ZodSchemaGenerator } from "../../src/generator";
-import type { GeneratorOptions } from "../../src/types";
+import { OpenApiGenerator } from "../../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../../src/types";
 
 /**
  * Utility functions for testing the OpenAPI to Zod generator
@@ -46,8 +46,8 @@ export const TestUtils = {
 	 * @param options - Partial generator options to merge with defaults
 	 * @returns Generated Zod schema string
 	 */
-	generateFromFixture(fixtureName: string, options?: Partial<GeneratorOptions>): string {
-		const generator = new ZodSchemaGenerator({
+	generateFromFixture(fixtureName: string, options?: Partial<OpenApiGeneratorOptions>): string {
+		const generator = new OpenApiGenerator({
 			input: this.getFixturePath(fixtureName),
 			...options,
 		});

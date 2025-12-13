@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { Command } from "commander";
 import prompts from "prompts";
 import { CliOptionsError } from "./errors";
-import { PlaywrightGenerator } from "./playwright-generator";
+import { OpenApiPlaywrightGenerator } from "./openapi-playwright-generator";
 import type { PlaywrightConfigFile } from "./types";
 import { loadConfig, mergeConfigWithDefaults } from "./utils/config-loader";
 
@@ -131,7 +131,7 @@ async function executeConfigMode(options: { config?: string }): Promise<void> {
 
 	// Generate for each spec
 	for (const spec of specs) {
-		const generator = new PlaywrightGenerator(spec);
+		const generator = new OpenApiPlaywrightGenerator(spec);
 		generator.generate();
 	}
 }

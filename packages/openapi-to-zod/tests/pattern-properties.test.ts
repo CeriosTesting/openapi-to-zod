@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Pattern Properties", () => {
@@ -8,7 +8,7 @@ describe("Pattern Properties", () => {
 
 	describe("Pattern Properties", () => {
 		it("should generate validation for pattern properties", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("pattern-properties.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -24,7 +24,7 @@ describe("Pattern Properties", () => {
 		});
 
 		it("should validate objects with pattern properties", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("pattern-properties.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -60,7 +60,7 @@ describe("Pattern Properties", () => {
 
 	describe("Property Names Validation", () => {
 		it("should generate validation for property name patterns", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("pattern-properties.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -75,7 +75,7 @@ describe("Pattern Properties", () => {
 		});
 
 		it("should validate property names with pattern", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("pattern-properties.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -102,7 +102,7 @@ describe("Pattern Properties", () => {
 		});
 
 		it("should validate property names with maxLength", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("pattern-properties.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -128,7 +128,7 @@ describe("Pattern Properties", () => {
 		});
 
 		it("should validate property names with minLength", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("pattern-properties.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -156,7 +156,7 @@ describe("Pattern Properties", () => {
 
 	describe("Combined Validation", () => {
 		it("should handle both pattern properties and property names", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("pattern-properties.yaml"),
 				output: outputPath,
 				mode: "normal",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Multi-Content-Type Support", () => {
@@ -7,7 +7,7 @@ describe("Multi-Content-Type Support", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should generate service method for application/json", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -18,7 +18,7 @@ describe("Multi-Content-Type Support", () => {
 		});
 
 		it("should accept data parameter for JSON content type", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -29,7 +29,7 @@ describe("Multi-Content-Type Support", () => {
 		});
 
 		it("should pass options to client", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -45,7 +45,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should generate service method for application/x-www-form-urlencoded", () => {
 			const fixture = TestUtils.getFixturePath("form-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -58,7 +58,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should accept form parameter for form-urlencoded content type", () => {
 			const fixture = TestUtils.getFixturePath("form-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -71,7 +71,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should pass options to client", () => {
 			const fixture = TestUtils.getFixturePath("form-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -87,7 +87,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should generate service method for multipart/form-data", () => {
 			const fixture = TestUtils.getFixturePath("upload-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -100,7 +100,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should accept multipart parameter for multipart/form-data", () => {
 			const fixture = TestUtils.getFixturePath("upload-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -113,7 +113,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should pass options to client", () => {
 			const fixture = TestUtils.getFixturePath("upload-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -129,7 +129,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should generate separate methods for each content type", () => {
 			const fixture = TestUtils.getFixturePath("multi-content-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -143,7 +143,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should call the same client method from all service methods", () => {
 			const fixture = TestUtils.getFixturePath("multi-content-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -160,7 +160,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should pass correct parameter type for each content type", () => {
 			const fixture = TestUtils.getFixturePath("multi-content-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -178,7 +178,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should handle params alongside different content types", () => {
 			const fixture = TestUtils.getFixturePath("params-with-body-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
 			});
 
@@ -195,7 +195,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should generate client with unified Playwright options", () => {
 			const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -216,7 +216,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should allow client to accept any Playwright option", () => {
 			const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 

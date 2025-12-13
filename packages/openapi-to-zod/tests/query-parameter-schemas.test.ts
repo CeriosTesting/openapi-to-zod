@@ -1,18 +1,18 @@
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 
 describe("Query Parameter Schema Generation", () => {
 	const fixtureInput = resolve(__dirname, "fixtures/query-parameters.yaml");
 
 	it("should generate query parameter schemas for operations with query params", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Should contain schema for /users endpoint (searchUsers operation)
@@ -33,12 +33,12 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should generate correct types for query parameters", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Check /users endpoint parameters
@@ -51,12 +51,12 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should handle required query parameters", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Check /products endpoint - status is required
@@ -67,12 +67,12 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should handle array parameters with different serialization styles", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// /products - ids with form style (comma-separated)
@@ -86,12 +86,12 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should handle number constraints in query parameters", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// /orders - minAmount and maxAmount with constraints
@@ -100,13 +100,13 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should generate schemas with correct JSDoc comments", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 			includeDescriptions: true,
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Should contain JSDoc with operation name
@@ -116,12 +116,12 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should respect strict mode for query parameter objects", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "strict",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Should use z.strictObject() instead of z.object()
@@ -129,12 +129,12 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should respect loose mode for query parameter objects", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "loose",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Should use z.looseObject() instead of z.object()
@@ -142,14 +142,14 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should work with prefix and suffix options", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 			prefix: "api",
 			suffix: "dto",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Should apply prefix and suffix to schema names
@@ -158,14 +158,14 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should handle useDescribe option for parameter descriptions", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 			useDescribe: true,
 			includeDescriptions: true,
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Should add .describe() calls for parameters with descriptions
@@ -175,12 +175,12 @@ describe("Query Parameter Schema Generation", () => {
 	});
 
 	it("should handle operations without query parameters", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// /config has no query parameters, should not generate schema
@@ -191,24 +191,24 @@ describe("Query Parameter Schema Generation", () => {
 	it("should handle operations without operationId gracefully", () => {
 		// This test uses a fixture where some operations may not have operationId
 		// The generator should skip those operations
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 
 		// Should not throw error
 		expect(() => generator.generateString()).not.toThrow();
 	});
 
 	it("should generate valid TypeScript/Zod code", () => {
-		const options: GeneratorOptions = {
+		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
 			mode: "normal",
 		};
 
-		const generator = new ZodSchemaGenerator(options);
+		const generator = new OpenApiGenerator(options);
 		const output = generator.generateString();
 
 		// Basic validation that output contains valid Zod imports and schemas

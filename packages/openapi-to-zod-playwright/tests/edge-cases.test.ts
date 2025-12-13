@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { FileOperationError } from "../src/errors";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Edge Cases", () => {
 	it("should handle empty OpenAPI spec", () => {
 		const fixtureFile = TestUtils.getFixturePath("empty-spec.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -21,7 +21,7 @@ describe("Edge Cases", () => {
 	it("should handle spec with no paths", () => {
 		const fixtureFile = TestUtils.getFixturePath("no-paths.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -34,7 +34,7 @@ describe("Edge Cases", () => {
 	it("should handle paths with no operations", () => {
 		const fixtureFile = TestUtils.getFixturePath("no-operations.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -45,7 +45,7 @@ describe("Edge Cases", () => {
 	it("should handle very long path names", () => {
 		const fixtureFile = TestUtils.getFixturePath("long-paths.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -59,7 +59,7 @@ describe("Edge Cases", () => {
 	it("should handle special characters in paths", () => {
 		const fixtureFile = TestUtils.getFixturePath("special-chars-paths.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -72,7 +72,7 @@ describe("Edge Cases", () => {
 	it("should handle circular references in schemas", () => {
 		const fixtureFile = TestUtils.getFixturePath("circular-schemas.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -87,7 +87,7 @@ describe("Edge Cases", () => {
 	it("should handle very deeply nested schemas", () => {
 		const fixtureFile = TestUtils.getFixturePath("deep-nesting.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -98,7 +98,7 @@ describe("Edge Cases", () => {
 
 	it("should throw error for non-existent input file", () => {
 		expect(() => {
-			new PlaywrightGenerator({
+			new OpenApiPlaywrightGenerator({
 				input: TestUtils.getFixturePath("non-existent.yaml"),
 			});
 		}).toThrow(FileOperationError);
@@ -106,7 +106,7 @@ describe("Edge Cases", () => {
 
 	it("should throw error for missing input path", () => {
 		expect(() => {
-			new PlaywrightGenerator({
+			new OpenApiPlaywrightGenerator({
 				input: "",
 			});
 		}).toThrow(FileOperationError);
@@ -116,7 +116,7 @@ describe("Edge Cases", () => {
 		const fixtureFile = TestUtils.getFixturePath("invalid-yaml.yaml");
 
 		expect(() => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 			generator.generateSchemasString();
@@ -130,7 +130,7 @@ describe("Performance", () => {
 
 		const startTime = Date.now();
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -146,7 +146,7 @@ describe("Performance", () => {
 	it("should handle multiple generations without memory leaks", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 
@@ -162,7 +162,7 @@ describe("Performance", () => {
 	it("should cache spec parsing for repeated generations", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 			showStats: false, // Disable stats to avoid timestamp differences
 		});

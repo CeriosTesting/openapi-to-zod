@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Query Parameters", () => {
 	const fixtureFile = TestUtils.getFixturePath("query-params-api.yaml");
 
 	function generateClientOutput(): string {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		return generator.generateClientString();

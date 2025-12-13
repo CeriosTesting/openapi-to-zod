@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
@@ -8,7 +8,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 
 	describe("unevaluatedProperties", () => {
 		it("should generate validation for unevaluatedProperties: false", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -24,7 +24,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 		});
 
 		it("should reject objects with unevaluated properties when false", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -54,7 +54,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 		});
 
 		it("should allow typed unevaluated properties with schema", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -85,7 +85,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 		});
 
 		it("should work with oneOf composition", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -120,7 +120,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 		});
 
 		it("should handle anyOf with unevaluated properties", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -158,7 +158,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 
 	describe("unevaluatedItems", () => {
 		it("should generate validation for unevaluatedItems: false", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -173,7 +173,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 		});
 
 		it("should reject arrays with items beyond prefixItems when false", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -194,7 +194,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 		});
 
 		it("should allow typed unevaluated items with schema", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -215,7 +215,7 @@ describe("Unevaluated Properties and Items (OpenAPI 3.1)", () => {
 		});
 
 		it("should work with allOf composition", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("unevaluated.yaml"),
 				output: outputPath,
 				mode: "normal",
