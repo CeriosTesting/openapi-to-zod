@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Headers", () => {
 	const fixtureFile = TestUtils.getFixturePath("headers-api.yaml");
 
 	function generateOutput(): string {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		return generator.generateClientString();

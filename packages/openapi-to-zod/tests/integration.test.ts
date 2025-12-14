@@ -1,8 +1,8 @@
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Integration Tests", () => {
@@ -11,13 +11,13 @@ describe("Integration Tests", () => {
 
 	describe("TypeScript Compilation", () => {
 		it("should generate TypeScript code that compiles without errors", () => {
-			const options: GeneratorOptions = {
+			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: outputPath,
 				mode: "normal",
 			};
 
-			const generator = new ZodSchemaGenerator(options);
+			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
 			// Try to compile with TypeScript
@@ -29,7 +29,7 @@ describe("Integration Tests", () => {
 		}, 10000); // TypeScript compilation can be slow
 
 		it("should generate valid TypeScript enums that compile", () => {
-			const options: GeneratorOptions = {
+			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("complex.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -37,7 +37,7 @@ describe("Integration Tests", () => {
 				nativeEnumType: "enum",
 			};
 
-			const generator = new ZodSchemaGenerator(options);
+			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
 			expect(() => {
@@ -48,13 +48,13 @@ describe("Integration Tests", () => {
 		}, 10000);
 
 		it("should generate circular references that compile", () => {
-			const options: GeneratorOptions = {
+			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("circular.yaml"),
 				output: outputPath,
 				mode: "normal",
 			};
 
-			const generator = new ZodSchemaGenerator(options);
+			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
 			expect(() => {
@@ -67,13 +67,13 @@ describe("Integration Tests", () => {
 
 	describe("Runtime Validation", () => {
 		it("should generate schemas that can validate data", () => {
-			const options: GeneratorOptions = {
+			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: outputPath,
 				mode: "normal",
 			};
 
-			const generator = new ZodSchemaGenerator(options);
+			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
 			// Create a test file that imports and uses the schema
@@ -99,13 +99,13 @@ console.log('Validation passed');
 		});
 
 		it("should reject invalid data", () => {
-			const options: GeneratorOptions = {
+			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: outputPath,
 				mode: "normal",
 			};
 
-			const generator = new ZodSchemaGenerator(options);
+			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
 			const testCode = `
@@ -130,7 +130,7 @@ console.log('Validation correctly failed');
 
 	describe("Full Pipeline", () => {
 		it("should handle complete workflow from YAML to validated TypeScript", () => {
-			const options: GeneratorOptions = {
+			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("complex.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -138,7 +138,7 @@ console.log('Validation correctly failed');
 				includeDescriptions: true,
 			};
 
-			const generator = new ZodSchemaGenerator(options);
+			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
 			expect(existsSync(outputPath)).toBe(true);

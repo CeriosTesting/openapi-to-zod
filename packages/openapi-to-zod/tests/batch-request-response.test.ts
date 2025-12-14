@@ -1,12 +1,12 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { executeBatch } from "../src/batch-executor";
-import type { GeneratorOptions } from "../src/types";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Batch Execution with Request/Response Options", () => {
 	it("should process multiple specs with different request/response options", async () => {
-		const specs: (GeneratorOptions & { output: string })[] = [
+		const specs: (OpenApiGeneratorOptions & { output: string })[] = [
 			{
 				input: TestUtils.getFixturePath("type-mode.yaml"),
 				output: TestUtils.getOutputPath("batch-mixed-typemode.ts"),
@@ -64,7 +64,7 @@ describe("Batch Execution with Request/Response Options", () => {
 			includeDescriptions: true,
 		};
 
-		const specs: (GeneratorOptions & { output: string })[] = [
+		const specs: (OpenApiGeneratorOptions & { output: string })[] = [
 			{
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath("batch-mixed-typemode.ts"),
@@ -95,7 +95,7 @@ describe("Batch Execution with Request/Response Options", () => {
 	});
 
 	it("should handle complex nested options in batch mode", async () => {
-		const specs: (GeneratorOptions & { output: string })[] = [
+		const specs: (OpenApiGeneratorOptions & { output: string })[] = [
 			{
 				input: TestUtils.getFixturePath("type-mode.yaml"),
 				output: TestUtils.getOutputPath("batch-mixed-typemode.ts"),

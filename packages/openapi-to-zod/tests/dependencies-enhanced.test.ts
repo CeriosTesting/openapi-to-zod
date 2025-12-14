@@ -1,6 +1,6 @@
 import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 /**
@@ -12,7 +12,7 @@ describe("Dependencies & DependentRequired - Enhanced Features", () => {
 
 	describe("Current Implementation Works", () => {
 		it("handles basic property dependencies correctly", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("dependencies.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -62,7 +62,7 @@ describe("Dependencies & DependentRequired - Enhanced Features", () => {
 
 		it("handles schema dependencies correctly", async () => {
 			const schemaOutputPath = TestUtils.getOutputPath("schema-dependencies-enhanced.ts");
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("schema-dependencies.yaml"),
 				output: schemaOutputPath,
 				mode: "normal",
@@ -110,7 +110,7 @@ describe("Dependencies & DependentRequired - Enhanced Features", () => {
 		});
 
 		it("handles multiple dependent properties", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("dependencies.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -176,7 +176,7 @@ components:
 			writeFileSync(testSpec, testContent);
 
 			try {
-				const generator = new ZodSchemaGenerator({
+				const generator = new OpenApiGenerator({
 					input: testSpec,
 					output: specialOutputPath,
 					mode: "normal",
@@ -245,7 +245,7 @@ components:
 `;
 			writeFileSync(testSpec, testContent);
 			try {
-				const generator = new ZodSchemaGenerator({
+				const generator = new OpenApiGenerator({
 					input: testSpec,
 					output: edgeOutputPath,
 					mode: "normal",
@@ -295,7 +295,7 @@ components:
 			writeFileSync(testSpec, yamlContent);
 			try {
 				const startTime = Date.now();
-				const generator = new ZodSchemaGenerator({
+				const generator = new OpenApiGenerator({
 					input: testSpec,
 					output: perfOutputPath,
 					mode: "normal",

@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 /**
  * Core generator tests for basic schema generation
  * Covers: basic objects, required/optional properties, type inference, formats, references
  */
-describe("ZodSchemaGenerator", () => {
+describe("OpenApiGenerator", () => {
 	describe("Basic Schema Generation", () => {
 		const fixturePath = TestUtils.getFixturePath("simple.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -57,8 +57,8 @@ describe("ZodSchemaGenerator", () => {
 	describe("Validation Modes", () => {
 		const fixturePath = TestUtils.getFixturePath("simple.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -90,16 +90,16 @@ describe("ZodSchemaGenerator", () => {
 		const formatsPath = TestUtils.getFixturePath("formats.yaml");
 		const advancedFormatsPath = TestUtils.getFixturePath("advanced-formats.yaml");
 
-		function generateFromFormats(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromFormats(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: formatsPath,
 				...options,
 			});
 			return generator.generateString();
 		}
 
-		function generateFromAdvancedFormats(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromAdvancedFormats(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: advancedFormatsPath,
 				...options,
 			});
@@ -170,8 +170,8 @@ describe("ZodSchemaGenerator", () => {
 	describe("Description Handling", () => {
 		const fixturePath = TestUtils.getFixturePath("simple.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -196,8 +196,8 @@ describe("ZodSchemaGenerator", () => {
 	describe("Complex Schemas", () => {
 		const fixturePath = TestUtils.getFixturePath("complex.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -244,16 +244,16 @@ describe("ZodSchemaGenerator", () => {
 		const simplePath = TestUtils.getFixturePath("simple.yaml");
 		const complexPath = TestUtils.getFixturePath("complex.yaml");
 
-		function generateFromSimple(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromSimple(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: simplePath,
 				...options,
 			});
 			return generator.generateString();
 		}
 
-		function generateFromComplex(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromComplex(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: complexPath,
 				...options,
 			});
@@ -310,24 +310,24 @@ describe("ZodSchemaGenerator", () => {
 		const circularPath = TestUtils.getFixturePath("circular.yaml");
 		const compositionPath = TestUtils.getFixturePath("composition.yaml");
 
-		function generateFromComplex(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromComplex(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: complexPath,
 				...options,
 			});
 			return generator.generateString();
 		}
 
-		function generateFromCircular(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromCircular(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: circularPath,
 				...options,
 			});
 			return generator.generateString();
 		}
 
-		function generateFromComposition(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromComposition(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: compositionPath,
 				...options,
 			});
@@ -368,8 +368,8 @@ describe("ZodSchemaGenerator", () => {
 	describe("Edge Cases and Fallbacks", () => {
 		const fixturePath = TestUtils.getFixturePath("edge-cases.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -413,8 +413,8 @@ describe("ZodSchemaGenerator", () => {
 	describe("Multiple Type Arrays (OpenAPI 3.1)", () => {
 		const fixturePath = TestUtils.getFixturePath("advanced-schema.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -446,6 +446,46 @@ describe("ZodSchemaGenerator", () => {
 			for (const union of unions) {
 				expect(union).not.toContain('"null"');
 			}
+		});
+	});
+
+	describe("JSON Format Support", () => {
+		it("should parse JSON files identically to YAML files", () => {
+			const yamlGenerator = new OpenApiGenerator({
+				input: TestUtils.getFixturePath("simple.yaml"),
+				showStats: false,
+			});
+			const jsonGenerator = new OpenApiGenerator({
+				input: TestUtils.getFixturePath("simple.json"),
+				showStats: false,
+			});
+
+			const yamlOutput = yamlGenerator.generateString();
+			const jsonOutput = jsonGenerator.generateString();
+
+			// Both outputs should be identical
+			expect(jsonOutput).toBe(yamlOutput);
+		});
+
+		it("should handle complex JSON specs with nested objects", () => {
+			const generator = new OpenApiGenerator({
+				input: TestUtils.getFixturePath("type-mode.json"),
+			});
+
+			const output = generator.generateString();
+
+			expect(output).toContain("export const userSchema");
+			expect(output).toContain("export const createUserRequestSchema");
+			expect(output).toContain("export const userStatusSchema");
+			expect(output).toContain("export const userProfileSchema");
+		});
+
+		it("should throw error for invalid JSON files", () => {
+			expect(() => {
+				new OpenApiGenerator({
+					input: TestUtils.getFixturePath("invalid-json.txt"),
+				});
+			}).toThrow(/Failed to parse OpenAPI specification/);
 		});
 	});
 });

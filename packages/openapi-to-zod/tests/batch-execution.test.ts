@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { executeBatch, getBatchExitCode } from "../src/batch-executor";
-import type { GeneratorOptions } from "../src/types";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Batch Execution", () => {
 	describe("Parallel Execution", () => {
 		it("should process multiple specs in parallel", async () => {
-			const specs: (GeneratorOptions & { output: string })[] = [
+			const specs: (OpenApiGeneratorOptions & { output: string })[] = [
 				{
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-parallel-simple.ts"),
@@ -28,7 +28,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should collect all errors in parallel mode", async () => {
-			const specs: (GeneratorOptions & { output: string })[] = [
+			const specs: (OpenApiGeneratorOptions & { output: string })[] = [
 				{
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-parallel-invalid.ts"),
@@ -48,7 +48,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should continue processing all specs even if some fail", async () => {
-			const specs: (GeneratorOptions & { output: string })[] = [
+			const specs: (OpenApiGeneratorOptions & { output: string })[] = [
 				{
 					input: TestUtils.getFixturePath("non-existent.yaml"),
 					output: TestUtils.getOutputPath("batch-invalid-1.ts"),
@@ -72,7 +72,7 @@ describe("Batch Execution", () => {
 
 	describe("Sequential Execution", () => {
 		it("should process multiple specs sequentially", async () => {
-			const specs: (GeneratorOptions & { output: string })[] = [
+			const specs: (OpenApiGeneratorOptions & { output: string })[] = [
 				{
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-sequential-simple.ts"),
@@ -91,7 +91,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should collect all errors in sequential mode", async () => {
-			const specs: GeneratorOptions[] = [
+			const specs: OpenApiGeneratorOptions[] = [
 				{
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-sequential-invalid.ts"),
@@ -109,7 +109,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should process specs in order and continue on failure", async () => {
-			const specs: GeneratorOptions[] = [
+			const specs: OpenApiGeneratorOptions[] = [
 				{
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-seq-first.ts"),
@@ -133,7 +133,7 @@ describe("Batch Execution", () => {
 
 	describe("Exit Code Handling", () => {
 		it("should return exit code 0 for all successful specs", async () => {
-			const specs: GeneratorOptions[] = [
+			const specs: OpenApiGeneratorOptions[] = [
 				{
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-exit-success.ts"),
@@ -145,7 +145,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should return exit code 1 if any spec fails", async () => {
-			const specs: GeneratorOptions[] = [
+			const specs: OpenApiGeneratorOptions[] = [
 				{
 					input: TestUtils.getFixturePath("simple.yaml"),
 					output: TestUtils.getOutputPath("batch-exit-mixed-1.ts"),
@@ -163,7 +163,7 @@ describe("Batch Execution", () => {
 
 	describe("Error Reporting", () => {
 		it("should report error messages without stack traces", async () => {
-			const specs: GeneratorOptions[] = [
+			const specs: OpenApiGeneratorOptions[] = [
 				{
 					input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 					output: TestUtils.getOutputPath("batch-error-report.ts"),
@@ -183,7 +183,7 @@ describe("Batch Execution", () => {
 		});
 
 		it("should handle large batch of specs", async () => {
-			const specs: GeneratorOptions[] = Array.from({ length: 10 }, (_, i) => ({
+			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 10 }, (_, i) => ({
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`batch-large-${i}.ts`),
 			}));

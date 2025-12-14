@@ -1,0 +1,126 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Type Mode Test API",
+		"version": "1.0.0"
+	},
+	"paths": {
+		"/users": {
+			"get": {
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUserRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"User": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"name": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 100
+					},
+					"email": {
+						"type": "string",
+						"format": "email",
+						"pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+					},
+					"age": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 150
+					},
+					"status": {
+						"$ref": "#/components/schemas/UserStatus"
+					},
+					"profile": {
+						"$ref": "#/components/schemas/UserProfile"
+					}
+				},
+				"required": ["id", "name", "email"]
+			},
+			"CreateUserRequest": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"minLength": 1
+					},
+					"email": {
+						"type": "string",
+						"format": "email"
+					},
+					"age": {
+						"type": "integer",
+						"minimum": 0
+					}
+				},
+				"required": ["name", "email"]
+			},
+			"UserStatus": {
+				"type": "string",
+				"enum": ["active", "inactive", "suspended"]
+			},
+			"UserProfile": {
+				"type": "object",
+				"properties": {
+					"bio": {
+						"type": "string",
+						"maxLength": 500
+					},
+					"website": {
+						"type": "string",
+						"format": "uri"
+					},
+					"tags": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"minItems": 0,
+						"maxItems": 10
+					}
+				}
+			}
+		}
+	}
+}

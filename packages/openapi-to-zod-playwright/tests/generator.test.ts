@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
-describe("PlaywrightGenerator", () => {
+describe("OpenApiPlaywrightGenerator", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 	it("should generate schemas, client, and service classes", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
-		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 
 		const schemasOutput = generator.generateSchemasString();
 		const clientOutput = generator.generateClientString();
@@ -39,7 +39,7 @@ describe("PlaywrightGenerator", () => {
 
 	it("should generate client methods with correct names", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
-		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 		const clientOutput = generator.generateClientString();
 
 		// Check client method names
@@ -51,7 +51,7 @@ describe("PlaywrightGenerator", () => {
 
 	it("should generate service methods with content-type handling", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
-		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 		const serviceOutput = generator.generateServiceString();
 
 		// Service methods should exist
@@ -66,7 +66,7 @@ describe("PlaywrightGenerator", () => {
 
 	it("should use expect for status validation", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
-		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 		const serviceOutput = generator.generateServiceString();
 
 		// Check for Playwright expect usage
@@ -77,7 +77,7 @@ describe("PlaywrightGenerator", () => {
 
 	it("should return void for 204 responses", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
-		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 		const serviceOutput = generator.generateServiceString();
 
 		// DELETE returns 204 with void
@@ -87,7 +87,7 @@ describe("PlaywrightGenerator", () => {
 
 	it("should use raw Playwright options in client methods", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
-		const generator = new PlaywrightGenerator({ input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 		const clientOutput = generator.generateClientString();
 
 		// Client methods should use raw Playwright options
@@ -97,7 +97,7 @@ describe("PlaywrightGenerator", () => {
 
 	describe("String Generation Methods", () => {
 		it("should generate schemas as string without writing to file", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -114,7 +114,7 @@ describe("PlaywrightGenerator", () => {
 		});
 
 		it("should generate client class as string", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -131,7 +131,7 @@ describe("PlaywrightGenerator", () => {
 		});
 
 		it("should generate service class as string", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -147,7 +147,7 @@ describe("PlaywrightGenerator", () => {
 		});
 
 		it("should generate schemas-only output as string", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -163,7 +163,7 @@ describe("PlaywrightGenerator", () => {
 		});
 
 		it("should work without output path when using string methods", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -180,7 +180,7 @@ describe("PlaywrightGenerator", () => {
 		});
 
 		it("should throw error when calling generate() without output path", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 
@@ -191,7 +191,7 @@ describe("PlaywrightGenerator", () => {
 	describe("Error Handling", () => {
 		it("should throw FileOperationError for non-existent input file", () => {
 			expect(() => {
-				new PlaywrightGenerator({
+				new OpenApiPlaywrightGenerator({
 					input: TestUtils.getFixturePath("non-existent.yaml"),
 					output: TestUtils.getOutputPath("test.ts"),
 				});
@@ -200,7 +200,7 @@ describe("PlaywrightGenerator", () => {
 
 		it("should throw FileOperationError for missing input path", () => {
 			expect(() => {
-				new PlaywrightGenerator({
+				new OpenApiPlaywrightGenerator({
 					input: "",
 					output: TestUtils.getOutputPath("test.ts"),
 				});
@@ -208,9 +208,44 @@ describe("PlaywrightGenerator", () => {
 		});
 
 		it("should throw SpecValidationError for invalid YAML", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: TestUtils.getFixturePath("invalid-yaml.yaml"),
 				output: TestUtils.getOutputPath("test.ts"),
+			});
+
+			expect(() => generator.generateSchemasString()).toThrow(/Failed to parse OpenAPI specification/);
+		});
+	});
+
+	describe("JSON Format Support", () => {
+		it("should parse JSON files identically to YAML files", () => {
+			const yamlGenerator = new OpenApiPlaywrightGenerator({
+				input: TestUtils.getFixturePath("simple-api.yaml"),
+				showStats: false,
+			});
+			const jsonGenerator = new OpenApiPlaywrightGenerator({
+				input: TestUtils.getFixturePath("simple-api.json"),
+				showStats: false,
+			});
+
+			const yamlSchemas = yamlGenerator.generateSchemasString();
+			const jsonSchemas = jsonGenerator.generateSchemasString();
+
+			const yamlClient = yamlGenerator.generateClientString();
+			const jsonClient = jsonGenerator.generateClientString();
+
+			const yamlService = yamlGenerator.generateServiceString();
+			const jsonService = jsonGenerator.generateServiceString();
+
+			// All outputs should be identical
+			expect(jsonSchemas).toBe(yamlSchemas);
+			expect(jsonClient).toBe(yamlClient);
+			expect(jsonService).toBe(yamlService);
+		});
+
+		it("should throw error for invalid JSON files", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: TestUtils.getFixturePath("invalid-json.txt"),
 			});
 
 			expect(() => generator.generateSchemasString()).toThrow(/Failed to parse OpenAPI specification/);

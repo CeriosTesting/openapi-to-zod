@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { Command } from "commander";
 import prompts from "prompts";
 import { executeBatch, getBatchExitCode } from "./batch-executor";
@@ -64,6 +65,53 @@ program
 program.parse();
 
 /**
+ * Find OpenAPI spec files in spec/ or specs/ folders
+ * @returns Object with files (path + size) and totalCount
+ */
+function findSpecFiles(): { files: Array<{ path: string; size: string }>; totalCount: number } {
+	const specFolders = ["spec", "specs"];
+	const validExtensions = [".yaml", ".yml", ".json"];
+	const excludePatterns = ["node_modules", ".git", "dist", "build", "coverage"];
+	const allFiles: Array<{ path: string; size: string }> = [];
+
+	for (const folder of specFolders) {
+		if (!existsSync(folder)) continue;
+
+		try {
+			const entries = readdirSync(folder, { recursive: true, encoding: "utf-8" });
+
+			for (const entry of entries) {
+				const fullPath = join(folder, entry as string);
+
+				// Skip if path contains excluded patterns
+				if (excludePatterns.some(pattern => fullPath.includes(pattern))) continue;
+
+				try {
+					const stats = statSync(fullPath);
+					if (!stats.isFile()) continue;
+
+					// Check if file has valid extension
+					const hasValidExt = validExtensions.some(ext => fullPath.endsWith(ext));
+					if (!hasValidExt) continue;
+
+					// Format file size
+					const sizeKB = (stats.size / 1024).toFixed(2);
+					allFiles.push({ path: fullPath.replace(/\\/g, "/"), size: `${sizeKB} KB` });
+				} catch {}
+			}
+		} catch {}
+	}
+
+	// Sort alphabetically
+	allFiles.sort((a, b) => a.path.localeCompare(b.path));
+
+	const totalCount = allFiles.length;
+	const files = allFiles.slice(0, 20);
+
+	return { files, totalCount };
+}
+
+/**
  * Execute config mode (only mode available)
  */
 async function executeConfigMode(options: { config?: string }): Promise<void> {
@@ -117,14 +165,81 @@ async function initConfigFile(): Promise<void> {
 		}
 	}
 
-	const response = await prompts([
-		{
+	// Discover spec files
+	const { files, totalCount } = findSpecFiles();
+
+	// Show pagination message if needed
+	if (totalCount > 20) {
+		console.log(`Showing first 20 of ${totalCount} files found. Use manual entry to specify others.\n`);
+	}
+
+	let inputPath: string;
+
+	if (files.length > 0) {
+		// Show file selection
+		const choices = [
+			...files.map(f => ({ title: `${f.path} (${f.size})`, value: f.path })),
+			{ title: "→ Enter manually...", value: "__MANUAL__" },
+		];
+
+		const inputResponse = await prompts({
+			type: "select",
+			name: "input",
+			message: "Select OpenAPI spec file (YAML or JSON):",
+			choices,
+		});
+
+		if (!inputResponse.input) {
+			console.log("\nInitialization cancelled.");
+			return;
+		}
+
+		if (inputResponse.input === "__MANUAL__") {
+			// Manual entry
+			const manualResponse = await prompts({
+				type: "text",
+				name: "input",
+				message: "Input OpenAPI file path (YAML or JSON):",
+				initial: "openapi.{yaml,yml,json}",
+				validate: value => {
+					if (value.length === 0) return "Input path is required";
+					if (!existsSync(value)) return "⚠️  File does not exist. Continue anyway?";
+					return true;
+				},
+			});
+
+			if (!manualResponse.input) {
+				console.log("\nInitialization cancelled.");
+				return;
+			}
+
+			inputPath = manualResponse.input;
+		} else {
+			inputPath = inputResponse.input;
+		}
+	} else {
+		// No files found, fall back to text input
+		const manualResponse = await prompts({
 			type: "text",
 			name: "input",
-			message: "Input OpenAPI file path:",
-			initial: "openapi.yaml",
-			validate: value => value.length > 0 || "Input path is required",
-		},
+			message: "Input OpenAPI file path (YAML or JSON):",
+			initial: "openapi.{yaml,yml,json}",
+			validate: value => {
+				if (value.length === 0) return "Input path is required";
+				if (!existsSync(value)) return "⚠️  File does not exist. Continue anyway?";
+				return true;
+			},
+		});
+
+		if (!manualResponse.input) {
+			console.log("\nInitialization cancelled.");
+			return;
+		}
+
+		inputPath = manualResponse.input;
+	}
+
+	const response = await prompts([
 		{
 			type: "text",
 			name: "output",
@@ -151,12 +266,13 @@ async function initConfigFile(): Promise<void> {
 	]);
 
 	// Handle user cancellation (Ctrl+C)
-	if (!response.input || !response.output || !response.format) {
+	if (!response.output || !response.format) {
 		console.log("\nInitialization cancelled.");
 		return;
 	}
 
-	const { input, output, format, includeDefaults } = response;
+	const { output, format, includeDefaults } = response;
+	const input = inputPath;
 
 	// Generate config content
 	let configContent: string;

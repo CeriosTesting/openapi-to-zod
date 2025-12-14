@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Enum Generation", () => {
 	describe("Zod Enums", () => {
-		function generateWithZodEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateWithZodEnum(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath(fixture),
 				mode: "normal",
 				enumType: "zod",
@@ -43,9 +43,9 @@ describe("Enum Generation", () => {
 	});
 
 	describe("TypeScript Enums", () => {
-		function generateWithTSEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
+		function generateWithTSEnum(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
 			const outputFile = `enum-ts-${fixture.replace(".yaml", "")}.ts`;
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath(fixture),
 				output: TestUtils.getOutputPath(outputFile),
 				mode: "normal",
@@ -93,9 +93,9 @@ describe("Enum Generation", () => {
 	});
 
 	describe("Enum Naming", () => {
-		function generateWithTSEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
+		function generateWithTSEnum(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
 			const outputFile = `enum-naming-${fixture.replace(".yaml", "")}.ts`;
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath(fixture),
 				output: TestUtils.getOutputPath(outputFile),
 				mode: "normal",
@@ -124,8 +124,8 @@ describe("Enum Generation", () => {
 	});
 
 	describe("Edge Cases", () => {
-		function generateWithZodEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateWithZodEnum(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath(fixture),
 				mode: "normal",
 				enumType: "zod",
@@ -134,9 +134,9 @@ describe("Enum Generation", () => {
 			return generator.generateString();
 		}
 
-		function generateWithTSEnum(fixture: string, options?: Partial<GeneratorOptions>): string {
+		function generateWithTSEnum(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
 			const outputFile = `enum-edge-${fixture.replace(".yaml", "")}.ts`;
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath(fixture),
 				output: TestUtils.getOutputPath(outputFile),
 				mode: "normal",

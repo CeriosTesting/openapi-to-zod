@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 /**
@@ -11,8 +11,8 @@ describe("Schema Composition", () => {
 	describe("AllOf Composition", () => {
 		const fixturePath = TestUtils.getFixturePath("composition.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -96,16 +96,16 @@ describe("Schema Composition", () => {
 		const compositionPath = TestUtils.getFixturePath("composition.yaml");
 		const simplePath = TestUtils.getFixturePath("simple.yaml");
 
-		function generateFromComposition(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromComposition(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: compositionPath,
 				...options,
 			});
 			return generator.generateString();
 		}
 
-		function generateFromSimple(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromSimple(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: simplePath,
 				...options,
 			});
@@ -137,8 +137,8 @@ describe("Schema Composition", () => {
 	describe("Tuple Validation (prefixItems)", () => {
 		const fixturePath = TestUtils.getFixturePath("composition.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -201,16 +201,16 @@ describe("Schema Composition", () => {
 		const compositionPath = TestUtils.getFixturePath("composition.yaml");
 		const simplePath = TestUtils.getFixturePath("simple.yaml");
 
-		function generateFromComposition(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromComposition(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: compositionPath,
 				...options,
 			});
 			return generator.generateString();
 		}
 
-		function generateFromSimple(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateFromSimple(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: simplePath,
 				...options,
 			});
@@ -235,8 +235,8 @@ describe("Schema Composition", () => {
 	describe("Edge Cases", () => {
 		const fixturePath = TestUtils.getFixturePath("edge-cases.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});
@@ -269,8 +269,8 @@ describe("Schema Composition", () => {
 	describe("Conditional Schemas (if/then/else)", () => {
 		const fixturePath = TestUtils.getFixturePath("advanced-schema.yaml");
 
-		function generateOutput(options?: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				...options,
 			});

@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("HTTP Methods", () => {
 	const fixtureFile = TestUtils.getFixturePath("http-methods-api.yaml");
 
 	function generateOutput(): string {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		return generator.generateClientString();
 	}
 
 	function generateServiceOutput(): string {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		return generator.generateServiceString();

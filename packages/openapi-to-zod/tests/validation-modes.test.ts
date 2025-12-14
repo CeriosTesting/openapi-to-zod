@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Validation Modes", () => {
-	function generateOutput(options?: Partial<GeneratorOptions>): string {
-		const generator = new ZodSchemaGenerator({
+	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
+		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath("simple.yaml"),
 			...options,
 		});
@@ -35,7 +35,7 @@ describe("Validation Modes", () => {
 		});
 
 		it("should apply strict mode to all object schemas", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("complex.yaml"),
 				mode: "strict",
 			});
@@ -54,7 +54,7 @@ describe("Validation Modes", () => {
 		});
 
 		it("should apply loose mode to all object schemas", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("complex.yaml"),
 				mode: "loose",
 			});
@@ -66,7 +66,7 @@ describe("Validation Modes", () => {
 
 	describe("Mode Consistency", () => {
 		it("should apply the same mode to nested objects", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("complex.yaml"),
 				mode: "strict",
 			});

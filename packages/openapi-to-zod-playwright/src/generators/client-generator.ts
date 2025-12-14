@@ -1,5 +1,6 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
+import { generateOperationJSDoc } from "../utils/string-utils";
 
 /**
  * Normalizes a base path by ensuring it has a leading slash and no trailing slash
@@ -53,6 +54,9 @@ interface EndpointInfo {
 	pathParams: string[];
 	parameters?: any[];
 	requestBody?: any;
+	deprecated?: boolean;
+	summary?: string;
+	description?: string;
 }
 
 /**
@@ -81,28 +85,6 @@ export function generateClientClass(spec: OpenAPISpec, className: string = "ApiC
 export type MultipartFormValue = string | number | boolean | ReadStream | { name: string; mimeType: string; buffer: Buffer };
 
 /**
- * Serializes query parameters, converting arrays to comma-separated strings
- * @param params - Query parameters object
- * @returns Serialized params compatible with Playwright
- */
-function serializeParams(params: { [key: string]: string | number | boolean | string[] | number[] | boolean[] } | URLSearchParams | string | undefined): { [key: string]: string | number | boolean } | URLSearchParams | string | undefined {
-	if (!params || typeof params === 'string' || params instanceof URLSearchParams) {
-		return params;
-	}
-
-	const serialized: { [key: string]: string | number | boolean } = {};
-	for (const [key, value] of Object.entries(params)) {
-		if (Array.isArray(value)) {
-			// Serialize arrays as comma-separated strings
-			serialized[key] = value.join(',');
-		} else {
-			serialized[key] = value;
-		}
-	}
-	return serialized;
-}
-
-/**
  * Options for API requests
  * Extends Playwright's APIRequestContext options with typed parameters
  * @property data - Request body data (JSON, text, or binary)
@@ -128,6 +110,28 @@ export type ApiRequestContextOptions = {
 	maxRedirects?: number;
 	maxRetries?: number;
 };
+
+/**
+ * Serializes query parameters, converting arrays to comma-separated strings
+ * @param params - Query parameters object
+ * @returns Serialized params compatible with Playwright
+ */
+function serializeParams(params: { [key: string]: string | number | boolean | string[] | number[] | boolean[] } | URLSearchParams | string | undefined): { [key: string]: string | number | boolean } | URLSearchParams | string | undefined {
+	if (!params || typeof params === 'string' || params instanceof URLSearchParams) {
+		return params;
+	}
+
+	const serialized: { [key: string]: string | number | boolean } = {};
+	for (const [key, value] of Object.entries(params)) {
+		if (Array.isArray(value)) {
+			// Serialize arrays as comma-separated strings
+			serialized[key] = value.join(',');
+		} else {
+			serialized[key] = value;
+		}
+	}
+	return serialized;
+}
 
 /**
  * Thin passthrough client for API requests
@@ -170,6 +174,9 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 					pathParams,
 					parameters: operation.parameters || [],
 					requestBody: operation.requestBody,
+					deprecated: operation.deprecated,
+					summary: operation.summary,
+					description: operation.description,
 				});
 			}
 		}
@@ -211,10 +218,16 @@ function generateClientMethod(endpoint: EndpointInfo, basePath?: string): string
 	// Generate method body - serialize params if present
 	const methodLower = method.toLowerCase();
 
-	return `\t/**
-	 * ${method} ${fullPath}
-	 * @returns Raw Playwright APIResponse
-	 */
+	const jsdoc = generateOperationJSDoc({
+		summary: endpoint.summary,
+		description: endpoint.description,
+		deprecated: endpoint.deprecated,
+		method,
+		path: fullPath,
+		additionalTags: ["@returns Raw Playwright APIResponse"],
+	});
+
+	return `${jsdoc}
 	async ${methodName}(${paramList}): Promise<APIResponse> {
 		const serializedOptions = options ? { ...options, params: serializeParams(options.params) } : options;
 		return await this.request.${methodLower}(\`${urlTemplate}\`, serializedOptions);

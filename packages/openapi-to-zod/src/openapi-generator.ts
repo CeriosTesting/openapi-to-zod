@@ -5,18 +5,18 @@ import { ConfigurationError, FileOperationError, SchemaGenerationError, SpecVali
 import { generateEnum } from "./generators/enum-generator";
 import { generateJSDoc } from "./generators/jsdoc-generator";
 import { PropertyGenerator } from "./generators/property-generator";
-import type { GeneratorOptions, OpenAPISchema, OpenAPISpec, ResolvedOptions, TypeMode } from "./types";
+import type { OpenAPISchema, OpenAPISpec, OpenApiGeneratorOptions, ResolvedOptions, TypeMode } from "./types";
 import { resolveRef, toCamelCase, toPascalCase } from "./utils/name-utils";
 
 type SchemaContext = "request" | "response" | "both";
 
-export class ZodSchemaGenerator {
+export class OpenApiGenerator {
 	private schemas: Map<string, string> = new Map();
 	private types: Map<string, string> = new Map();
 	private enums: Map<string, string> = new Map();
 	private nativeEnums: Map<string, string> = new Map();
 	private schemaDependencies: Map<string, Set<string>> = new Map();
-	private options: GeneratorOptions;
+	private options: OpenApiGeneratorOptions;
 	private spec: OpenAPISpec;
 	private propertyGenerator: PropertyGenerator;
 	private schemaUsageMap: Map<string, SchemaContext> = new Map();
@@ -25,7 +25,7 @@ export class ZodSchemaGenerator {
 	private responseOptions: ResolvedOptions;
 	private needsZodImport = false;
 
-	constructor(options: GeneratorOptions) {
+	constructor(options: OpenApiGeneratorOptions) {
 		// Validate input path early
 		if (!options.input) {
 			throw new ConfigurationError("Input path is required", { providedOptions: options });
@@ -61,19 +61,44 @@ export class ZodSchemaGenerator {
 		}
 
 		try {
-			const yamlContent = readFileSync(this.options.input, "utf-8");
-			this.spec = parse(yamlContent);
+			const content = readFileSync(this.options.input, "utf-8");
+
+			// Try parsing as YAML first (works for both YAML and JSON)
+			try {
+				this.spec = parse(content);
+			} catch (yamlError) {
+				// If YAML parsing fails, try JSON
+				try {
+					this.spec = JSON.parse(content);
+				} catch {
+					if (yamlError instanceof Error) {
+						const errorMessage = [
+							`Failed to parse OpenAPI specification from: ${this.options.input}`,
+							"",
+							`Error: ${yamlError.message}`,
+							"",
+							"Please ensure:",
+							"  - The file exists and is readable",
+							"  - The file contains valid YAML or JSON syntax",
+							"  - The file is a valid OpenAPI 3.x specification",
+						].join("\n");
+						throw new SpecValidationError(errorMessage, {
+							filePath: this.options.input,
+							originalError: yamlError.message,
+						});
+					}
+					throw yamlError;
+				}
+			}
 		} catch (error) {
+			if (error instanceof SpecValidationError) {
+				throw error;
+			}
 			if (error instanceof Error) {
 				const errorMessage = [
-					`Failed to parse OpenAPI specification from: ${this.options.input}`,
+					`Failed to read OpenAPI specification from: ${this.options.input}`,
 					"",
 					`Error: ${error.message}`,
-					"",
-					"Please ensure:",
-					"  - The file exists and is readable",
-					"  - The file contains valid YAML syntax",
-					"  - The file is a valid OpenAPI 3.x specification",
 				].join("\n");
 				throw new SpecValidationError(errorMessage, { filePath: this.options.input, originalError: error.message });
 			}

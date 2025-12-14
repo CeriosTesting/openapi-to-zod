@@ -2,13 +2,13 @@
  * Base error class for all Playwright generator errors
  * Provides consistent error handling and structure
  */
-export class PlaywrightGeneratorError extends Error {
+export class OpenApiPlaywrightGeneratorError extends Error {
 	constructor(
 		message: string,
 		public readonly cause?: Error
 	) {
 		super(message);
-		this.name = "PlaywrightGeneratorError";
+		this.name = "OpenApiPlaywrightGeneratorError";
 		// Maintain proper stack trace for where error was thrown (V8 only)
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, this.constructor);
@@ -19,7 +19,7 @@ export class PlaywrightGeneratorError extends Error {
 /**
  * Thrown when OpenAPI spec parsing or validation fails
  */
-export class SpecValidationError extends PlaywrightGeneratorError {
+export class SpecValidationError extends OpenApiPlaywrightGeneratorError {
 	constructor(
 		message: string,
 		public readonly specPath: string,
@@ -33,7 +33,7 @@ export class SpecValidationError extends PlaywrightGeneratorError {
 /**
  * Thrown when file operations fail (read/write/access)
  */
-export class FileOperationError extends PlaywrightGeneratorError {
+export class FileOperationError extends OpenApiPlaywrightGeneratorError {
 	constructor(
 		message: string,
 		public readonly filePath: string,
@@ -47,7 +47,7 @@ export class FileOperationError extends PlaywrightGeneratorError {
 /**
  * Thrown when config file validation fails
  */
-export class ConfigValidationError extends PlaywrightGeneratorError {
+export class ConfigValidationError extends OpenApiPlaywrightGeneratorError {
 	constructor(
 		message: string,
 		public readonly configPath?: string,
@@ -61,7 +61,7 @@ export class ConfigValidationError extends PlaywrightGeneratorError {
 /**
  * Thrown when client/service generation fails
  */
-export class ClientGenerationError extends PlaywrightGeneratorError {
+export class ClientGenerationError extends OpenApiPlaywrightGeneratorError {
 	constructor(message: string, cause?: Error) {
 		super(message, cause);
 		this.name = "ClientGenerationError";
@@ -71,7 +71,7 @@ export class ClientGenerationError extends PlaywrightGeneratorError {
 /**
  * Thrown when circular reference is detected in schema
  */
-export class CircularReferenceError extends PlaywrightGeneratorError {
+export class CircularReferenceError extends OpenApiPlaywrightGeneratorError {
 	constructor(
 		public readonly schemaName: string,
 		public readonly referencePath: string[]
@@ -85,7 +85,7 @@ export class CircularReferenceError extends PlaywrightGeneratorError {
 /**
  * Thrown when CLI options validation fails
  */
-export class CliOptionsError extends PlaywrightGeneratorError {
+export class CliOptionsError extends OpenApiPlaywrightGeneratorError {
 	constructor(message: string, cause?: Error) {
 		super(message, cause);
 		this.name = "CliOptionsError";
@@ -95,7 +95,7 @@ export class CliOptionsError extends PlaywrightGeneratorError {
 /**
  * Thrown when configuration is invalid or missing required values
  */
-export class ConfigurationError extends PlaywrightGeneratorError {
+export class ConfigurationError extends OpenApiPlaywrightGeneratorError {
 	constructor(
 		message: string,
 		public readonly context?: Record<string, unknown>,

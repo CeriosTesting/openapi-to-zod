@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Response Types", () => {
@@ -7,7 +7,7 @@ describe("Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("primitives-api.yaml");
 
 		it("should handle number responses", () => {
-			const generator = new PlaywrightGenerator({ input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns number
@@ -16,7 +16,7 @@ describe("Response Types", () => {
 		});
 
 		it("should handle string responses", () => {
-			const generator = new PlaywrightGenerator({ input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns string
@@ -25,7 +25,7 @@ describe("Response Types", () => {
 		});
 
 		it("should handle boolean responses", () => {
-			const generator = new PlaywrightGenerator({ input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns boolean
@@ -34,7 +34,7 @@ describe("Response Types", () => {
 		});
 
 		it("should handle array responses", () => {
-			const generator = new PlaywrightGenerator({ input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns array
@@ -43,7 +43,7 @@ describe("Response Types", () => {
 		});
 
 		it("should validate primitive responses with Zod", () => {
-			const generator = new PlaywrightGenerator({ input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({ input: fixtureFile });
 			const serviceOutput = generator.generateServiceString();
 
 			// Should have methods for all primitive types
@@ -58,7 +58,7 @@ describe("Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		function generateOutput(): string {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 			return generator.generateSchemasString();
@@ -83,7 +83,7 @@ describe("Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should handle 204 No Content responses in service", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 			const serviceString = generator.generateServiceString();
@@ -94,7 +94,7 @@ describe("Response Types", () => {
 		});
 
 		it("should not try to parse body for 204 responses", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 			});
 			const serviceString = generator.generateServiceString();

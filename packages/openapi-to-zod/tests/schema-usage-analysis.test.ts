@@ -1,15 +1,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
-import type { GeneratorOptions } from "../src/types";
+import { OpenApiGenerator } from "../src/openapi-generator";
+import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Schema Usage Analysis", () => {
 	const testOutput = TestUtils.getOutputPath("schema-usage-test.ts");
 
 	describe("Path-based detection", () => {
-		function generateOutput(options: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("type-mode.yaml"),
 				output: testOutput,
 				...options,
@@ -52,8 +52,8 @@ describe("Schema Usage Analysis", () => {
 	});
 
 	describe("Unreferenced schemas", () => {
-		function generateOutput(options: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("empty-schemas.yaml"),
 				output: testOutput,
 				...options,
@@ -75,8 +75,8 @@ describe("Schema Usage Analysis", () => {
 	});
 
 	describe("Fallback to readOnly/writeOnly analysis", () => {
-		function generateOutput(options: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("nested-writeonly.yaml"),
 				output: testOutput,
 				...options,
@@ -110,8 +110,8 @@ describe("Schema Usage Analysis", () => {
 	});
 
 	describe("Circular references", () => {
-		function generateOutput(options: Partial<GeneratorOptions>): string {
-			const generator = new ZodSchemaGenerator({
+		function generateOutput(options: Partial<OpenApiGeneratorOptions>): string {
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("circular.yaml"),
 				output: testOutput,
 				...options,

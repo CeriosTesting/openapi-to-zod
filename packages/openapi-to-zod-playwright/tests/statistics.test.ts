@@ -1,13 +1,42 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Statistics Generation", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
+	describe("Schema Statistics", () => {
+		it("should include statistics in schema file when showStats is true", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				showStats: true,
+			});
+
+			const schemasOutput = generator.generateSchemasString();
+
+			// Base package uses "Generation Statistics:"
+			expect(schemasOutput).toContain("// Generation Statistics:");
+			expect(schemasOutput).toContain("//   Total schemas:");
+			expect(schemasOutput).toContain("//   Generated at:");
+		});
+
+		it("should not include statistics in schema file when showStats is false", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				showStats: false,
+			});
+
+			const schemasOutput = generator.generateSchemasString();
+
+			expect(schemasOutput).not.toContain("// Generation Statistics:");
+			expect(schemasOutput).not.toContain("//   Total schemas:");
+			expect(schemasOutput).not.toContain("//   Generated at:");
+		});
+	});
+
 	describe("Client Statistics", () => {
 		it("should include statistics in client file when showStats is true", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -25,7 +54,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should not include statistics in client file when showStats is false", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: false,
 			});
@@ -38,7 +67,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should calculate correct endpoint count", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -51,19 +80,19 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should list all HTTP methods used", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
 
 			const clientFileOutput = (generator as any).generateClientFile();
 
-			// Should contain DELETE, GET, POST (alphabetically sorted)
-			expect(clientFileOutput).toMatch(/HTTP methods:\s*DELETE,\s*GET,\s*POST/);
+			// Should contain DELETE, GET, POST with counts (alphabetically sorted)
+			expect(clientFileOutput).toMatch(/HTTP methods:\s*DELETE:\s*\d+,\s*GET:\s*\d+,\s*POST:\s*\d+/);
 		});
 
 		it("should count unique path parameters", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -75,7 +104,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should include ISO timestamp", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -89,7 +118,7 @@ describe("Statistics Generation", () => {
 
 	describe("Service Statistics", () => {
 		it("should include statistics in service file when showStats is true", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -112,7 +141,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should not include statistics in service file when showStats is false", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: false,
 			});
@@ -129,7 +158,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should calculate correct method count", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -145,7 +174,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should count methods with response validation", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -161,7 +190,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should count methods with query parameters", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -176,7 +205,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should count schema and type imports", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -192,7 +221,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should include ISO timestamp", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -211,7 +240,7 @@ describe("Statistics Generation", () => {
 	describe("Statistics with different OpenAPI specs", () => {
 		it("should handle spec with no endpoints", () => {
 			const emptyFixture = TestUtils.getFixturePath("empty-api.yaml");
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: emptyFixture,
 				showStats: true,
 			});
@@ -225,7 +254,7 @@ describe("Statistics Generation", () => {
 
 		it("should handle spec with multiple path parameters", () => {
 			const multiParamFixture = TestUtils.getFixturePath("multi-param-api.yaml");
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: multiParamFixture,
 				showStats: true,
 			});
@@ -238,7 +267,7 @@ describe("Statistics Generation", () => {
 
 		it("should handle spec with all HTTP methods", () => {
 			const allMethodsFixture = TestUtils.getFixturePath("all-methods.yaml");
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: allMethodsFixture,
 				showStats: true,
 			});
@@ -253,7 +282,7 @@ describe("Statistics Generation", () => {
 
 	describe("Statistics consistency", () => {
 		it("should show same endpoint count in client and service statistics", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -279,7 +308,7 @@ describe("Statistics Generation", () => {
 
 	describe("Statistics format", () => {
 		it("should format statistics as comments", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -307,7 +336,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should place statistics before imports", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});
@@ -323,7 +352,7 @@ describe("Statistics Generation", () => {
 		});
 
 		it("should include blank line between statistics and code", () => {
-			const generator = new PlaywrightGenerator({
+			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				showStats: true,
 			});

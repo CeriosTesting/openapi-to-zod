@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Array Contains", () => {
@@ -8,7 +8,7 @@ describe("Array Contains", () => {
 
 	describe("Basic Contains", () => {
 		it("should generate validation for contains", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("array-contains.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -24,7 +24,7 @@ describe("Array Contains", () => {
 		});
 
 		it("should validate arrays with at least one matching item", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("array-contains.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -54,7 +54,7 @@ describe("Array Contains", () => {
 
 	describe("Contains with minContains and maxContains", () => {
 		it("should validate min and max contains constraints", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("array-contains.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -89,7 +89,7 @@ describe("Array Contains", () => {
 
 	describe("Contains with minContains only", () => {
 		it("should validate minimum contains constraint", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("array-contains.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -120,7 +120,7 @@ describe("Array Contains", () => {
 
 	describe("Contains with enum values", () => {
 		it("should validate enum-based contains", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("array-contains.yaml"),
 				output: outputPath,
 				mode: "normal",

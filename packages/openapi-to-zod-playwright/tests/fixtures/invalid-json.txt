@@ -1,0 +1,6 @@
+{
+  "This is not valid JSON": [
+    "missing quotes and commas"
+    "broken syntax
+  ]
+}

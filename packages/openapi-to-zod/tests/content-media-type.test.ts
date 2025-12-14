@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Content Media Type Expansion", () => {
@@ -8,7 +8,7 @@ describe("Content Media Type Expansion", () => {
 
 	describe("JSON Media Type", () => {
 		it("should validate JSON content", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -34,7 +34,7 @@ describe("Content Media Type Expansion", () => {
 
 	describe("XML Media Type", () => {
 		it("should validate XML content", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -60,7 +60,7 @@ describe("Content Media Type Expansion", () => {
 
 	describe("YAML Media Type", () => {
 		it("should validate YAML content", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -86,7 +86,7 @@ describe("Content Media Type Expansion", () => {
 
 	describe("HTML Media Type", () => {
 		it("should validate HTML content", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -112,7 +112,7 @@ describe("Content Media Type Expansion", () => {
 
 	describe("Plain Text Media Type", () => {
 		it("should validate plain text content", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -131,7 +131,7 @@ describe("Content Media Type Expansion", () => {
 
 	describe("Combined Encoding and Media Type", () => {
 		it("should validate base64-encoded XML", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -152,7 +152,7 @@ describe("Content Media Type Expansion", () => {
 		});
 
 		it("should validate base64-encoded JSON", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -175,7 +175,7 @@ describe("Content Media Type Expansion", () => {
 
 	describe("Multiple Media Types in Object", () => {
 		it("should generate schema with multiple media type validations", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -193,7 +193,7 @@ describe("Content Media Type Expansion", () => {
 		});
 
 		it("should validate document with mixed content types", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("content-media-type.yaml"),
 				output: outputPath,
 				mode: "normal",

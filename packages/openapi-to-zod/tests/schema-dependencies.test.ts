@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Schema Dependencies (OpenAPI 3.0)", () => {
@@ -8,7 +8,7 @@ describe("Schema Dependencies (OpenAPI 3.0)", () => {
 
 	describe("Schema Dependencies with required", () => {
 		it("should generate validation for schema dependencies", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("schema-dependencies.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -24,7 +24,7 @@ describe("Schema Dependencies (OpenAPI 3.0)", () => {
 		});
 
 		it("should validate when dependent property is not present", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("schema-dependencies.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -43,7 +43,7 @@ describe("Schema Dependencies (OpenAPI 3.0)", () => {
 		});
 
 		it("should validate when dependent property exists with all required fields", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("schema-dependencies.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -66,7 +66,7 @@ describe("Schema Dependencies (OpenAPI 3.0)", () => {
 		});
 
 		it("should fail when dependent property exists but required fields are missing", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("schema-dependencies.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -99,7 +99,7 @@ describe("Schema Dependencies (OpenAPI 3.0)", () => {
 
 	describe("Mixed array and schema dependencies", () => {
 		it("should handle both dependency types in the same schema", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("schema-dependencies.yaml"),
 				output: outputPath,
 				mode: "normal",

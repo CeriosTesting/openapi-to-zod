@@ -1,5 +1,26 @@
 # @cerios/openapi-to-zod
 
+## 0.4.0
+
+### Minor Changes
+
+- Core Generator & Types Refactor:
+
+  - Renamed PlaywrightGenerator to OpenApiPlaywrightGenerator throughout the codebase, updated all imports/exports, and changed related type names to be more descriptive and consistent (OpenApiPlaywrightOpenApiGeneratorOptions).
+  - Updated the import from ZodSchemaGenerator to OpenApiGenerator in the generator implementation.
+
+  CLI Usability Improvements:
+
+  - Added automatic discovery of OpenAPI spec files in spec/ and specs/ folders, with user-friendly selection and pagination for large numbers of files. Falls back to manual entry if no files are found.
+
+  Error Handling Consistency:
+
+  - Unified all custom error classes to extend from OpenApiPlaywrightGeneratorError instead of PlaywrightGeneratorError, and updated all error class names accordingly for consistency.
+
+  Generated Code Documentation Enhancements:
+
+  - Added summary, description, and deprecated fields to endpoint metadata in both client and service generators, and used a new generateOperationJSDoc utility to produce richer, more informative JSDoc comments for generated methods.
+
 ## 0.3.0
 
 ### Minor Changes

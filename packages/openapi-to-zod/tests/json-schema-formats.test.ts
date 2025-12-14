@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("JSON Schema Formats", () => {
@@ -8,7 +8,7 @@ describe("JSON Schema Formats", () => {
 
 	describe("JSON Pointer Format", () => {
 		it("should generate validation for json-pointer format", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("json-schema-formats.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -23,7 +23,7 @@ describe("JSON Schema Formats", () => {
 		});
 
 		it("should validate JSON Pointer format", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("json-schema-formats.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -51,7 +51,7 @@ describe("JSON Schema Formats", () => {
 
 	describe("Relative JSON Pointer Format", () => {
 		it("should generate validation for relative-json-pointer format", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("json-schema-formats.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -66,7 +66,7 @@ describe("JSON Schema Formats", () => {
 		});
 
 		it("should validate relative JSON Pointer format", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("json-schema-formats.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -94,7 +94,7 @@ describe("JSON Schema Formats", () => {
 
 	describe("Enhanced Duration Format", () => {
 		it("should generate validation for duration format with full ISO 8601 support", () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("json-schema-formats.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -109,7 +109,7 @@ describe("JSON Schema Formats", () => {
 		});
 
 		it("should validate ISO 8601 duration format", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("json-schema-formats.yaml"),
 				output: outputPath,
 				mode: "normal",
@@ -140,7 +140,7 @@ describe("JSON Schema Formats", () => {
 
 	describe("All Formats Combined", () => {
 		it("should handle all new formats in one schema", async () => {
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath("json-schema-formats.yaml"),
 				output: outputPath,
 				mode: "normal",

@@ -1,6 +1,6 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
-import { toPascalCase } from "../utils//string-utils";
+import { generateOperationJSDoc, toPascalCase } from "../utils//string-utils";
 
 interface ResponseInfo {
 	statusCode: string;
@@ -21,6 +21,9 @@ interface EndpointInfo {
 	requestBody?: any;
 	responses: ResponseInfo[];
 	queryParamSchemaName?: string; // Name of the generated query parameter schema
+	deprecated?: boolean;
+	summary?: string;
+	description?: string;
 }
 
 /**
@@ -238,6 +241,9 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 				requestBody: operation.requestBody,
 				responses,
 				queryParamSchemaName,
+				deprecated: operation.deprecated,
+				summary: operation.summary,
+				description: operation.description,
 			});
 		}
 	}
@@ -582,10 +588,28 @@ function generateServiceMethod(
 		validationCode.push(`\t\treturn;`);
 	}
 
-	return `\t/**
-	 * ${method} ${path}${requestContentType ? ` [${requestContentType}]` : ""}${response ? ` (${statusCode})` : ""}
-	 ${response?.description ? `* ${response.description}` : ""}
-	 */
+	// Build JSDoc tags
+	const additionalTags: string[] = [];
+
+	// Add content-type and status info
+	const contentTypeInfo = requestContentType ? ` [${requestContentType}]` : "";
+	const statusInfo = response ? ` (${statusCode})` : "";
+
+	// Add @returns tag with response description if present
+	if (response?.description) {
+		additionalTags.push(`@returns ${response.description}`);
+	}
+
+	const jsdoc = generateOperationJSDoc({
+		summary: endpoint.summary,
+		description: endpoint.description,
+		deprecated: endpoint.deprecated,
+		method,
+		path: `${path}${contentTypeInfo}${statusInfo}`,
+		additionalTags,
+	});
+
+	return `${jsdoc}
 	async ${finalMethodName}(${paramList}): ${returnType} {
 ${validationCode.join("\n")}
 	}`;

@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  title: Deprecated Operations Test API
+  version: 1.0.0
+paths:
+  /old-endpoint:
+    get:
+      operationId: getOldEndpoint
+      deprecated: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get all users
+      description: Retrieves a list of all registered users in the system
+      responses:
+        '200':
+          description: Success
+  /old-users:
+    get:
+      operationId: getOldUsers
+      summary: Get users (old endpoint)
+      deprecated: true
+      responses:
+        '200':
+          description: Success
+  /malicious:
+    get:
+      operationId: getMalicious
+      summary: "Test */ malicious code here /**"
+      description: "Contains @param injection attempt"
+      responses:
+        '200':
+          description: Success
+  /minimal:
+    get:
+      operationId: getMinimal
+      responses:
+        '200':
+          description: Success
+  /complex:
+    get:
+      operationId: getComplex
+      summary: Complex operation
+      description: This is a detailed description that spans multiple lines
+      deprecated: true
+      responses:
+        '200':
+          description: Success
+  /old-create:
+    post:
+      operationId: oldCreateUser
+      summary: Create user (deprecated)
+      deprecated: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string

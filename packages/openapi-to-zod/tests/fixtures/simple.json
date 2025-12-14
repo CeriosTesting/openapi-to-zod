@@ -1,0 +1,58 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Simple Test API",
+		"version": "1.0.0"
+	},
+	"components": {
+		"schemas": {
+			"User": {
+				"type": "object",
+				"description": "A user in the system",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid",
+						"description": "The unique identifier for the user"
+					},
+					"name": {
+						"type": "string",
+						"description": "The user's full name"
+					},
+					"email": {
+						"type": "string",
+						"format": "email",
+						"description": "The user's email address"
+					},
+					"age": {
+						"type": "integer",
+						"description": "The user's age in years"
+					},
+					"isActive": {
+						"type": "boolean",
+						"description": "Whether the user account is active"
+					}
+				},
+				"required": ["id", "name"]
+			},
+			"Status": {
+				"type": "string",
+				"enum": ["active", "inactive", "pending"]
+			},
+			"Address": {
+				"type": "object",
+				"properties": {
+					"street": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"postalCode": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

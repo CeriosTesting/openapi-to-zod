@@ -3,7 +3,7 @@ import { toCamelCase, toPascalCase } from "../utils/name-utils";
 
 export type EnumType = "zod" | "typescript";
 
-export interface EnumGeneratorOptions extends NamingOptions {
+export interface EnumOpenApiGeneratorOptions extends NamingOptions {
 	enumType: EnumType;
 }
 
@@ -16,7 +16,11 @@ export interface EnumResult {
 /**
  * Generate enum as TypeScript enum or Zod enum
  */
-export function generateEnum(name: string, values: (string | number)[], options: EnumGeneratorOptions): EnumResult {
+export function generateEnum(
+	name: string,
+	values: (string | number)[],
+	options: EnumOpenApiGeneratorOptions
+): EnumResult {
 	const enumName = name.endsWith("EnumOptions") ? name.replace("EnumOptions", "Enum") : `${name}Enum`;
 	const schemaName = `${toCamelCase(name, options)}Schema`;
 

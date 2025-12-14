@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ZodSchemaGenerator } from "../src/generator";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import { escapeJSDoc } from "../src/utils/string-utils";
 import { TestUtils } from "./utils/test-utils";
 
@@ -68,7 +68,7 @@ components:
 			const fixturePath = TestUtils.getFixturePath("malicious-jsdoc.yaml");
 			writeFileSync(fixturePath, maliciousYaml);
 
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				includeDescriptions: true,
 			});
@@ -101,7 +101,7 @@ components:
 			const fixturePath = TestUtils.getFixturePath("email-jsdoc.yaml");
 			writeFileSync(fixturePath, yamlWithAt);
 
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				includeDescriptions: true,
 			});
@@ -131,7 +131,7 @@ components:
 			const fixturePath = TestUtils.getFixturePath("complex-jsdoc.yaml");
 			writeFileSync(fixturePath, complexYaml);
 
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				includeDescriptions: true,
 			});
@@ -165,7 +165,7 @@ components:
 			const fixturePath = TestUtils.getFixturePath("describe-jsdoc.yaml");
 			writeFileSync(fixturePath, yamlWithDescribe);
 
-			const generator = new ZodSchemaGenerator({
+			const generator = new OpenApiGenerator({
 				input: fixturePath,
 				includeDescriptions: true,
 				useDescribe: true,

@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { PlaywrightGenerator } from "../src/playwright-generator";
+import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Status Codes", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 	function generateClientOutput(): string {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		return generator.generateClientString();
 	}
 
 	function generateServiceOutput(): string {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		return generator.generateServiceString();
@@ -34,7 +34,7 @@ describe("Status Codes", () => {
 	});
 
 	it("should generate error methods for 4xx/5xx responses", () => {
-		const generator = new PlaywrightGenerator({
+		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
 		});
 		const schemasOutput = generator.generateSchemasString();
