@@ -1,5 +1,13 @@
 # @cerios/openapi-to-zod-playwright
 
+## 0.5.2
+
+### Patch Changes
+
+- re-export types fix
+- Updated dependencies
+  - @cerios/openapi-to-zod@0.5.2
+
 ## 0.5.1
 
 ### Patch Changes

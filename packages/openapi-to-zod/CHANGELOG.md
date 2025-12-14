@@ -1,5 +1,11 @@
 # @cerios/openapi-to-zod
 
+## 0.5.2
+
+### Patch Changes
+
+- re-export types fix
+
 ## 0.5.1
 
 ### Patch Changes
