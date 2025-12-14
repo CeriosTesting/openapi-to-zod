@@ -8,6 +8,10 @@ export {
 	SpecValidationError,
 } from "./errors";
 export { OpenApiPlaywrightGenerator } from "./openapi-playwright-generator";
-export type { OpenApiPlaywrightOpenApiGeneratorOptions, PlaywrightConfigFile } from "./types";
+export type {
+	OpenApiPlaywrightGeneratorOptions,
+	PlaywrightConfigFile,
+	PlaywrightOperationFilters,
+} from "./types";
 export { defineConfig } from "./types";
 export { loadConfig, mergeCliWithConfig, mergeConfigWithDefaults } from "./utils/config-loader";

@@ -6,7 +6,7 @@ import { parse } from "yaml";
 import { ClientGenerationError, ConfigurationError, FileOperationError, SpecValidationError } from "./errors";
 import { generateClientClass } from "./generators/client-generator";
 import { generateServiceClass } from "./generators/service-generator";
-import type { OpenApiPlaywrightOpenApiGeneratorOptions } from "./types";
+import type { OpenApiPlaywrightGeneratorOptions } from "./types";
 import { LRUCache } from "./utils/lru-cache";
 import { toPascalCase } from "./utils/string-utils";
 
@@ -15,11 +15,11 @@ import { toPascalCase } from "./utils/string-utils";
  * Supports file splitting: schemas (always), client (optional), service (optional, requires client)
  */
 export class OpenApiPlaywrightGenerator {
-	private options: OpenApiPlaywrightOpenApiGeneratorOptions & { schemaType: "all" };
+	private options: OpenApiPlaywrightGeneratorOptions & { schemaType: "all" };
 	private spec: OpenAPISpec | null = null;
 	private static specCache = new LRUCache<string, OpenAPISpec>(50); // Cache for parsed specs
 
-	constructor(options: OpenApiPlaywrightOpenApiGeneratorOptions) {
+	constructor(options: OpenApiPlaywrightGeneratorOptions) {
 		// Input validation
 		if (!options.input) {
 			throw new FileOperationError("Input path is required", "");

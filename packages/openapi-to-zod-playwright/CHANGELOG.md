@@ -21,7 +21,7 @@
 
 - Core Generator & Types Refactor:
 
-  - Renamed PlaywrightGenerator to OpenApiPlaywrightGenerator throughout the codebase, updated all imports/exports, and changed related type names to be more descriptive and consistent (OpenApiPlaywrightOpenApiGeneratorOptions).
+  - Renamed PlaywrightGenerator to OpenApiPlaywrightGenerator throughout the codebase, updated all imports/exports, and changed related type names to be more descriptive and consistent (OpenApiPlaywrightGeneratorOptions).
   - Updated the import from ZodSchemaGenerator to OpenApiGenerator in the generator implementation.
 
   CLI Usability Improvements:

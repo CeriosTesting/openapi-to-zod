@@ -1,5 +1,5 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
-import type { OperationFilters } from "../types";
+import type { PlaywrightOperationFilters } from "../types";
 import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
 import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc, toPascalCase } from "../utils//string-utils";
@@ -112,7 +112,7 @@ export function generateServiceClass(
 	schemaImports: Set<string>,
 	className: string = "ApiService",
 	clientClassName: string = "ApiClient",
-	operationFilters?: OperationFilters,
+	operationFilters?: PlaywrightOperationFilters,
 	useOperationId: boolean = true
 ): string {
 	const endpoints = extractEndpoints(spec, operationFilters, useOperationId);
@@ -142,7 +142,7 @@ ${methods}
  */
 function extractEndpoints(
 	spec: OpenAPISpec,
-	operationFilters?: OperationFilters,
+	operationFilters?: PlaywrightOperationFilters,
 	useOperationId: boolean = true
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];

@@ -1,6 +1,6 @@
 import { cosmiconfig, type Loader } from "cosmiconfig";
 import { z } from "zod";
-import type { OpenApiPlaywrightOpenApiGeneratorOptions, PlaywrightConfigFile } from "../types";
+import type { OpenApiPlaywrightGeneratorOptions, PlaywrightConfigFile } from "../types";
 
 /**
  * Zod schema for strict validation of Playwright config files
@@ -32,7 +32,7 @@ const OperationFiltersSchema = z.strictObject({
 	excludeStatusCodes: z.array(z.string()).optional(),
 });
 
-const OpenApiPlaywrightOpenApiGeneratorOptionsSchema = z.strictObject({
+const OpenApiPlaywrightGeneratorOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
 	input: z.string(),
 	output: z.string().optional(),
@@ -74,7 +74,7 @@ const PlaywrightConfigFileSchema = z.strictObject({
 			operationFilters: OperationFiltersSchema.optional(),
 		})
 		.optional(),
-	specs: z.array(OpenApiPlaywrightOpenApiGeneratorOptionsSchema).min(1, "At least one spec is required"),
+	specs: z.array(OpenApiPlaywrightGeneratorOptionsSchema).min(1, "At least one spec is required"),
 	executionMode: z.enum(["parallel", "sequential"]).optional(),
 });
 
@@ -196,9 +196,9 @@ export async function loadConfig(configPath?: string): Promise<PlaywrightConfigF
  * Automatically enforces schemaType: "all" for all specs
  *
  * @param config - Validated Playwright configuration file
- * @returns Array of fully resolved OpenApiPlaywrightOpenApiGeneratorOptions objects with schemaType enforced to "all"
+ * @returns Array of fully resolved OpenApiPlaywrightGeneratorOptions objects with schemaType enforced to "all"
  */
-export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPlaywrightOpenApiGeneratorOptions[] {
+export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPlaywrightGeneratorOptions[] {
 	if (!config?.specs || !Array.isArray(config.specs)) {
 		throw new Error("Invalid config: specs array is required");
 	}
@@ -207,7 +207,7 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPl
 
 	return config.specs.map(spec => {
 		// Deep merge: spec options override defaults
-		const merged: OpenApiPlaywrightOpenApiGeneratorOptions = {
+		const merged: OpenApiPlaywrightGeneratorOptions = {
 			// Apply defaults first
 			mode: defaults.mode,
 			includeDescriptions: defaults.includeDescriptions,
@@ -237,16 +237,16 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPl
  *
  * @param specConfig - Configuration from config file (with defaults already applied)
  * @param cliOptions - Options provided via CLI arguments
- * @returns Merged OpenApiPlaywrightOpenApiGeneratorOptions with CLI taking precedence and schemaType enforced
+ * @returns Merged OpenApiPlaywrightGeneratorOptions with CLI taking precedence and schemaType enforced
  */
 export function mergeCliWithConfig(
-	specConfig: OpenApiPlaywrightOpenApiGeneratorOptions,
-	cliOptions: Partial<OpenApiPlaywrightOpenApiGeneratorOptions>
-): OpenApiPlaywrightOpenApiGeneratorOptions {
+	specConfig: OpenApiPlaywrightGeneratorOptions,
+	cliOptions: Partial<OpenApiPlaywrightGeneratorOptions>
+): OpenApiPlaywrightGeneratorOptions {
 	// CLI options override everything, but schemaType is always "all"
 	return {
 		...specConfig,
 		...Object.fromEntries(Object.entries(cliOptions).filter(([_, v]) => v !== undefined)),
 		schemaType: "all", // Always enforce for Playwright
-	} as OpenApiPlaywrightOpenApiGeneratorOptions;
+	} as OpenApiPlaywrightGeneratorOptions;
 }

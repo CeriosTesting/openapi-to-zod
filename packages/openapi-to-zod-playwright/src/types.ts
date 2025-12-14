@@ -1,10 +1,10 @@
-import type { OperationFilters as BaseOperationFilters, OpenApiGeneratorOptions } from "@cerios/openapi-to-zod";
+import type { OpenApiGeneratorOptions, OperationFilters } from "@cerios/openapi-to-zod";
 
 /**
  * Playwright-specific operation filtering options
  * Extends base filters with status code filtering for response validation
  */
-export interface OperationFilters extends BaseOperationFilters {
+export interface PlaywrightOperationFilters extends OperationFilters {
 	/**
 	 * Include only these status codes in generated response types
 	 * Supports exact codes ("200", "201") and range patterns ("2xx", "4xx", "5xx")
@@ -35,7 +35,7 @@ export interface OperationFilters extends BaseOperationFilters {
  * - Client (outputClient): Optional, Playwright API passthrough wrapper
  * - Service (outputService): Optional, type-safe validation layer (requires outputClient)
  */
-export interface OpenApiPlaywrightOpenApiGeneratorOptions
+export interface OpenApiPlaywrightGeneratorOptions
 	extends Omit<OpenApiGeneratorOptions, "schemaType" | "operationFilters"> {
 	/**
 	 * Input OpenAPI specification file path (YAML or JSON)
@@ -84,7 +84,7 @@ export interface OpenApiPlaywrightOpenApiGeneratorOptions
 	 * Operation filtering options (Playwright-specific with status code support)
 	 * Allows filtering operations by tags, paths, methods, operationIds, deprecated status, and status codes
 	 */
-	operationFilters?: OperationFilters;
+	operationFilters?: PlaywrightOperationFilters;
 
 	/**
 	 * Whether to validate request body data with Zod schemas in service methods
@@ -128,13 +128,13 @@ export interface PlaywrightConfigFile {
 	 * Global default options applied to all specs
 	 * Can be overridden by individual spec configurations
 	 */
-	defaults?: Partial<Omit<OpenApiPlaywrightOpenApiGeneratorOptions, "input" | "output">>;
+	defaults?: Partial<Omit<OpenApiPlaywrightGeneratorOptions, "input" | "output">>;
 
 	/**
 	 * Array of OpenAPI specifications to process
 	 * Each spec must have input and output paths
 	 */
-	specs: OpenApiPlaywrightOpenApiGeneratorOptions[];
+	specs: OpenApiPlaywrightGeneratorOptions[];
 
 	/**
 	 * Execution mode for batch processing
