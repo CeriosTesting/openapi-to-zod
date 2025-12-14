@@ -9,11 +9,16 @@ export {
 } from "./errors";
 export { OpenApiGenerator } from "./openapi-generator";
 export type {
+	CommonSchemaOptions,
 	ConfigFile,
 	ExecutionMode,
+	NativeEnumType,
 	OpenAPISpec,
 	OpenApiGeneratorOptions,
 	OperationFilters,
+	RequestOptions,
+	ResponseOptions,
+	TypeMode,
 } from "./types";
 export { defineConfig } from "./types";
 export {

@@ -15,7 +15,7 @@ export type NativeEnumType = "union" | "enum";
 /**
  * Common options shared by both request and response contexts
  */
-interface CommonSchemaOptions {
+export interface CommonSchemaOptions {
 	/**
 	 * Object validation mode
 	 * - 'strict': Uses z.strictObject() - no additional properties allowed
