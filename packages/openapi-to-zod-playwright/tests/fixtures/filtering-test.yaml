@@ -1,0 +1,181 @@
+openapi: 3.0.0
+info:
+  title: Filtering Test API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get all users
+      tags:
+        - users
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: createUser
+      summary: Create user
+      tags:
+        - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Created
+  /users/{id}:
+    get:
+      operationId: getUserById
+      summary: Get user by ID
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: deleteUser
+      summary: Delete user
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+  /products:
+    get:
+      operationId: getProducts
+      summary: Get all products
+      tags:
+        - products
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  /products/{id}:
+    get:
+      operationId: getProductById
+      summary: Get product by ID
+      tags:
+        - products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+  /admin/settings:
+    get:
+      operationId: getAdminSettings
+      summary: Get admin settings
+      tags:
+        - admin
+        - internal
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /internal/metrics:
+    get:
+      operationId: getInternalMetrics
+      summary: Get internal metrics
+      tags:
+        - internal
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/items:
+    get:
+      operationId: getV1Items
+      summary: Get V1 items
+      tags:
+        - items
+      responses:
+        '200':
+          description: Success
+  /api/v2/items:
+    get:
+      operationId: getV2Items
+      summary: Get V2 items
+      tags:
+        - items
+      responses:
+        '200':
+          description: Success
+  /deprecated/old-endpoint:
+    get:
+      operationId: getOldEndpoint
+      summary: Old deprecated endpoint
+      deprecated: true
+      tags:
+        - legacy
+      responses:
+        '200':
+          description: Success
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+    Product:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number

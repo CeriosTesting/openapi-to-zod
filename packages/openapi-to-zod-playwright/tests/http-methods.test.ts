@@ -8,6 +8,7 @@ describe("HTTP Methods", () => {
 	function generateOutput(): string {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			useOperationId: false,
 		});
 		return generator.generateClientString();
 	}
@@ -15,6 +16,7 @@ describe("HTTP Methods", () => {
 	function generateServiceOutput(): string {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			useOperationId: false,
 		});
 		return generator.generateServiceString();
 	}

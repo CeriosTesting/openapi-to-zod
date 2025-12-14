@@ -18,6 +18,20 @@ const RequestResponseOptionsSchema = z.strictObject({
 	nativeEnumType: NativeEnumTypeSchema.optional(),
 });
 
+const OperationFiltersSchema = z.strictObject({
+	includeTags: z.array(z.string()).optional(),
+	excludeTags: z.array(z.string()).optional(),
+	includePaths: z.array(z.string()).optional(),
+	excludePaths: z.array(z.string()).optional(),
+	includeMethods: z.array(z.string()).optional(),
+	excludeMethods: z.array(z.string()).optional(),
+	includeOperationIds: z.array(z.string()).optional(),
+	excludeOperationIds: z.array(z.string()).optional(),
+	excludeDeprecated: z.boolean().optional(),
+	includeStatusCodes: z.array(z.string()).optional(),
+	excludeStatusCodes: z.array(z.string()).optional(),
+});
+
 const OpenApiPlaywrightOpenApiGeneratorOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
 	input: z.string(),
@@ -35,6 +49,7 @@ const OpenApiPlaywrightOpenApiGeneratorOptionsSchema = z.strictObject({
 	response: RequestResponseOptionsSchema.optional(),
 	name: z.string().optional(),
 	basePath: z.string().optional(),
+	operationFilters: OperationFiltersSchema.optional(),
 	// schemaType is not included - always "all" for Playwright
 });
 
@@ -56,6 +71,7 @@ const PlaywrightConfigFileSchema = z.strictObject({
 			outputClient: z.string().optional(),
 			outputService: z.string().optional(),
 			basePath: z.string().optional(),
+			operationFilters: OperationFiltersSchema.optional(),
 		})
 		.optional(),
 	specs: z.array(OpenApiPlaywrightOpenApiGeneratorOptionsSchema).min(1, "At least one spec is required"),

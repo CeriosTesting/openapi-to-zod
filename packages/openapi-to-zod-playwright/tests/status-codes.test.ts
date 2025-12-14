@@ -6,16 +6,12 @@ describe("Status Codes", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 	function generateClientOutput(): string {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixtureFile,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
 		return generator.generateClientString();
 	}
 
 	function generateServiceOutput(): string {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixtureFile,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
 		return generator.generateServiceString();
 	}
 
@@ -34,9 +30,7 @@ describe("Status Codes", () => {
 	});
 
 	it("should generate error methods for 4xx/5xx responses", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixtureFile,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
 		const schemasOutput = generator.generateSchemasString();
 		const serviceOutput = generator.generateServiceString();
 
@@ -72,7 +66,7 @@ describe("Status Codes", () => {
 		const output = generateServiceOutput();
 
 		// DELETE returns 204
-		expect(output).toContain("deleteUsersByUserId");
+		expect(output).toContain("deleteUser");
 		expect(output).toContain("Promise<void>");
 	});
 

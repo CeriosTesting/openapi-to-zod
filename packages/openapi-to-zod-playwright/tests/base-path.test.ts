@@ -10,9 +10,7 @@ describe("BasePath Option", () => {
 
 	describe("Path normalization", () => {
 		it("should not modify paths when basePath is undefined", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
 
 			const output = generator.generateClientString();
 
@@ -25,10 +23,7 @@ describe("BasePath Option", () => {
 		});
 
 		it("should normalize empty string to undefined (no basePath)", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				basePath: "",
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile, basePath: "" });
 
 			const output = generator.generateClientString();
 
@@ -39,10 +34,7 @@ describe("BasePath Option", () => {
 		});
 
 		it("should normalize single slash to undefined (no basePath)", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				basePath: "/",
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile, basePath: "/" });
 
 			const output = generator.generateClientString();
 
@@ -54,6 +46,7 @@ describe("BasePath Option", () => {
 
 		it("should normalize basePath with leading slash", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v1",
 			});
@@ -70,6 +63,7 @@ describe("BasePath Option", () => {
 
 		it("should normalize basePath without leading slash", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "api/v1",
 			});
@@ -83,6 +77,7 @@ describe("BasePath Option", () => {
 
 		it("should normalize basePath with trailing slash", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v1/",
 			});
@@ -97,6 +92,7 @@ describe("BasePath Option", () => {
 
 		it("should normalize basePath without leading slash but with trailing slash", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "api/v1/",
 			});
@@ -110,6 +106,7 @@ describe("BasePath Option", () => {
 
 		it("should handle basePath with whitespace", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "  /api/v1  ",
 			});
@@ -122,10 +119,7 @@ describe("BasePath Option", () => {
 		});
 
 		it("should normalize basePath with only whitespace to undefined", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				basePath: "   ",
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile, basePath: "   " });
 
 			const output = generator.generateClientString();
 
@@ -138,6 +132,7 @@ describe("BasePath Option", () => {
 	describe("Path construction", () => {
 		it("should preserve path parameters in URLs", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v1",
 			});
@@ -151,6 +146,7 @@ describe("BasePath Option", () => {
 
 		it("should handle multiple path segments in basePath", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v2/internal",
 			});
@@ -162,10 +158,7 @@ describe("BasePath Option", () => {
 		});
 
 		it("should handle root endpoint with basePath", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				basePath: "/api",
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile, basePath: "/api" });
 
 			const output = generator.generateClientString();
 
@@ -178,6 +171,7 @@ describe("BasePath Option", () => {
 	describe("JSDoc comments", () => {
 		it("should show full path including basePath in client JSDoc", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v1",
 			});
@@ -190,9 +184,7 @@ describe("BasePath Option", () => {
 			expect(output).toContain("GET /api/v1/users/{userId}");
 		});
 		it("should show original path in JSDoc when no basePath", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
 
 			const output = generator.generateClientString();
 
@@ -205,6 +197,7 @@ describe("BasePath Option", () => {
 	describe("Split files with basePath", () => {
 		it("should apply basePath in separate client file", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("base-path-schemas.ts"),
 				outputClient: TestUtils.getOutputPath("base-path-client.ts"),
@@ -222,6 +215,7 @@ describe("BasePath Option", () => {
 
 		it("should apply basePath in separate service file", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				output: TestUtils.getOutputPath("base-path-schemas2.ts"),
 				outputClient: TestUtils.getOutputPath("base-path-client2.ts"),
@@ -242,10 +236,7 @@ describe("BasePath Option", () => {
 
 	describe("Different HTTP methods", () => {
 		it("should apply basePath to all HTTP methods", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				basePath: "/api",
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile, basePath: "/api" });
 
 			const output = generator.generateClientString();
 
@@ -260,6 +251,7 @@ describe("BasePath Option", () => {
 	describe("API versioning use case", () => {
 		it("should support v1 API path", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v1",
 			});
@@ -271,10 +263,7 @@ describe("BasePath Option", () => {
 		});
 
 		it("should support v2 API path", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				basePath: "/v2",
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile, basePath: "/v2" });
 
 			const output = generator.generateClientString();
 
@@ -284,6 +273,7 @@ describe("BasePath Option", () => {
 
 		it("should support nested versioned paths", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/services/users/v3",
 			});
@@ -297,10 +287,7 @@ describe("BasePath Option", () => {
 
 	describe("Edge cases", () => {
 		it("should handle endpoint path without leading slash", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				basePath: "/api",
-			});
+			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile, basePath: "/api" });
 
 			const output = generator.generateClientString();
 
@@ -310,6 +297,7 @@ describe("BasePath Option", () => {
 
 		it("should not create double slashes", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v1/",
 			});
@@ -323,6 +311,7 @@ describe("BasePath Option", () => {
 
 		it("should handle complex basePath with special characters", () => {
 			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api-gateway/v1.0",
 			});
@@ -336,11 +325,10 @@ describe("BasePath Option", () => {
 
 	describe("Schema generation (basePath should not affect)", () => {
 		it("should not affect schema generation", () => {
-			const generatorWithoutBasePath = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-			});
+			const generatorWithoutBasePath = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
 
 			const generatorWithBasePath = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
 				input: fixtureFile,
 				basePath: "/api/v1",
 			});

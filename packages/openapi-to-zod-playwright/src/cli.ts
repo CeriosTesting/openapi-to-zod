@@ -358,5 +358,20 @@ ${specConfig.join("\n")}
 	console.log("\nNext steps:");
 	console.log("  1. Review and customize your config file if needed");
 	console.log("  2. Run 'openapi-to-zod-playwright' to generate Playwright API client");
-	console.log("Things just got Cerios... happy hacking! 🎭\n");
+
+	// Random fun messages
+	const ceriosMessages = [
+		"Things just got Cerios!",
+		"Getting Cerios about testing!",
+		"Cerios business ahead!",
+		"Don't take it too Cerios-ly!",
+		"Time to get Cerios with Playwright!",
+		"We're dead Cerios about API testing!",
+		"This is Cerios-ly awesome!",
+		"Cerios-ly, you're all set!",
+		"You are Cerios right now!",
+		"Cerios vibes only!",
+	];
+	const randomMessage = ceriosMessages[Math.floor(Math.random() * ceriosMessages.length)];
+	console.log(`${randomMessage} ... happy hacking! 🎭\n`);
 }

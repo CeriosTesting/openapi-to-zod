@@ -339,5 +339,20 @@ export default defineConfig({
 	console.log("\nNext steps:");
 	console.log("  1. Review and customize your config file if needed");
 	console.log("  2. Run 'openapi-to-zod' to generate schemas\n");
-	console.log("Things just got Cerios...\n");
+
+	// Random fun messages
+	const ceriosMessages = [
+		"Things just got Cerios!",
+		"Getting Cerios about schemas!",
+		"Cerios business ahead!",
+		"Don't take it too Cerios-ly!",
+		"Time to get Cerios!",
+		"We're dead Cerios about types!",
+		"This is Cerios-ly awesome!",
+		"Cerios-ly, you're all set!",
+		"You are Cerios right now!",
+		"Cerios vibes only!",
+	];
+	const randomMessage = ceriosMessages[Math.floor(Math.random() * ceriosMessages.length)];
+	console.log(`${randomMessage}\n`);
 }

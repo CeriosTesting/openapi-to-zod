@@ -6,9 +6,7 @@ describe("Deprecated Operations", () => {
 	const fixturePath = TestUtils.getFixturePath("deprecated-api.yaml");
 
 	it("should generate @deprecated JSDoc tag for deprecated operations in client", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const client = generator.generateClientString();
 
 		// Check for @deprecated tag in JSDoc for the /old-endpoint operation
@@ -17,9 +15,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should generate @deprecated JSDoc tag for deprecated operations in service", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const service = generator.generateServiceString();
 
 		// Check for @deprecated tag in JSDoc for the /old-endpoint operation
@@ -28,9 +24,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should include operation summary in JSDoc", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const client = generator.generateClientString();
 
 		// Check for summary in JSDoc for /users endpoint
@@ -39,9 +33,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should include operation description in JSDoc", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const client = generator.generateClientString();
 
 		// Check for description in JSDoc for /users endpoint
@@ -50,9 +42,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should include both summary and @deprecated for deprecated operations", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const client = generator.generateClientString();
 
 		// Check for both summary and @deprecated for /old-users endpoint
@@ -62,9 +52,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should sanitize JSDoc content to prevent injection attacks", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const client = generator.generateClientString();
 
 		// Check that */ is escaped in /malicious endpoint
@@ -76,9 +64,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should handle operations without summary, description, or deprecated", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const client = generator.generateClientString();
 
 		// Should still generate JSDoc with basic info for /minimal endpoint
@@ -96,9 +82,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should generate proper multi-line JSDoc format", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const client = generator.generateClientString();
 
 		// Check for proper JSDoc structure for /complex endpoint
@@ -110,9 +94,7 @@ describe("Deprecated Operations", () => {
 	});
 
 	it("should handle deprecated operations with request bodies in service", () => {
-		const generator = new OpenApiPlaywrightGenerator({
-			input: fixturePath,
-		});
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixturePath });
 		const service = generator.generateServiceString();
 
 		// Check for @deprecated in service method for /old-create endpoint

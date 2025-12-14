@@ -1,5 +1,7 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
+import type { OperationFilters } from "../types";
 import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
+import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc, toPascalCase } from "../utils//string-utils";
 
 interface ResponseInfo {
@@ -21,6 +23,7 @@ interface EndpointInfo {
 	requestBody?: any;
 	responses: ResponseInfo[];
 	queryParamSchemaName?: string; // Name of the generated query parameter schema
+	headerParamSchemaName?: string; // Name of the generated header parameter schema
 	deprecated?: boolean;
 	summary?: string;
 	description?: string;
@@ -101,14 +104,18 @@ function deduplicateSuffixes(suffixes: string[]): string[] {
  * @param schemaImports - Set to collect schema import names
  * @param className - Name for the generated service class (default: "ApiService")
  * @param clientClassName - Name of the client class to inject (default: "ApiClient")
+ * @param operationFilters - Optional operation filters to apply
+ * @param useOperationId - Whether to use operationId for method names (default: true)
  */
 export function generateServiceClass(
 	spec: OpenAPISpec,
 	schemaImports: Set<string>,
 	className: string = "ApiService",
-	clientClassName: string = "ApiClient"
+	clientClassName: string = "ApiClient",
+	operationFilters?: OperationFilters,
+	useOperationId: boolean = true
 ): string {
-	const endpoints = extractEndpoints(spec);
+	const endpoints = extractEndpoints(spec, operationFilters, useOperationId);
 
 	if (endpoints.length === 0) {
 		return "";
@@ -133,7 +140,11 @@ ${methods}
 /**
  * Extracts all endpoints with their response information
  */
-function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
+function extractEndpoints(
+	spec: OpenAPISpec,
+	operationFilters?: OperationFilters,
+	useOperationId: boolean = true
+): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 
 	if (!spec.paths) {
@@ -149,7 +160,14 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 			const operation = pathItem[method];
 			if (!operation) continue;
 
-			const methodName = generateMethodName(method, path);
+			// Apply operation filters
+			if (operationFilters && !shouldIncludeOperation(operation, path, method, operationFilters)) {
+				continue;
+			}
+
+			// Use operationId if useOperationId is true and operationId exists, otherwise generate from path
+			const methodName =
+				useOperationId && operation.operationId ? operation.operationId : generateMethodName(method, path);
 			const pathParams = extractPathParams(path);
 
 			const responses: ResponseInfo[] = [];
@@ -232,6 +250,22 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 				}
 			}
 
+			// Check if operation has header parameters
+			let headerParamSchemaName: string | undefined;
+			if (operation.operationId && operation.parameters && Array.isArray(operation.parameters)) {
+				const hasHeaderParams = operation.parameters.some(
+					(param: any) => param && typeof param === "object" && param.in === "header"
+				);
+				if (hasHeaderParams) {
+					// Generate schema name matching the base generator pattern
+					// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
+					const pascalOperationId = operation.operationId.includes("-")
+						? toPascalCase(operation.operationId)
+						: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
+					headerParamSchemaName = `${pascalOperationId}HeaderParams`;
+				}
+			}
+
 			endpoints.push({
 				path,
 				method: method.toUpperCase(),
@@ -241,6 +275,7 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 				requestBody: operation.requestBody,
 				responses,
 				queryParamSchemaName,
+				headerParamSchemaName,
 				deprecated: operation.deprecated,
 				summary: operation.summary,
 				description: operation.description,
@@ -471,9 +506,16 @@ function generateServiceMethod(
 			}
 		}
 
-		// Add headers (keep generic)
+		// Add headers with typed schema if available
 		if (hasHeaderParams) {
-			optionsProps.push("headers?: { [key: string]: string }");
+			if (endpoint.headerParamSchemaName) {
+				// Use the typed header parameter schema
+				schemaImports.add(endpoint.headerParamSchemaName);
+				optionsProps.push(`headers?: ${endpoint.headerParamSchemaName}`);
+			} else {
+				// Fallback to generic headers
+				optionsProps.push("headers?: { [key: string]: string }");
+			}
 		}
 
 		// Add request body based on content-type

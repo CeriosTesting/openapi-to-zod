@@ -1,5 +1,7 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
+import type { OperationFilters } from "../types";
 import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
+import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc } from "../utils/string-utils";
 
 /**
@@ -66,9 +68,38 @@ interface EndpointInfo {
  * @param spec - OpenAPI specification
  * @param className - Name for the generated client class (default: "ApiClient")
  * @param basePath - Optional base path to prepend to all endpoints
+ * @param operationFilters - Optional operation filters to apply
+ * @param useOperationId - Whether to use operationId for method names (default: true)
  */
-export function generateClientClass(spec: OpenAPISpec, className: string = "ApiClient", basePath?: string): string {
-	const endpoints = extractEndpoints(spec);
+export function generateClientClass(
+	spec: OpenAPISpec,
+	className: string = "ApiClient",
+	basePath?: string,
+	operationFilters?: OperationFilters,
+	useOperationId: boolean = true
+): string {
+	const endpoints = extractEndpoints(spec, operationFilters, useOperationId);
+
+	// Warn if all operations were filtered out
+	if (operationFilters && endpoints.length === 0) {
+		// Count total operations
+		let totalOperations = 0;
+		if (spec.paths) {
+			for (const pathItem of Object.values(spec.paths)) {
+				if (!pathItem || typeof pathItem !== "object") continue;
+				const methods = ["get", "post", "put", "patch", "delete", "head", "options"];
+				for (const method of methods) {
+					if (pathItem[method]) totalOperations++;
+				}
+			}
+		}
+
+		if (totalOperations > 0) {
+			console.warn(
+				`⚠️  Warning: All ${totalOperations} operations were filtered out. Check your operationFilters configuration.`
+			);
+		}
+	}
 
 	if (endpoints.length === 0) {
 		return "";
@@ -148,8 +179,15 @@ ${methods}
 
 /**
  * Extracts all endpoints from OpenAPI spec
+ * @param spec - OpenAPI specification
+ * @param operationFilters - Optional operation filters to apply
+ * @param useOperationId - Whether to use operationId for method names (default: true)
  */
-function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
+function extractEndpoints(
+	spec: OpenAPISpec,
+	operationFilters?: OperationFilters,
+	useOperationId: boolean = true
+): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 
 	if (!spec.paths) {
@@ -163,22 +201,29 @@ function extractEndpoints(spec: OpenAPISpec): EndpointInfo[] {
 
 		for (const method of methods) {
 			const operation = pathItem[method];
-			if (operation) {
-				const methodName = generateMethodName(method, path);
-				const pathParams = extractPathParams(path);
+			if (!operation) continue;
 
-				endpoints.push({
-					path,
-					method: method.toUpperCase(),
-					methodName,
-					pathParams,
-					parameters: operation.parameters || [],
-					requestBody: operation.requestBody,
-					deprecated: operation.deprecated,
-					summary: operation.summary,
-					description: operation.description,
-				});
+			// Apply operation filters
+			if (!shouldIncludeOperation(operation, path, method, operationFilters)) {
+				continue;
 			}
+
+			// Use operationId if useOperationId is true and operationId exists, otherwise generate from path
+			const methodName =
+				useOperationId && operation.operationId ? operation.operationId : generateMethodName(method, path);
+			const pathParams = extractPathParams(path);
+
+			endpoints.push({
+				path,
+				method: method.toUpperCase(),
+				methodName,
+				pathParams,
+				parameters: operation.parameters || [],
+				requestBody: operation.requestBody,
+				deprecated: operation.deprecated,
+				summary: operation.summary,
+				description: operation.description,
+			});
 		}
 	}
 

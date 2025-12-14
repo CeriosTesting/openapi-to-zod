@@ -9,6 +9,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should generate service method for application/json", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -20,6 +21,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should accept data parameter for JSON content type", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -31,6 +33,7 @@ describe("Multi-Content-Type Support", () => {
 		it("should pass options to client", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -47,6 +50,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -60,6 +64,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -73,6 +78,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -89,6 +95,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -102,6 +109,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -115,6 +123,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -131,6 +140,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -145,6 +155,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const clientSection = generator.generateClientString();
@@ -162,6 +173,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();
@@ -180,6 +192,7 @@ describe("Multi-Content-Type Support", () => {
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixture,
+				useOperationId: false,
 			});
 
 			const serviceSection = generator.generateServiceString();

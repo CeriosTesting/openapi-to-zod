@@ -1,4 +1,31 @@
-import type { OpenApiGeneratorOptions } from "@cerios/openapi-to-zod";
+import type { OperationFilters as BaseOperationFilters, OpenApiGeneratorOptions } from "@cerios/openapi-to-zod";
+
+/**
+ * Playwright-specific operation filtering options
+ * Extends base filters with status code filtering for response validation
+ */
+export interface OperationFilters extends BaseOperationFilters {
+	/**
+	 * Include only these status codes in generated response types
+	 * Supports exact codes ("200", "201") and range patterns ("2xx", "4xx", "5xx")
+	 * Empty array = no constraint
+	 *
+	 * @example ["200", "201"] - Only success codes
+	 * @example ["2xx"] - All 2xx success codes
+	 * @example ["200", "4xx"] - Specific code plus range
+	 */
+	includeStatusCodes?: string[];
+
+	/**
+	 * Exclude these status codes from generated response types
+	 * Supports exact codes ("500", "503") and range patterns ("5xx")
+	 * Empty array = no constraint
+	 *
+	 * @example ["5xx"] - Exclude all server errors
+	 * @example ["404", "500"] - Exclude specific errors
+	 */
+	excludeStatusCodes?: string[];
+}
 
 /**
  * Generator options for Playwright client generation
@@ -8,7 +35,8 @@ import type { OpenApiGeneratorOptions } from "@cerios/openapi-to-zod";
  * - Client (outputClient): Optional, Playwright API passthrough wrapper
  * - Service (outputService): Optional, type-safe validation layer (requires outputClient)
  */
-export interface OpenApiPlaywrightOpenApiGeneratorOptions extends Omit<OpenApiGeneratorOptions, "schemaType"> {
+export interface OpenApiPlaywrightOpenApiGeneratorOptions
+	extends Omit<OpenApiGeneratorOptions, "schemaType" | "operationFilters"> {
 	/**
 	 * Input OpenAPI specification file path (YAML or JSON)
 	 */
@@ -53,6 +81,12 @@ export interface OpenApiPlaywrightOpenApiGeneratorOptions extends Omit<OpenApiGe
 	outputService?: string;
 
 	/**
+	 * Operation filtering options (Playwright-specific with status code support)
+	 * Allows filtering operations by tags, paths, methods, operationIds, deprecated status, and status codes
+	 */
+	operationFilters?: OperationFilters;
+
+	/**
 	 * Whether to validate request body data with Zod schemas in service methods
 	 * @default false
 	 */
@@ -67,6 +101,16 @@ export interface OpenApiPlaywrightOpenApiGeneratorOptions extends Omit<OpenApiGe
 	 * @default undefined (no base path)
 	 */
 	basePath?: string;
+
+	/**
+	 * Whether to use operationId from OpenAPI spec for method names
+	 * When true: Uses operationId if available, falls back to generated names
+	 * When false: Always generates method names from HTTP method + path
+	 * @example true: "getUserById" (from operationId)
+	 * @example false: "getUsersByUserId" (generated from GET /users/{userId})
+	 * @default true
+	 */
+	useOperationId?: boolean;
 
 	/**
 	 * Schema type is always "all" for Playwright generator

@@ -157,6 +157,108 @@ export interface OpenApiGeneratorOptions {
 	 * Always generates Zod schemas for runtime validation
 	 */
 	response?: ResponseOptions;
+
+	/**
+	 * Filter which operations to include/exclude from generation
+	 * Useful for generating separate schemas for different API subsets
+	 *
+	 * Filtering logic:
+	 * 1. If no filters specified, all operations are included
+	 * 2. Empty arrays are treated as "no constraint" (not as "exclude all")
+	 * 3. Include filters are applied first (allowlist)
+	 * 4. Exclude filters are applied second (blocklist)
+	 * 5. Exclude rules always win over include rules
+	 *
+	 * Supports glob patterns for paths and operationIds (e.g., "/api/v1/**", "get*")
+	 *
+	 * @example
+	 * // Only generate schemas for user-related endpoints
+	 * operationFilters: {
+	 *   includeTags: ["users"]
+	 * }
+	 *
+	 * @example
+	 * // Generate only GET endpoints, excluding deprecated ones
+	 * operationFilters: {
+	 *   includeMethods: ["get"],
+	 *   excludeDeprecated: true
+	 * }
+	 *
+	 * @example
+	 * // Generate only v1 API endpoints
+	 * operationFilters: {
+	 *   includePaths: ["/api/v1/**"]
+	 * }
+	 */
+	operationFilters?: OperationFilters;
+}
+
+/**
+ * Operation filtering options
+ * Controls which operations from the OpenAPI spec are included in generation
+ */
+export interface OperationFilters {
+	/**
+	 * Include only operations with these tags
+	 * If specified, only operations with at least one matching tag are included
+	 * Empty array = no constraint
+	 */
+	includeTags?: string[];
+
+	/**
+	 * Exclude operations with these tags
+	 * Operations with any matching tag are excluded
+	 * Empty array = no constraint
+	 */
+	excludeTags?: string[];
+
+	/**
+	 * Include only operations matching these path patterns
+	 * Supports glob patterns (e.g., "/users/**", "/api/v1/*")
+	 * Empty array = no constraint
+	 */
+	includePaths?: string[];
+
+	/**
+	 * Exclude operations matching these path patterns
+	 * Supports glob patterns (e.g., "/internal/**", "/admin/*")
+	 * Empty array = no constraint
+	 */
+	excludePaths?: string[];
+
+	/**
+	 * Include only these HTTP methods
+	 * Valid values: "get", "post", "put", "patch", "delete", "head", "options"
+	 * Empty array = no constraint
+	 */
+	includeMethods?: string[];
+
+	/**
+	 * Exclude these HTTP methods
+	 * Valid values: "get", "post", "put", "patch", "delete", "head", "options"
+	 * Empty array = no constraint
+	 */
+	excludeMethods?: string[];
+
+	/**
+	 * Include only operations matching these operationId patterns
+	 * Supports glob patterns (e.g., "getUser*", "*Admin")
+	 * Empty array = no constraint
+	 */
+	includeOperationIds?: string[];
+
+	/**
+	 * Exclude operations matching these operationId patterns
+	 * Supports glob patterns (e.g., "deleteUser*", "*Internal")
+	 * Empty array = no constraint
+	 */
+	excludeOperationIds?: string[];
+
+	/**
+	 * Whether to exclude deprecated operations
+	 * @default false
+	 */
+	excludeDeprecated?: boolean;
 }
 
 export interface OpenAPISchema {

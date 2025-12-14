@@ -6,7 +6,7 @@ describe("Query Parameter Types in Service Methods", () => {
 	const schemaPath = resolve(__dirname, "fixtures/query-params-validation-api.yaml");
 
 	it("should generate service methods with typed query parameters", () => {
-		const generator = new OpenApiPlaywrightGenerator({ input: schemaPath, output: "test.ts" });
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: schemaPath, output: "test.ts" });
 		const output = generator.generateServiceString();
 
 		// Should import query parameter types (not schemas)
@@ -17,7 +17,7 @@ describe("Query Parameter Types in Service Methods", () => {
 	});
 
 	it("should not add runtime validation for query parameters", () => {
-		const generator = new OpenApiPlaywrightGenerator({ input: schemaPath, output: "test.ts" });
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: schemaPath, output: "test.ts" });
 		const output = generator.generateServiceString();
 
 		// Should NOT validate query params (compile-time only)
@@ -26,7 +26,7 @@ describe("Query Parameter Types in Service Methods", () => {
 	});
 
 	it("should not add params for operations without query parameters", () => {
-		const generator = new OpenApiPlaywrightGenerator({ input: schemaPath, output: "test.ts" });
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: schemaPath, output: "test.ts" });
 		const output = generator.generateServiceString();
 
 		// Simple endpoint without query params should not have params in signature
@@ -38,7 +38,7 @@ describe("Query Parameter Types in Service Methods", () => {
 	});
 
 	it("should handle operations with both path and query parameters", () => {
-		const generator = new OpenApiPlaywrightGenerator({ input: schemaPath, output: "test.ts" });
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: schemaPath, output: "test.ts" });
 		const output = generator.generateServiceString();
 
 		// GetPostQueryParams type should be imported
@@ -50,7 +50,7 @@ describe("Query Parameter Types in Service Methods", () => {
 	});
 
 	it("should generate valid TypeScript code", () => {
-		const generator = new OpenApiPlaywrightGenerator({ input: schemaPath, output: "test.ts" });
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: schemaPath, output: "test.ts" });
 		const output = generator.generateServiceString();
 
 		// Basic validation of service class structure (class name derived from filename)
@@ -60,7 +60,7 @@ describe("Query Parameter Types in Service Methods", () => {
 	});
 
 	it("should include query parameter types (not schemas)", () => {
-		const generator = new OpenApiPlaywrightGenerator({ input: schemaPath, output: "test.ts" });
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: schemaPath, output: "test.ts" });
 		const output = generator.generateSchemasString();
 
 		// Check that output includes query param types
@@ -73,7 +73,7 @@ describe("Query Parameter Types in Service Methods", () => {
 	});
 
 	it("should use correct naming convention for types", () => {
-		const generator = new OpenApiPlaywrightGenerator({ input: schemaPath, output: "test.ts" });
+		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: schemaPath, output: "test.ts" });
 		const output = generator.generateServiceString();
 
 		// Type names should follow {OperationId}QueryParams pattern

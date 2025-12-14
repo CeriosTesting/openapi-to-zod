@@ -18,6 +18,18 @@ const RequestResponseOptionsSchema = z.strictObject({
 	nativeEnumType: NativeEnumTypeSchema.optional(),
 });
 
+const OperationFiltersSchema = z.strictObject({
+	includeTags: z.array(z.string()).optional(),
+	excludeTags: z.array(z.string()).optional(),
+	includePaths: z.array(z.string()).optional(),
+	excludePaths: z.array(z.string()).optional(),
+	includeMethods: z.array(z.string()).optional(),
+	excludeMethods: z.array(z.string()).optional(),
+	includeOperationIds: z.array(z.string()).optional(),
+	excludeOperationIds: z.array(z.string()).optional(),
+	excludeDeprecated: z.boolean().optional(),
+});
+
 const OpenApiGeneratorOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
 	input: z.string(),
@@ -33,6 +45,7 @@ const OpenApiGeneratorOptionsSchema = z.strictObject({
 	request: RequestResponseOptionsSchema.optional(),
 	response: RequestResponseOptionsSchema.optional(),
 	name: z.string().optional(),
+	operationFilters: OperationFiltersSchema.optional(),
 });
 
 const ConfigFileSchema = z.strictObject({
@@ -49,6 +62,7 @@ const ConfigFileSchema = z.strictObject({
 			nativeEnumType: NativeEnumTypeSchema.optional(),
 			request: RequestResponseOptionsSchema.optional(),
 			response: RequestResponseOptionsSchema.optional(),
+			operationFilters: OperationFiltersSchema.optional(),
 		})
 		.optional(),
 	specs: z.array(OpenApiGeneratorOptionsSchema).min(1, "At least one spec is required"),

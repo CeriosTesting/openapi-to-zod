@@ -38,6 +38,7 @@ export class OpenApiPlaywrightGenerator {
 			showStats: options.showStats ?? true,
 			prefix: options.prefix || "",
 			suffix: options.suffix || "",
+			useOperationId: options.useOperationId ?? true, // Default to true
 			...options,
 			schemaType: "all", // Always enforce all schemas
 		};
@@ -162,7 +163,13 @@ export class OpenApiPlaywrightGenerator {
 		}
 
 		const clientClassName = this.deriveClassName(this.options.outputClient || this.options.output, "Client");
-		return generateClientClass(this.spec, clientClassName, this.options.basePath);
+		return generateClientClass(
+			this.spec,
+			clientClassName,
+			this.options.basePath,
+			this.options.operationFilters,
+			this.options.useOperationId ?? true
+		);
 	}
 
 	/**
@@ -178,7 +185,14 @@ export class OpenApiPlaywrightGenerator {
 		const schemaImports = new Set<string>();
 		const serviceClassName = this.deriveClassName(this.options.outputService || this.options.output, "Service");
 		const clientClassName = this.deriveClassName(this.options.outputClient || this.options.output, "Client");
-		return generateServiceClass(this.spec, schemaImports, serviceClassName, clientClassName);
+		return generateServiceClass(
+			this.spec,
+			schemaImports,
+			serviceClassName,
+			clientClassName,
+			this.options.operationFilters,
+			this.options.useOperationId ?? true
+		);
 	}
 
 	/**
@@ -296,15 +310,20 @@ export class OpenApiPlaywrightGenerator {
 		// 1. Return type annotations: Promise<TypeName>
 		// 2. Parameter types (e.g., request bodies): data: TypeName
 		// 3. Query parameter types: params?: TypeName
+		// 4. Header parameter types: headers?: TypeName
 		const schemaTypes = allSchemas.filter(name => {
 			if (name.endsWith("Schema")) return false; // Skip schemas
 			if (!serviceString.includes(name)) return false; // Must appear in the code
-			// Match return types, parameter types, or query param types
+			// Match return types, parameter types, query param types, or header param types
 			const returnPattern = new RegExp(`Promise<${name}(?:\\[\\])?>`);
 			const paramPattern = new RegExp(`(?:data|form|multipart)\\??:\\s*${name}\\b`);
 			const queryParamPattern = new RegExp(`params\\??:\\s*${name}\\b`);
+			const headerParamPattern = new RegExp(`headers\\??:\\s*${name}\\b`);
 			return (
-				returnPattern.test(serviceString) || paramPattern.test(serviceString) || queryParamPattern.test(serviceString)
+				returnPattern.test(serviceString) ||
+				paramPattern.test(serviceString) ||
+				queryParamPattern.test(serviceString) ||
+				headerParamPattern.test(serviceString)
 			);
 		});
 

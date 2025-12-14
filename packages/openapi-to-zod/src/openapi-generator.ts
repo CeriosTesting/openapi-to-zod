@@ -7,6 +7,13 @@ import { generateJSDoc } from "./generators/jsdoc-generator";
 import { PropertyGenerator } from "./generators/property-generator";
 import type { OpenAPISchema, OpenAPISpec, OpenApiGeneratorOptions, ResolvedOptions, TypeMode } from "./types";
 import { resolveRef, toCamelCase, toPascalCase } from "./utils/name-utils";
+import {
+	createFilterStatistics,
+	type FilterStatistics,
+	formatFilterStatistics,
+	shouldIncludeOperation,
+	validateFilters,
+} from "./utils/operation-filters";
 
 type SchemaContext = "request" | "response" | "both";
 
@@ -24,6 +31,7 @@ export class OpenApiGenerator {
 	private requestOptions: ResolvedOptions;
 	private responseOptions: ResolvedOptions;
 	private needsZodImport = false;
+	private filterStats: FilterStatistics = createFilterStatistics();
 
 	constructor(options: OpenApiGeneratorOptions) {
 		// Validate input path early
@@ -45,6 +53,7 @@ export class OpenApiGenerator {
 			nativeEnumType: options.nativeEnumType || "union",
 			request: options.request,
 			response: options.response,
+			operationFilters: options.operationFilters,
 		};
 
 		// Validate input file exists
@@ -178,6 +187,12 @@ export class OpenApiGenerator {
 		// Third pass: generate query parameter schemas from path operations
 		this.generateQueryParameterSchemas();
 
+		// Fourth pass: generate header parameter schemas from path operations
+		this.generateHeaderParameterSchemas();
+
+		// Validate filters and emit warnings if needed
+		validateFilters(this.filterStats, this.options.operationFilters);
+
 		// Sort schemas by dependencies
 		const orderedSchemaNames = this.topologicalSort();
 
@@ -301,9 +316,22 @@ export class OpenApiGenerator {
 
 		// Analyze paths section if available
 		if (this.spec.paths) {
-			for (const [, pathItem] of Object.entries(this.spec.paths)) {
-				for (const [, operation] of Object.entries(pathItem)) {
+			for (const [path, pathItem] of Object.entries(this.spec.paths)) {
+				const methods = ["get", "post", "put", "patch", "delete", "head", "options"];
+				for (const method of methods) {
+					const operation = (pathItem as any)[method];
 					if (typeof operation !== "object" || !operation) continue;
+
+					// Track total operations
+					this.filterStats.totalOperations++;
+
+					// Apply operation filters
+					if (!shouldIncludeOperation(operation, path, method, this.options.operationFilters, this.filterStats)) {
+						continue;
+					}
+
+					// Count included operation
+					this.filterStats.includedOperations++;
 
 					// Check request bodies
 					if (
@@ -745,7 +773,7 @@ export class OpenApiGenerator {
 			return;
 		}
 
-		for (const [_path, pathItem] of Object.entries(this.spec.paths)) {
+		for (const [path, pathItem] of Object.entries(this.spec.paths)) {
 			if (!pathItem || typeof pathItem !== "object") continue;
 
 			const methods = ["get", "post", "put", "patch", "delete", "head", "options"];
@@ -753,6 +781,11 @@ export class OpenApiGenerator {
 			for (const method of methods) {
 				const operation = (pathItem as any)[method];
 				if (!operation) continue;
+
+				// Apply operation filters (stats already tracked in analyzeSchemaUsage)
+				if (!shouldIncludeOperation(operation, path, method, this.options.operationFilters)) {
+					continue;
+				}
 
 				// Skip operations without operationId or parameters
 				if (!operation.operationId || !operation.parameters || !Array.isArray(operation.parameters)) {
@@ -848,6 +881,118 @@ export class OpenApiGenerator {
 
 				// Generate JSDoc
 				const jsdoc = `/**\n * Query parameters for ${operation.operationId}\n */\n`;
+				const fullSchemaCode = `${jsdoc}export const ${camelCaseSchemaName} = ${schemaCode};`;
+
+				this.schemas.set(schemaName, fullSchemaCode);
+				this.needsZodImport = true;
+			}
+		}
+	}
+
+	/**
+	 * Generate header parameter schemas for each operation
+	 * Header parameters are always string type (HTTP header semantics)
+	 */
+	private generateHeaderParameterSchemas(): void {
+		if (!this.spec.paths) {
+			return;
+		}
+
+		for (const [path, pathItem] of Object.entries(this.spec.paths)) {
+			if (!pathItem || typeof pathItem !== "object") continue;
+
+			const methods = ["get", "post", "put", "patch", "delete", "head", "options"];
+
+			for (const method of methods) {
+				const operation = (pathItem as any)[method];
+				if (!operation) continue;
+
+				// Apply operation filters
+				if (!shouldIncludeOperation(operation, path, method, this.options.operationFilters)) {
+					continue;
+				}
+
+				// Skip operations without operationId or parameters
+				if (!operation.operationId || !operation.parameters || !Array.isArray(operation.parameters)) {
+					continue;
+				}
+
+				// Filter for header parameters only
+				const headerParams = operation.parameters.filter(
+					(param: any) => param && typeof param === "object" && param.in === "header"
+				);
+
+				if (headerParams.length === 0) {
+					continue;
+				}
+
+				// Generate schema name from operationId
+				const pascalOperationId = operation.operationId.includes("-")
+					? toPascalCase(operation.operationId)
+					: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
+				const schemaName = `${pascalOperationId}HeaderParams`;
+
+				// Initialize dependencies for this schema
+				if (!this.schemaDependencies.has(schemaName)) {
+					this.schemaDependencies.set(schemaName, new Set());
+				}
+
+				// Build object schema properties (headers are always strings)
+				const properties: Record<string, string> = {};
+
+				for (const param of headerParams) {
+					const paramName = param.name;
+					const paramSchema = param.schema;
+
+					if (!paramSchema) continue;
+
+					// Headers are always strings in HTTP, regardless of schema type
+					let zodType = "z.string()";
+
+					// Add description if available
+					if (param.description && this.requestOptions.includeDescriptions) {
+						if (this.requestOptions.useDescribe) {
+							zodType = `${zodType}.describe(${JSON.stringify(param.description)})`;
+						}
+					}
+
+					// Headers are always optional in service layer (as per requirements)
+					zodType = `${zodType}.optional()`;
+
+					properties[paramName] = zodType;
+
+					// Track dependencies from schema references (if any)
+					if (paramSchema.$ref) {
+						const refName = resolveRef(paramSchema.$ref);
+						this.schemaDependencies.get(schemaName)?.add(refName);
+					}
+				}
+
+				// Generate the object schema code
+				const objectMode = this.requestOptions.mode;
+				const zodMethod = objectMode === "strict" ? "strictObject" : objectMode === "loose" ? "looseObject" : "object";
+
+				const propsCode = Object.entries(properties)
+					.map(([key, value]) => {
+						// Quote property names that contain special characters or are not valid identifiers
+						const needsQuotes = !/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key);
+						const quotedKey = needsQuotes ? `"${key}"` : key;
+						return `  ${quotedKey}: ${value}`;
+					})
+					.join(",\n");
+
+				const schemaCode = `z.${zodMethod}({\n${propsCode}\n})`;
+
+				// Apply prefix/suffix to the operation name only, then add HeaderParams and Schema
+				const operationName = pascalOperationId;
+				const prefixedName = this.options.prefix
+					? `${toPascalCase(this.options.prefix)}${operationName}`
+					: operationName;
+				const suffixedName = this.options.suffix ? `${prefixedName}${toPascalCase(this.options.suffix)}` : prefixedName;
+				const camelCaseSchemaName = `${suffixedName.charAt(0).toLowerCase() + suffixedName.slice(1)}HeaderParamsSchema`;
+
+				// Generate JSDoc
+				const jsdoc = `/**\n * Header parameters for ${operation.operationId}\n */\n`;
 				const fullSchemaCode = `${jsdoc}export const ${camelCaseSchemaName} = ${schemaCode};`;
 
 				this.schemas.set(schemaName, fullSchemaCode);
@@ -1208,14 +1353,26 @@ export class OpenApiGenerator {
 			}
 		}
 
-		return [
+		const output = [
 			"// Generation Statistics:",
 			`//   Total schemas: ${stats.totalSchemas}`,
 			`//   Enums: ${stats.enums}`,
 			`//   Circular references: ${stats.withCircularRefs}`,
 			`//   Discriminated unions: ${stats.withDiscriminators}`,
 			`//   With constraints: ${stats.withConstraints}`,
-			`//   Generated at: ${new Date().toISOString()}`,
 		];
+
+		// Add filter statistics if filtering was used
+		if (this.options.operationFilters && this.filterStats.totalOperations > 0) {
+			output.push("//");
+			const filterStatsStr = formatFilterStatistics(this.filterStats);
+			for (const line of filterStatsStr.split("\n")) {
+				output.push(`//   ${line}`);
+			}
+		}
+
+		output.push(`//   Generated at: ${new Date().toISOString()}`);
+
+		return output;
 	}
 }
