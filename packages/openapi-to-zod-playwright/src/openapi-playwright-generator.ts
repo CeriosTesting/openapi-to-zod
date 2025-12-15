@@ -341,12 +341,23 @@ export class OpenApiPlaywrightGenerator {
 			schemaImportStatement += `import type { ${schemaTypes.join(", ")} } from "${relativeImportMain}";\n`;
 		}
 
-		// Only import ApiRequestContextOptions/MultipartFormValue if service uses them
-		const usesOptions = serviceString.includes("ApiRequestContextOptions");
-		const usesMultipart = serviceString.includes("MultipartFormValue");
+		// Check for all client type aliases that might be used in service
+		const clientTypeAliases = [
+			"ApiRequestContextOptions",
+			"MultipartFormValue",
+			"QueryParams",
+			"HttpHeaders",
+			"UrlEncodedFormData",
+			"MultipartFormData",
+			"RequestBody",
+		];
+
 		const clientImports = [clientClassName];
-		if (usesOptions) clientImports.push("type ApiRequestContextOptions");
-		if (usesMultipart) clientImports.push("type MultipartFormValue");
+		for (const typeAlias of clientTypeAliases) {
+			if (serviceString.includes(typeAlias)) {
+				clientImports.push(`type ${typeAlias}`);
+			}
+		}
 
 		output.push(`import { z } from "zod";`);
 		output.push(`import { expect } from "@playwright/test";`);
