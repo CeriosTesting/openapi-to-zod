@@ -1,6 +1,6 @@
 {
 	"name": "@cerios/openapi-to-zod",
-	"version": "0.5.3",
+	"version": "0.6.0",
 	"author": "Ronald Veth - Cerios",
 	"description": "Generate Zod schemas from OpenAPI specifications. A TypeScript code generator that converts OpenAPI/Swagger YAML definitions into type-safe Zod validation schemas.",
 	"license": "MIT",

@@ -1,5 +1,15 @@
 # @cerios/openapi-to-zod
 
+## 0.6.0
+
+### Minor Changes
+
+- Removes TypeScript native enum generation support, standardizing on Zod enums exclusively for consistency and runtime type safety.
+
+  Eliminates typeMode, enumType, and nativeEnumType options along with their associated complexity. Response schemas always required Zod for validation, making the native type generation only partially useful.
+
+  Updates default configuration recommendations to use strict mode with better defaults. Changes useOperationId default to false, preferring generated path-based method names over potentially inconsistent operationIds.
+
 ## 0.5.3
 
 ### Patch Changes
