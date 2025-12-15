@@ -54,8 +54,6 @@ interface EndpointInfo {
 	method: string;
 	methodName: string;
 	pathParams: string[];
-	parameters?: any[];
-	requestBody?: any;
 	deprecated?: boolean;
 	summary?: string;
 	description?: string;
@@ -247,8 +245,6 @@ function extractEndpoints(
 				method: method.toUpperCase(),
 				methodName,
 				pathParams,
-				parameters: operation.parameters || [],
-				requestBody: operation.requestBody,
 				deprecated: operation.deprecated,
 				summary: operation.summary,
 				description: operation.description,
