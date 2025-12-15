@@ -242,19 +242,10 @@ describe("OpenApiGenerator", () => {
 
 	describe("Schema Naming Options", () => {
 		const simplePath = TestUtils.getFixturePath("simple.yaml");
-		const complexPath = TestUtils.getFixturePath("complex.yaml");
 
 		function generateFromSimple(options?: Partial<OpenApiGeneratorOptions>): string {
 			const generator = new OpenApiGenerator({
 				input: simplePath,
-				...options,
-			});
-			return generator.generateString();
-		}
-
-		function generateFromComplex(options?: Partial<OpenApiGeneratorOptions>): string {
-			const generator = new OpenApiGenerator({
-				input: complexPath,
 				...options,
 			});
 			return generator.generateString();
@@ -281,20 +272,6 @@ describe("OpenApiGenerator", () => {
 			expect(output).toContain("export type User = z.infer<typeof apiUserDtoSchema>");
 		});
 
-		it("should apply prefix to enum names", () => {
-			const output = generateFromComplex({ prefix: "api", enumType: "typescript", nativeEnumType: "enum" });
-
-			// Enum type names don't get prefix, but schema variables do
-			expect(output).toContain("export enum UserTypeEnum");
-			expect(output).toContain("export const apiUserTypeSchema");
-			expect(output).toContain("z.nativeEnum(UserTypeEnum)");
-		});
-
-		it("should apply suffix to enum names", () => {
-			const output = generateFromComplex({ suffix: "Enum", enumType: "typescript", nativeEnumType: "enum" });
-
-			expect(output).toContain("export enum UserTypeEnum");
-		});
 		it("should maintain camelCase for schema variables with prefix/suffix", () => {
 			const output = generateFromSimple({ prefix: "api", suffix: "Model" });
 
@@ -339,7 +316,6 @@ describe("OpenApiGenerator", () => {
 
 			expect(output).toContain("// Generation Statistics:");
 			expect(output).toContain("//   Total schemas:");
-			expect(output).toContain("//   Enums:");
 			expect(output).toContain("//   Generated at:");
 		});
 

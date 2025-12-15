@@ -5,7 +5,7 @@ import { ConfigurationError, FileOperationError, SchemaGenerationError, SpecVali
 import { generateEnum } from "./generators/enum-generator";
 import { generateJSDoc } from "./generators/jsdoc-generator";
 import { PropertyGenerator } from "./generators/property-generator";
-import type { OpenAPISchema, OpenAPISpec, OpenApiGeneratorOptions, ResolvedOptions, TypeMode } from "./types";
+import type { OpenAPISchema, OpenAPISpec, OpenApiGeneratorOptions, ResolvedOptions } from "./types";
 import { resolveRef, toCamelCase, toPascalCase } from "./utils/name-utils";
 import {
 	createFilterStatistics,
@@ -20,17 +20,14 @@ type SchemaContext = "request" | "response" | "both";
 export class OpenApiGenerator {
 	private schemas: Map<string, string> = new Map();
 	private types: Map<string, string> = new Map();
-	private enums: Map<string, string> = new Map();
-	private nativeEnums: Map<string, string> = new Map();
 	private schemaDependencies: Map<string, Set<string>> = new Map();
 	private options: OpenApiGeneratorOptions;
 	private spec: OpenAPISpec;
 	private propertyGenerator: PropertyGenerator;
 	private schemaUsageMap: Map<string, SchemaContext> = new Map();
-	private schemaTypeModeMap: Map<string, TypeMode> = new Map();
 	private requestOptions: ResolvedOptions;
 	private responseOptions: ResolvedOptions;
-	private needsZodImport = false;
+	private needsZodImport = true;
 	private filterStats: FilterStatistics = createFilterStatistics();
 
 	constructor(options: OpenApiGeneratorOptions) {
@@ -44,13 +41,11 @@ export class OpenApiGenerator {
 			input: options.input,
 			output: options.output,
 			includeDescriptions: options.includeDescriptions ?? true,
-			enumType: options.enumType || "zod",
 			useDescribe: options.useDescribe ?? false,
 			schemaType: options.schemaType || "all",
 			prefix: options.prefix,
 			suffix: options.suffix,
 			showStats: options.showStats ?? true,
-			nativeEnumType: options.nativeEnumType || "union",
 			request: options.request,
 			response: options.response,
 			operationFilters: options.operationFilters,
@@ -123,9 +118,6 @@ export class OpenApiGenerator {
 		// Analyze schema usage to determine context (request/response/both)
 		this.analyzeSchemaUsage();
 
-		// Determine typeMode for each schema based on usage context
-		this.determineSchemaTypeModes();
-
 		// Initialize property generator with context
 		// We'll update this dynamically based on schema context during generation
 		this.propertyGenerator = new PropertyGenerator({
@@ -135,8 +127,6 @@ export class OpenApiGenerator {
 			mode: this.requestOptions.mode,
 			includeDescriptions: this.requestOptions.includeDescriptions,
 			useDescribe: this.requestOptions.useDescribe,
-			typeMode: this.requestOptions.typeMode,
-			nativeEnumType: this.requestOptions.nativeEnumType,
 			namingOptions: {
 				prefix: this.options.prefix,
 				suffix: this.options.suffix,
@@ -153,41 +143,15 @@ export class OpenApiGenerator {
 			throw new SpecValidationError("No schemas found in OpenAPI spec", { filePath: this.options.input });
 		}
 
-		// First pass: generate enums
-		for (const [name, schema] of Object.entries(this.spec.components.schemas)) {
-			if (schema.enum) {
-				const context = this.schemaUsageMap.get(name);
-				const resolvedOptions = context === "response" ? this.responseOptions : this.requestOptions;
-
-				// For enums, use enumType option to determine generation strategy
-				if (resolvedOptions.enumType === "typescript") {
-					// Generate native TypeScript enum
-					this.generateNativeEnum(name, schema);
-				} else {
-					// Generate Zod enum - will create schema in second pass
-					const { enumCode } = generateEnum(name, schema.enum, {
-						enumType: "zod",
-						prefix: this.options.prefix,
-						suffix: this.options.suffix,
-					});
-					if (enumCode) {
-						this.enums.set(name, enumCode);
-						// Mark that we need Zod import for enum schemas
-						this.needsZodImport = true;
-					}
-				}
-			}
-		}
-
-		// Second pass: generate schemas/types and track dependencies
+		// Generate schemas and track dependencies
 		for (const [name, schema] of Object.entries(this.spec.components.schemas)) {
 			this.generateComponentSchema(name, schema);
 		}
 
-		// Third pass: generate query parameter schemas from path operations
+		// Generate query parameter schemas from path operations
 		this.generateQueryParameterSchemas();
 
-		// Fourth pass: generate header parameter schemas from path operations
+		// Generate header parameter schemas from path operations
 		this.generateHeaderParameterSchemas();
 
 		// Validate filters and emit warnings if needed
@@ -211,27 +175,13 @@ export class OpenApiGenerator {
 			output.push("");
 		}
 
-		// Add native enums first (they have no dependencies and are referenced by value)
-		if (this.nativeEnums.size > 0) {
-			output.push("// Native Enums");
-			for (const enumCode of this.nativeEnums.values()) {
-				output.push(enumCode);
-				output.push("");
-			}
-		}
-
-		// Add schemas, types, and zod enums in dependency order (grouped by schema)
+		// Add schemas and types in dependency order
 		output.push("// Schemas and Types");
 		for (const name of orderedSchemaNames) {
-			const enumCode = this.enums.get(name);
 			const schemaCode = this.schemas.get(name);
 			const typeCode = this.types.get(name);
 
-			if (enumCode) {
-				// Zod enum schema
-				output.push(enumCode);
-				output.push("");
-			} else if (schemaCode) {
+			if (schemaCode) {
 				// Zod schema with inferred type
 				output.push(schemaCode);
 
@@ -243,7 +193,7 @@ export class OpenApiGenerator {
 
 				output.push("");
 			} else if (typeCode) {
-				// Native TypeScript type
+				// Type only (shouldn't happen in Zod-only mode, but kept for safety)
 				output.push(typeCode);
 				output.push("");
 			}
@@ -283,26 +233,14 @@ export class OpenApiGenerator {
 	/**
 	 * Resolve options for a specific context (request or response)
 	 * Nested options silently override root-level options
-	 * Response schemas always use 'inferred' mode (Zod schemas)
 	 */
 	private resolveOptionsForContext(context: "request" | "response"): ResolvedOptions {
 		const contextOptions = context === "request" ? this.options.request : this.options.response;
 
-		// For nativeEnumType, only access it from request options since ResponseOptions doesn't have it
-		const nativeEnumType =
-			context === "request"
-				? (this.options.request?.nativeEnumType ?? this.options.nativeEnumType ?? "union")
-				: (this.options.nativeEnumType ?? "union");
-
 		return {
 			mode: contextOptions?.mode ?? this.options.mode ?? "normal",
-			enumType: contextOptions?.enumType ?? this.options.enumType ?? "zod",
 			useDescribe: contextOptions?.useDescribe ?? this.options.useDescribe ?? false,
 			includeDescriptions: contextOptions?.includeDescriptions ?? this.options.includeDescriptions ?? true,
-			// Response schemas always use 'inferred' mode (Zod schemas are required)
-			// Request schemas can optionally use 'native' mode
-			typeMode: context === "response" ? "inferred" : (this.options.request?.typeMode ?? "inferred"),
-			nativeEnumType,
 		};
 	}
 
@@ -552,34 +490,6 @@ export class OpenApiGenerator {
 	}
 
 	/**
-	 * Determine the typeMode for each schema based on its usage context
-	 * Response schemas always use 'inferred' mode
-	 */
-	private determineSchemaTypeModes(): void {
-		for (const [name] of Object.entries(this.spec.components?.schemas || {})) {
-			const context = this.schemaUsageMap.get(name);
-
-			if (context === "request") {
-				this.schemaTypeModeMap.set(name, this.requestOptions.typeMode);
-			} else if (context === "response") {
-				// Response schemas always use 'inferred' mode (Zod schemas are required)
-				this.schemaTypeModeMap.set(name, "inferred");
-			} else if (context === "both") {
-				// Safety: always use inferred for schemas used in both contexts
-				this.schemaTypeModeMap.set(name, "inferred");
-			} else {
-				// Unreferenced schemas default to inferred
-				this.schemaTypeModeMap.set(name, "inferred");
-			}
-
-			// Track if we need Zod import
-			if (this.schemaTypeModeMap.get(name) === "inferred") {
-				this.needsZodImport = true;
-			}
-		}
-	}
-
-	/**
 	 * Validate the OpenAPI specification
 	 */
 	private validateSpec(): void {
@@ -666,8 +576,6 @@ export class OpenApiGenerator {
 			this.schemaDependencies.set(name, new Set());
 		}
 
-		// Get the typeMode for this schema
-		const typeMode = this.schemaTypeModeMap.get(name) || "inferred";
 		const context = this.schemaUsageMap.get(name);
 		const resolvedOptions = context === "response" ? this.responseOptions : this.requestOptions;
 
@@ -675,94 +583,65 @@ export class OpenApiGenerator {
 		if (schema.enum) {
 			const jsdoc = generateJSDoc(schema, name, { includeDescriptions: resolvedOptions.includeDescriptions });
 
-			// Use enumType to determine generation strategy
-			if (resolvedOptions.enumType === "typescript") {
-				// TypeScript enum - native enum was generated in first pass, now generate schema
-				const { schemaCode, typeCode } = generateEnum(name, schema.enum, {
-					enumType: "typescript",
-					prefix: this.options.prefix,
-					suffix: this.options.suffix,
-				});
+			// Generate Zod enum
+			const { schemaCode, typeCode } = generateEnum(name, schema.enum, {
+				prefix: this.options.prefix,
+				suffix: this.options.suffix,
+			});
 
-				const enumSchemaCode = `${jsdoc}${schemaCode}\n${typeCode}`;
-				this.schemas.set(name, enumSchemaCode);
-			} else {
-				// Zod enum
-				const { enumCode, schemaCode, typeCode } = generateEnum(name, schema.enum, {
-					enumType: "zod",
-					prefix: this.options.prefix,
-					suffix: this.options.suffix,
-				});
-
-				if (enumCode) {
-					this.enums.set(name, enumCode);
-				}
-
-				const enumSchemaCode = `${jsdoc}${schemaCode}\n${typeCode}`;
-				this.schemas.set(name, enumSchemaCode);
-			}
+			const enumSchemaCode = `${jsdoc}${schemaCode}\n${typeCode}`;
+			this.schemas.set(name, enumSchemaCode);
 			return;
 		}
 
-		if (typeMode === "native") {
-			// Generate native TypeScript type
-			const jsdoc = generateJSDoc(schema, name, { includeDescriptions: resolvedOptions.includeDescriptions });
-			const jsdocWithConstraints = this.addConstraintsToJSDoc(jsdoc, schema, resolvedOptions.includeDescriptions);
-			const typeDefinition = this.generateNativeTypeDefinition(schema, name);
-			const typeCode = `${jsdocWithConstraints}export type ${name} = ${typeDefinition};`;
-			this.types.set(name, typeCode);
-		} else {
-			// Generate Zod schema
-			const schemaName = `${toCamelCase(name, { prefix: this.options.prefix, suffix: this.options.suffix })}Schema`;
-			const jsdoc = generateJSDoc(schema, name, { includeDescriptions: resolvedOptions.includeDescriptions });
+		// Generate Zod schema
+		const schemaName = `${toCamelCase(name, { prefix: this.options.prefix, suffix: this.options.suffix })}Schema`;
+		const jsdoc = generateJSDoc(schema, name, { includeDescriptions: resolvedOptions.includeDescriptions });
 
-			// For allOf with single $ref, track dependency manually since we simplify it
-			if (schema.allOf && schema.allOf.length === 1 && schema.allOf[0].$ref) {
-				const refName = resolveRef(schema.allOf[0].$ref);
-				this.schemaDependencies.get(name)?.add(refName);
-			}
+		// For allOf with single $ref, track dependency manually since we simplify it
+		if (schema.allOf && schema.allOf.length === 1 && schema.allOf[0].$ref) {
+			const refName = resolveRef(schema.allOf[0].$ref);
+			this.schemaDependencies.get(name)?.add(refName);
+		}
 
-			// Update property generator context for this schema
-			this.propertyGenerator = new PropertyGenerator({
-				spec: this.spec,
-				schemaDependencies: this.schemaDependencies,
-				schemaType: this.options.schemaType || "all",
-				mode: resolvedOptions.mode,
-				includeDescriptions: resolvedOptions.includeDescriptions,
-				useDescribe: resolvedOptions.useDescribe,
-				typeMode: resolvedOptions.typeMode,
-				nativeEnumType: resolvedOptions.nativeEnumType,
-				namingOptions: {
-					prefix: this.options.prefix,
-					suffix: this.options.suffix,
-				},
-			});
+		// Update property generator context for this schema
+		this.propertyGenerator = new PropertyGenerator({
+			spec: this.spec,
+			schemaDependencies: this.schemaDependencies,
+			schemaType: this.options.schemaType || "all",
+			mode: resolvedOptions.mode,
+			includeDescriptions: resolvedOptions.includeDescriptions,
+			useDescribe: resolvedOptions.useDescribe,
+			namingOptions: {
+				prefix: this.options.prefix,
+				suffix: this.options.suffix,
+			},
+		});
 
-			// Check if this is just a simple $ref (alias)
-			const isAlias = !!(schema.$ref && !schema.properties && !schema.allOf && !schema.oneOf && !schema.anyOf);
-			const zodSchema = this.propertyGenerator.generatePropertySchema(schema, name, isAlias);
-			const zodSchemaCode = `${jsdoc}export const ${schemaName} = ${zodSchema};`;
+		// Check if this is just a simple $ref (alias)
+		const isAlias = !!(schema.$ref && !schema.properties && !schema.allOf && !schema.oneOf && !schema.anyOf);
+		const zodSchema = this.propertyGenerator.generatePropertySchema(schema, name, isAlias);
+		const zodSchemaCode = `${jsdoc}export const ${schemaName} = ${zodSchema};`;
 
-			// Track dependencies from discriminated unions
-			// Extract schema references like "carSchema, truckSchema" from discriminatedUnion calls
-			if (zodSchema.includes("z.discriminatedUnion(")) {
-				const match = zodSchema.match(/z\.discriminatedUnion\([^,]+,\s*\[([^\]]+)\]/);
-				if (match) {
-					const refs = match[1].split(",").map(ref => ref.trim());
-					for (const ref of refs) {
-						// Extract schema name from camelCase reference (e.g., "carSchema" -> "Car")
-						const depMatch = ref.match(/^([a-z][a-zA-Z0-9]*?)Schema$/);
-						if (depMatch) {
-							// Convert camelCase to PascalCase (carSchema -> Car)
-							const depName = depMatch[1].charAt(0).toUpperCase() + depMatch[1].slice(1);
-							this.schemaDependencies.get(name)?.add(depName);
-						}
+		// Track dependencies from discriminated unions
+		// Extract schema references like "carSchema, truckSchema" from discriminatedUnion calls
+		if (zodSchema.includes("z.discriminatedUnion(")) {
+			const match = zodSchema.match(/z\.discriminatedUnion\([^,]+,\s*\[([^\]]+)\]/);
+			if (match) {
+				const refs = match[1].split(",").map(ref => ref.trim());
+				for (const ref of refs) {
+					// Extract schema name from camelCase reference (e.g., "carSchema" -> "Car")
+					const depMatch = ref.match(/^([a-z][a-zA-Z0-9]*?)Schema$/);
+					if (depMatch) {
+						// Convert camelCase to PascalCase (carSchema -> Car)
+						const depName = depMatch[1].charAt(0).toUpperCase() + depMatch[1].slice(1);
+						this.schemaDependencies.get(name)?.add(depName);
 					}
 				}
 			}
-
-			this.schemas.set(name, zodSchemaCode);
 		}
+
+		this.schemas.set(name, zodSchemaCode);
 	}
 
 	/**
@@ -1062,184 +941,11 @@ export class OpenApiGenerator {
 		return "z.unknown()";
 	}
 
-	/**
-	 * Generate native TypeScript enum
-	 */
-	private generateNativeEnum(name: string, schema: OpenAPISchema): void {
-		if (!schema.enum) return;
-
-		const context = this.schemaUsageMap.get(name);
-		const resolvedOptions = context === "response" ? this.responseOptions : this.requestOptions;
-		const jsdoc = generateJSDoc(schema, name, { includeDescriptions: resolvedOptions.includeDescriptions });
-
-		if (resolvedOptions.nativeEnumType === "enum") {
-			// Generate TypeScript enum with Enum suffix (no prefix/suffix)
-			const enumName = `${name}Enum`;
-			const members = schema.enum
-				.map(value => {
-					const key = typeof value === "string" ? this.toEnumKey(value) : `N${value}`;
-					const val = typeof value === "string" ? `"${value}"` : value;
-					return `  ${key} = ${val}`;
-				})
-				.join(",\n");
-
-			const enumCode = `${jsdoc}export enum ${enumName} {\n${members}\n}`;
-			this.nativeEnums.set(name, enumCode);
-
-			// Also create a type alias for convenience
-			const typeCode = `export type ${name} = ${enumName};`;
-			this.types.set(name, typeCode);
-		} else {
-			// Generate union type
-			const unionType = schema.enum.map(v => (typeof v === "string" ? `"${v}"` : v)).join(" | ");
-			const typeCode = `${jsdoc}export type ${name} = ${unionType};`;
-			this.types.set(name, typeCode);
-		}
-	}
-
-	/**
-	 * Convert string to valid enum key
-	 */
-	private toEnumKey(value: string): string {
-		// Convert to PascalCase and ensure it starts with a letter
-		const cleaned = value.replace(/[^a-zA-Z0-9]/g, "_");
-		const pascalCase = cleaned
-			.split("_")
-			.map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-			.join("");
-		return pascalCase || "Value";
-	}
-
-	/**
-	 * Add constraint annotations to JSDoc for native types
-	 */
-	private addConstraintsToJSDoc(jsdoc: string, schema: OpenAPISchema, includeDescriptions: boolean): string {
-		if (!includeDescriptions) return jsdoc;
-
-		const constraints: string[] = [];
-
-		if (schema.minLength !== undefined) constraints.push(`@minLength ${schema.minLength}`);
-		if (schema.maxLength !== undefined) constraints.push(`@maxLength ${schema.maxLength}`);
-		if (schema.pattern) constraints.push(`@pattern ${schema.pattern}`);
-		if (schema.minimum !== undefined) constraints.push(`@minimum ${schema.minimum}`);
-		if (schema.maximum !== undefined) constraints.push(`@maximum ${schema.maximum}`);
-		if (schema.minItems !== undefined) constraints.push(`@minItems ${schema.minItems}`);
-		if (schema.maxItems !== undefined) constraints.push(`@maxItems ${schema.maxItems}`);
-		if (schema.minProperties !== undefined) constraints.push(`@minProperties ${schema.minProperties}`);
-		if (schema.maxProperties !== undefined) constraints.push(`@maxProperties ${schema.maxProperties}`);
-		if (schema.multipleOf !== undefined) constraints.push(`@multipleOf ${schema.multipleOf}`);
-		if (schema.format) constraints.push(`@format ${schema.format}`);
-
-		if (constraints.length === 0) return jsdoc;
-
-		// If there's already a JSDoc, add constraints to it
-		if (jsdoc) {
-			const lines = jsdoc.trim().split("\n");
-			if (lines[0] === "/**" && lines[lines.length - 1] === " */") {
-				// Multi-line JSDoc
-				const newLines = [...lines.slice(0, -1), ...constraints.map(c => ` * ${c}`), " */\n"];
-				return newLines.join("\n");
-			}
-			// Single-line JSDoc
-			const content = jsdoc.replace("/** ", "").replace(" */\n", "");
-			return `/**\n * ${content}\n${constraints.map(c => ` * ${c}`).join("\n")}\n */\n`;
-		}
-
-		// No existing JSDoc, create new one with just constraints
-		return `/**\n${constraints.map(c => ` * ${c}`).join("\n")}\n */\n`;
-	}
-
-	/**
-	 * Generate native TypeScript type definition from OpenAPI schema
-	 */
-	private generateNativeTypeDefinition(schema: OpenAPISchema, _schemaName?: string): string {
-		// Handle $ref
-		if (schema.$ref) {
-			return resolveRef(schema.$ref);
-		}
-
-		// Handle const
-		if (schema.const !== undefined) {
-			return typeof schema.const === "string" ? `"${schema.const}"` : String(schema.const);
-		}
-
-		// Handle nullable
-		const isNullable = schema.nullable || (Array.isArray(schema.type) && schema.type.includes("null"));
-		const wrapNullable = (type: string) => (isNullable ? `(${type}) | null` : type);
-
-		// Get primary type
-		const primaryType = Array.isArray(schema.type) ? schema.type.find(t => t !== "null") : schema.type;
-
-		// Handle different types
-		switch (primaryType) {
-			case "string":
-				return wrapNullable("string");
-			case "number":
-			case "integer":
-				return wrapNullable("number");
-			case "boolean":
-				return wrapNullable("boolean");
-			case "array":
-				if (schema.items) {
-					const itemType = this.generateNativeTypeDefinition(schema.items);
-					return wrapNullable(`${itemType}[]`);
-				}
-				return wrapNullable("unknown[]");
-			case "object":
-				return wrapNullable(this.generateObjectType(schema));
-			default:
-				// Handle composition schemas
-				if (schema.allOf) {
-					const types = schema.allOf.map(s => this.generateNativeTypeDefinition(s));
-					return wrapNullable(types.join(" & "));
-				}
-				if (schema.oneOf || schema.anyOf) {
-					const schemas = schema.oneOf || schema.anyOf || [];
-					const types = schemas.map(s => this.generateNativeTypeDefinition(s));
-					return wrapNullable(types.join(" | "));
-				}
-				return wrapNullable("unknown");
-		}
-	}
-
-	/**
-	 * Generate TypeScript object type definition
-	 */
-	private generateObjectType(schema: OpenAPISchema): string {
-		if (!schema.properties || Object.keys(schema.properties).length === 0) {
-			return "Record<string, unknown>";
-		}
-
-		const context = this.schemaUsageMap.get(schema.$ref ? resolveRef(schema.$ref) : "");
-		const resolvedOptions = context === "response" ? this.responseOptions : this.requestOptions;
-		const required = new Set(schema.required || []);
-		const props: string[] = [];
-
-		for (const [propName, propSchema] of Object.entries(schema.properties)) {
-			const propType = this.generateNativeTypeDefinition(propSchema);
-			const optional = !required.has(propName) ? "?" : "";
-
-			// Generate JSDoc with constraints
-			let propJsdoc = generateJSDoc(propSchema, propName, { includeDescriptions: resolvedOptions.includeDescriptions });
-			if (resolvedOptions.includeDescriptions && !propJsdoc) {
-				// Add constraint-only JSDoc if no description exists
-				propJsdoc = this.addConstraintsToJSDoc("", propSchema, resolvedOptions.includeDescriptions);
-			} else if (propJsdoc && resolvedOptions.includeDescriptions) {
-				// Add constraints to existing JSDoc
-				propJsdoc = this.addConstraintsToJSDoc(propJsdoc, propSchema, resolvedOptions.includeDescriptions);
-			}
-
-			if (propJsdoc) {
-				// Remove trailing newline for inline property JSDoc
-				const cleanJsdoc = propJsdoc.trimEnd();
-				props.push(`  ${cleanJsdoc}\n  ${propName}${optional}: ${propType};`);
-			} else {
-				props.push(`  ${propName}${optional}: ${propType};`);
-			}
-		}
-
-		return `{\n${props.join("\n")}\n}`;
-	}
+	// REMOVED: generateNativeEnum method - no longer needed as we only generate Zod schemas
+	// REMOVED: toEnumKey method - was only used by generateNativeEnum
+	// REMOVED: addConstraintsToJSDoc method - was only used for native TypeScript types
+	// REMOVED: generateNativeTypeDefinition method - was only used for native TypeScript types
+	// REMOVED: generateObjectType method - was only used for native TypeScript types
 
 	/**
 	 * Topological sort for schema dependencies
@@ -1254,9 +960,6 @@ export class OpenApiGenerator {
 
 		// Performance optimization: Cache schema and type code lookups
 		const codeCache = new Map<string, string>();
-		for (const [name, code] of this.enums) {
-			codeCache.set(name, code);
-		}
 		for (const [name, code] of this.schemas) {
 			codeCache.set(name, code);
 		}
@@ -1298,7 +1001,7 @@ export class OpenApiGenerator {
 			const deps = this.schemaDependencies.get(name);
 			if (deps && deps.size > 0) {
 				for (const dep of deps) {
-					if (this.enums.has(dep) || this.schemas.has(dep) || this.types.has(dep)) {
+					if (this.schemas.has(dep) || this.types.has(dep)) {
 						visit(dep);
 					}
 				}
@@ -1313,8 +1016,8 @@ export class OpenApiGenerator {
 			}
 		};
 
-		// Visit all enums, schemas and types
-		const allNames = new Set([...this.enums.keys(), ...this.schemas.keys(), ...this.types.keys()]);
+		// Visit all schemas and types
+		const allNames = new Set([...this.schemas.keys(), ...this.types.keys()]);
 		for (const name of allNames) {
 			visit(name);
 		}
@@ -1338,7 +1041,6 @@ export class OpenApiGenerator {
 	private generateStats(): string[] {
 		const stats = {
 			totalSchemas: this.schemas.size,
-			enums: this.enums.size,
 			withCircularRefs: 0,
 			withDiscriminators: 0,
 			withConstraints: 0,
@@ -1356,7 +1058,6 @@ export class OpenApiGenerator {
 		const output = [
 			"// Generation Statistics:",
 			`//   Total schemas: ${stats.totalSchemas}`,
-			`//   Enums: ${stats.enums}`,
 			`//   Circular references: ${stats.withCircularRefs}`,
 			`//   Discriminated unions: ${stats.withDiscriminators}`,
 			`//   With constraints: ${stats.withConstraints}`,

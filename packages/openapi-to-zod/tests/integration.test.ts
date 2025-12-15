@@ -28,25 +28,6 @@ describe("Integration Tests", () => {
 			}).not.toThrow();
 		}, 10000); // TypeScript compilation can be slow
 
-		it("should generate valid TypeScript enums that compile", () => {
-			const options: OpenApiGeneratorOptions = {
-				input: TestUtils.getFixturePath("complex.yaml"),
-				output: outputPath,
-				mode: "normal",
-				enumType: "typescript",
-				nativeEnumType: "enum",
-			};
-
-			const generator = new OpenApiGenerator(options);
-			generator.generate();
-
-			expect(() => {
-				execSync(`npx tsc --noEmit --skipLibCheck ${outputPath}`, {
-					stdio: "pipe",
-				});
-			}).not.toThrow();
-		}, 10000);
-
 		it("should generate circular references that compile", () => {
 			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("circular.yaml"),
@@ -134,7 +115,6 @@ console.log('Validation correctly failed');
 				input: TestUtils.getFixturePath("complex.yaml"),
 				output: outputPath,
 				mode: "normal",
-				enumType: "zod",
 				includeDescriptions: true,
 			};
 

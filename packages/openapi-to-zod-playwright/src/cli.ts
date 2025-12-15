@@ -267,7 +267,7 @@ async function initConfigFile(): Promise<void> {
 		{
 			type: "confirm",
 			name: "includeDefaults",
-			message: "Include commonly-used defaults? (mode: normal, validateServiceRequest: false)",
+			message: "Include commonly-used recommended defaults?",
 			initial: true,
 		},
 	]);
@@ -302,7 +302,10 @@ async function initConfigFile(): Promise<void> {
 
 export default defineConfig({
   defaults: {
-    mode: 'normal',
+    mode: 'strict',
+    includeDescriptions: true,
+	useDescribe: false,
+    showStats: false,
     validateServiceRequest: false,
   },
   specs: [

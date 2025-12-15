@@ -15,7 +15,7 @@ npm install @cerios/openapi-to-zod
 **Features:**
 - ✅ Zod v4 compatible with latest features
 - 📝 Automatic TypeScript type generation
-- 🎯 TypeScript/Zod enums with proper naming
+- 🎯 Zod enums with proper handling
 - 🔧 Multiple validation modes (strict/normal/loose)
 - 📐 Full format support (uuid, email, url, date, etc.)
 - 🔀 Smart schema composition (allOf, oneOf, anyOf)

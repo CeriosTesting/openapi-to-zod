@@ -26,18 +26,24 @@ describe("useOperationId Option", () => {
 			expect(clientOutput).not.toContain("async deleteUsersByUserId(");
 		});
 
-		it("should use operationId by default when option is omitted", () => {
+		it("should generate path-based names by default when option is omitted", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				// useOperationId not specified - should default to true
+				// useOperationId not specified - should default to false
 			});
 
 			const clientOutput = generator.generateClientString();
 
-			// Should use operationIds by default
-			expect(clientOutput).toContain("async createUser(");
-			expect(clientOutput).toContain("async getUserById(");
-			expect(clientOutput).not.toContain("async postUsers(");
+			// Should use path-based names by default
+			expect(clientOutput).toContain("async getUsers(");
+			expect(clientOutput).toContain("async postUsers(");
+			expect(clientOutput).toContain("async getUsersByUserId(");
+			expect(clientOutput).toContain("async deleteUsersByUserId(");
+
+			// Should NOT use operationIds (even though they exist in spec)
+			expect(clientOutput).not.toContain("async createUser(");
+			expect(clientOutput).not.toContain("async getUserById(");
+			expect(clientOutput).not.toContain("async deleteUser(");
 		});
 	});
 

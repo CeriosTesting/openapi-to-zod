@@ -60,7 +60,6 @@ describe("Config Loading - Playwright", () => {
 				defaults: {
 					mode: "strict",
 					includeDescriptions: true,
-					enumType: "zod",
 					showStats: false,
 					validateServiceRequest: false,
 				},
@@ -180,7 +179,6 @@ describe("Config Loading - Playwright", () => {
 				output: "api.ts",
 				mode: "normal",
 				includeDescriptions: true,
-				enumType: "zod",
 				schemaType: "all",
 			};
 
@@ -292,13 +290,11 @@ describe("Config Loading - Playwright", () => {
 			const merged = mergeConfigWithDefaults(config);
 			const withCli = mergeCliWithConfig(merged[0], {
 				prefix: "cli",
-				enumType: "typescript",
 				validateServiceRequest: true,
 			});
 
 			// CLI wins
 			expect(withCli.prefix).toBe("cli");
-			expect(withCli.enumType).toBe("typescript");
 			expect(withCli.validateServiceRequest).toBe(true);
 
 			// Per-spec wins over defaults

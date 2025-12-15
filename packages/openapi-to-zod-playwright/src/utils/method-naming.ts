@@ -95,3 +95,54 @@ export function sanitizeParamName(paramName: string): string {
 
 	return camelCased;
 }
+
+/**
+ * Sanitizes an operationId to be a valid TypeScript identifier in camelCase
+ * Handles kebab-case, snake_case, PascalCase, and other special characters
+ * Examples:
+ *   "get-users" -> "getUsers"
+ *   "create_user" -> "createUser"
+ *   "GetUsers" -> "getUsers"
+ *   "getUsers" -> "getUsers" (preserved)
+ *   "delete-user-by-id" -> "deleteUserById"
+ */
+export function sanitizeOperationId(operationId: string): string {
+	// Check if already a valid identifier (alphanumeric, no special chars except starting with letter)
+	const isValidIdentifier = /^[a-zA-Z][a-zA-Z0-9]*$/.test(operationId);
+
+	if (isValidIdentifier) {
+		// Already valid - just ensure it starts with lowercase (camelCase)
+		return operationId.charAt(0).toLowerCase() + operationId.slice(1);
+	}
+
+	// Has special characters - need to transform
+	// Replace special characters with spaces for splitting
+	const normalized = operationId.replace(/[^a-zA-Z0-9]+/g, " ");
+
+	// Split into words and convert to camelCase
+	const words = normalized
+		.trim()
+		.split(/\s+/)
+		.filter(word => word.length > 0);
+
+	if (words.length === 0) {
+		return "operation";
+	}
+
+	// First word is lowercase, rest are capitalized
+	const camelCased = words
+		.map((word, index) => {
+			if (index === 0) {
+				return word.charAt(0).toLowerCase() + word.slice(1).toLowerCase();
+			}
+			return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+		})
+		.join("");
+
+	// Prefix with _ if starts with number
+	if (/^[0-9]/.test(camelCased)) {
+		return `_${camelCased}`;
+	}
+
+	return camelCased;
+}

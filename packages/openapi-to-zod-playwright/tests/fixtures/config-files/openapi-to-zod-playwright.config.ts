@@ -4,7 +4,6 @@ const config: PlaywrightConfigFile = {
 	defaults: {
 		mode: "strict",
 		includeDescriptions: true,
-		enumType: "zod",
 		validateServiceRequest: false,
 		showStats: false,
 	},

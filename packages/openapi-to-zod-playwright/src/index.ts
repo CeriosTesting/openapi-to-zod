@@ -2,14 +2,12 @@
 export type {
 	CommonSchemaOptions,
 	ExecutionMode,
-	NativeEnumType,
 	OpenAPISchema,
 	OpenAPISpec,
 	OpenApiGeneratorOptions,
 	OperationFilters,
 	RequestOptions,
 	ResponseOptions,
-	TypeMode,
 } from "@cerios/openapi-to-zod";
 export {
 	CircularReferenceError,

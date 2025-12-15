@@ -54,66 +54,10 @@ describe("Comprehensive Compilation Tests", () => {
 		});
 	});
 
-	describe("TypeMode Options", () => {
-		it("should generate with typeMode: inferred", () => {
-			generateAndTrack("typemode-inferred", {
-				input: TestUtils.getFixturePath("complex.yaml"),
-				request: {
-					typeMode: "inferred",
-				},
-			});
-		});
-
-		it("should generate with typeMode: native", () => {
-			generateAndTrack("typemode-native", {
-				input: TestUtils.getFixturePath("complex.yaml"),
-				request: {
-					typeMode: "native",
-				},
-			});
-		});
-
-		it("should generate with mixed typeMode (request native, response inferred)", () => {
-			generateAndTrack("typemode-mixed", {
-				input: TestUtils.getFixturePath("type-mode.yaml"),
-				request: {
-					typeMode: "native",
-				},
-			});
-		});
-	});
-
 	describe("Enum Options", () => {
-		it("should generate with enumType: zod", () => {
+		it("should generate with Zod enums", () => {
 			generateAndTrack("enum-zod", {
 				input: TestUtils.getFixturePath("complex.yaml"),
-				enumType: "zod",
-			});
-		});
-
-		it("should generate with enumType: typescript", () => {
-			generateAndTrack("enum-typescript", {
-				input: TestUtils.getFixturePath("complex.yaml"),
-				enumType: "typescript",
-				nativeEnumType: "enum",
-			});
-		});
-		it("should generate with nativeEnumType: union (native mode)", () => {
-			generateAndTrack("native-enum-union", {
-				input: TestUtils.getFixturePath("complex.yaml"),
-				request: {
-					typeMode: "native",
-					nativeEnumType: "union",
-				},
-			});
-		});
-		it("should generate with nativeEnumType: enum (native mode)", () => {
-			generateAndTrack("native-enum-enum", {
-				input: TestUtils.getFixturePath("complex.yaml"),
-				request: {
-					typeMode: "native",
-					nativeEnumType: "enum",
-				},
 			});
 		});
 	});
@@ -274,30 +218,11 @@ describe("Comprehensive Compilation Tests", () => {
 			generateAndTrack("all-options", {
 				input: TestUtils.getFixturePath("complex.yaml"),
 				mode: "strict",
-				enumType: "typescript",
-				nativeEnumType: "enum",
 				includeDescriptions: true,
 				useDescribe: true,
 				showStats: true,
 				prefix: "api",
 				suffix: "dto",
-				request: {
-					typeMode: "inferred",
-				},
-			});
-		});
-		it("should generate with native types and all features", () => {
-			generateAndTrack("native-all-features", {
-				input: TestUtils.getFixturePath("complex.yaml"),
-				mode: "loose",
-				includeDescriptions: true,
-				showStats: false,
-				prefix: "v1",
-				suffix: "type",
-				request: {
-					typeMode: "native",
-					nativeEnumType: "enum",
-				},
 			});
 		});
 
@@ -306,7 +231,6 @@ describe("Comprehensive Compilation Tests", () => {
 				input: TestUtils.getFixturePath("type-mode.yaml"),
 				mode: "normal",
 				request: {
-					typeMode: "native",
 					mode: "strict",
 					includeDescriptions: false,
 				},

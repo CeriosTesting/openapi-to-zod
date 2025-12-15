@@ -1,0 +1,102 @@
+openapi: 3.0.0
+info:
+  title: Special Characters Test API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      operationId: get-all-users
+      summary: Get all users
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      operationId: create-new-user
+      summary: Create user
+      responses:
+        '201':
+          description: Created
+  /users/{id}:
+    get:
+      operationId: get-user-by-id
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: delete-user-by-id
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+  /items:
+    get:
+      operationId: get_all_items
+      summary: Get items
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: create_new_item
+      summary: Create item
+      responses:
+        '201':
+          description: Created
+  /products:
+    get:
+      operationId: GetAllProducts
+      summary: Get products
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: CreateProduct
+      summary: Create product
+      responses:
+        '201':
+          description: Created
+  /orders:
+    get:
+      operationId: getAllOrders
+      summary: Get orders
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: createOrder
+      summary: Create order
+      responses:
+        '201':
+          description: Created
+  /reports:
+    get:
+      operationId: get_daily-report.v2
+      summary: Get report
+      responses:
+        '200':
+          description: Success
+  /data:
+    get:
+      operationId: 2fa-validate
+      summary: Validate 2FA
+      responses:
+        '200':
+          description: Success

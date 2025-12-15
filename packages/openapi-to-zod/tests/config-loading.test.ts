@@ -53,7 +53,6 @@ describe("Config Loading", () => {
 				defaults: {
 					mode: "strict",
 					includeDescriptions: true,
-					enumType: "zod",
 					showStats: false,
 				},
 				specs: [
@@ -118,7 +117,6 @@ describe("Config Loading", () => {
 				output: "api.ts",
 				mode: "normal",
 				includeDescriptions: true,
-				enumType: "zod",
 			};
 
 			const cliOptions: Partial<OpenApiGeneratorOptions> = {
@@ -188,12 +186,10 @@ describe("Config Loading", () => {
 			const merged = mergeConfigWithDefaults(config);
 			const withCli = mergeCliWithConfig(merged[0], {
 				prefix: "cli",
-				enumType: "typescript",
 			});
 
 			// CLI wins
 			expect(withCli.prefix).toBe("cli");
-			expect(withCli.enumType).toBe("typescript");
 
 			// Per-spec wins over defaults
 			expect(withCli.mode).toBe("strict");

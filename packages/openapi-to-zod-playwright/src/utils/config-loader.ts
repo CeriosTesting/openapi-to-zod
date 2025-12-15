@@ -6,16 +6,10 @@ import type { OpenApiPlaywrightGeneratorOptions, PlaywrightConfigFile } from "..
  * Zod schema for strict validation of Playwright config files
  * Extends base config schema but enforces schemaType: "all"
  */
-const TypeModeSchema = z.enum(["inferred", "native"]);
-const NativeEnumTypeSchema = z.enum(["union", "enum"]);
-
 const RequestResponseOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
-	enumType: z.enum(["zod", "typescript"]).optional(),
 	useDescribe: z.boolean().optional(),
 	includeDescriptions: z.boolean().optional(),
-	typeMode: TypeModeSchema.optional(),
-	nativeEnumType: NativeEnumTypeSchema.optional(),
 });
 
 const OperationFiltersSchema = z.strictObject({
@@ -39,12 +33,10 @@ const OpenApiPlaywrightGeneratorOptionsSchema = z.strictObject({
 	outputClient: z.string().optional(),
 	outputService: z.string().optional(),
 	validateServiceRequest: z.boolean().optional(),
-	enumType: z.enum(["zod", "typescript"]).optional(),
 	useDescribe: z.boolean().optional(),
 	prefix: z.string().optional(),
 	suffix: z.string().optional(),
 	showStats: z.boolean().optional(),
-	nativeEnumType: NativeEnumTypeSchema.optional(),
 	request: RequestResponseOptionsSchema.optional(),
 	response: RequestResponseOptionsSchema.optional(),
 	name: z.string().optional(),
@@ -58,12 +50,10 @@ const PlaywrightConfigFileSchema = z.strictObject({
 		.strictObject({
 			mode: z.enum(["strict", "normal", "loose"]).optional(),
 			includeDescriptions: z.boolean().optional(),
-			enumType: z.enum(["zod", "typescript"]).optional(),
 			useDescribe: z.boolean().optional(),
 			prefix: z.string().optional(),
 			suffix: z.string().optional(),
 			showStats: z.boolean().optional(),
-			nativeEnumType: NativeEnumTypeSchema.optional(),
 			request: RequestResponseOptionsSchema.optional(),
 			response: RequestResponseOptionsSchema.optional(),
 			generateService: z.boolean().optional(),
@@ -211,7 +201,6 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPl
 			// Apply defaults first
 			mode: defaults.mode,
 			includeDescriptions: defaults.includeDescriptions,
-			enumType: defaults.enumType,
 			useDescribe: defaults.useDescribe,
 			prefix: defaults.prefix,
 			suffix: defaults.suffix,
@@ -219,13 +208,12 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPl
 			validateServiceRequest: defaults.validateServiceRequest,
 			outputClient: defaults.outputClient,
 			outputService: defaults.outputService,
-			nativeEnumType: defaults.nativeEnumType,
 
 			// Override with spec-specific values (including required input)
-			...spec, // Always enforce schemaType: "all" for Playwright
+			...spec,
+			// Always enforce schemaType: "all" for Playwright
 			schemaType: "all",
 		};
-
 		return merged;
 	});
 }

@@ -1,6 +1,6 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import type { PlaywrightOperationFilters } from "../types";
-import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
+import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
 import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc, toPascalCase } from "../utils//string-utils";
 
@@ -97,25 +97,24 @@ function deduplicateSuffixes(suffixes: string[]): string[] {
 }
 
 /**
- * Generates the ApiService class code
- * The service layer handles content-type mapping and response validation
+ * Generate a type-safe API service class with response validation
  * Separate methods for each request content-type and status code combination
  * @param spec - OpenAPI specification
  * @param schemaImports - Set to collect schema import names
  * @param className - Name for the generated service class (default: "ApiService")
  * @param clientClassName - Name of the client class to inject (default: "ApiClient")
+ * @param useOperationId - Whether to use operationId for method names
  * @param operationFilters - Optional operation filters to apply
- * @param useOperationId - Whether to use operationId for method names (default: true)
  */
 export function generateServiceClass(
 	spec: OpenAPISpec,
 	schemaImports: Set<string>,
 	className: string = "ApiService",
 	clientClassName: string = "ApiClient",
-	operationFilters?: PlaywrightOperationFilters,
-	useOperationId: boolean = true
+	useOperationId: boolean,
+	operationFilters?: PlaywrightOperationFilters
 ): string {
-	const endpoints = extractEndpoints(spec, operationFilters, useOperationId);
+	const endpoints = extractEndpoints(spec, useOperationId, operationFilters);
 
 	if (endpoints.length === 0) {
 		return "";
@@ -142,8 +141,8 @@ ${methods}
  */
 function extractEndpoints(
 	spec: OpenAPISpec,
-	operationFilters?: PlaywrightOperationFilters,
-	useOperationId: boolean = true
+	useOperationId: boolean,
+	operationFilters?: PlaywrightOperationFilters
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 
@@ -166,8 +165,11 @@ function extractEndpoints(
 			}
 
 			// Use operationId if useOperationId is true and operationId exists, otherwise generate from path
+			// Sanitize operationId to ensure it's a valid TypeScript identifier
 			const methodName =
-				useOperationId && operation.operationId ? operation.operationId : generateMethodName(method, path);
+				useOperationId && operation.operationId
+					? sanitizeOperationId(operation.operationId)
+					: generateMethodName(method, path);
 			const pathParams = extractPathParams(path);
 
 			const responses: ResponseInfo[] = [];
@@ -502,7 +504,7 @@ function generateServiceMethod(
 				optionsProps.push(`params?: ${endpoint.queryParamSchemaName}`);
 			} else {
 				// Fallback to generic params
-				optionsProps.push("params?: { [key: string]: string | number | boolean } | URLSearchParams | string");
+				optionsProps.push("params?: QueryParams");
 			}
 		}
 
@@ -514,7 +516,7 @@ function generateServiceMethod(
 				optionsProps.push(`headers?: ${endpoint.headerParamSchemaName}`);
 			} else {
 				// Fallback to generic headers
-				optionsProps.push("headers?: { [key: string]: string }");
+				optionsProps.push("headers?: HttpHeaders");
 			}
 		}
 
@@ -531,15 +533,15 @@ function generateServiceMethod(
 					optionsProps.push(`data${optionalMarker}: ${schemaName}`);
 					schemaImports.add(schemaName);
 				} else {
-					optionsProps.push(`data${optionalMarker}: string | Buffer | any`);
+					optionsProps.push(`data${optionalMarker}: RequestBody`);
 				}
 			} else if (requestContentType === "application/x-www-form-urlencoded") {
-				optionsProps.push(`form${optionalMarker}: { [key: string]: string | number | boolean } | FormData`);
+				optionsProps.push(`form${optionalMarker}: UrlEncodedFormData | FormData`);
 			} else if (requestContentType === "multipart/form-data") {
-				optionsProps.push(`multipart${optionalMarker}: FormData | { [key: string]: MultipartFormValue }`);
+				optionsProps.push(`multipart${optionalMarker}: MultipartFormData`);
 			} else {
 				// Fallback for other content-types
-				optionsProps.push(`data${optionalMarker}: string | Buffer | any`);
+				optionsProps.push(`data${optionalMarker}: RequestBody`);
 			}
 		}
 

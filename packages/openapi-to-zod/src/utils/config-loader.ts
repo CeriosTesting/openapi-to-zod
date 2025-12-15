@@ -6,16 +6,10 @@ import type { ConfigFile, OpenApiGeneratorOptions } from "../types";
  * Zod schema for strict validation of config files
  * Rejects unknown properties to catch typos and invalid options
  */
-const TypeModeSchema = z.enum(["inferred", "native"]);
-const NativeEnumTypeSchema = z.enum(["union", "enum"]);
-
 const RequestResponseOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
-	enumType: z.enum(["zod", "typescript"]).optional(),
 	useDescribe: z.boolean().optional(),
 	includeDescriptions: z.boolean().optional(),
-	typeMode: TypeModeSchema.optional(),
-	nativeEnumType: NativeEnumTypeSchema.optional(),
 });
 
 const OperationFiltersSchema = z.strictObject({
@@ -35,13 +29,11 @@ const OpenApiGeneratorOptionsSchema = z.strictObject({
 	input: z.string(),
 	output: z.string(),
 	includeDescriptions: z.boolean().optional(),
-	enumType: z.enum(["zod", "typescript"]).optional(),
 	useDescribe: z.boolean().optional(),
 	schemaType: z.enum(["all", "request", "response"]).optional(),
 	prefix: z.string().optional(),
 	suffix: z.string().optional(),
 	showStats: z.boolean().optional(),
-	nativeEnumType: NativeEnumTypeSchema.optional(),
 	request: RequestResponseOptionsSchema.optional(),
 	response: RequestResponseOptionsSchema.optional(),
 	name: z.string().optional(),
@@ -53,13 +45,11 @@ const ConfigFileSchema = z.strictObject({
 		.strictObject({
 			mode: z.enum(["strict", "normal", "loose"]).optional(),
 			includeDescriptions: z.boolean().optional(),
-			enumType: z.enum(["zod", "typescript"]).optional(),
 			useDescribe: z.boolean().optional(),
 			schemaType: z.enum(["all", "request", "response"]).optional(),
 			prefix: z.string().optional(),
 			suffix: z.string().optional(),
 			showStats: z.boolean().optional(),
-			nativeEnumType: NativeEnumTypeSchema.optional(),
 			request: RequestResponseOptionsSchema.optional(),
 			response: RequestResponseOptionsSchema.optional(),
 			operationFilters: OperationFiltersSchema.optional(),
@@ -200,7 +190,6 @@ export function mergeConfigWithDefaults(config: ConfigFile): OpenApiGeneratorOpt
 			// Apply defaults first
 			mode: defaults.mode,
 			includeDescriptions: defaults.includeDescriptions,
-			enumType: defaults.enumType,
 			useDescribe: defaults.useDescribe,
 			schemaType: defaults.schemaType,
 			prefix: defaults.prefix,
@@ -210,7 +199,6 @@ export function mergeConfigWithDefaults(config: ConfigFile): OpenApiGeneratorOpt
 			// Override with spec-specific values (including required input/output)
 			...spec,
 		};
-
 		return merged;
 	});
 }

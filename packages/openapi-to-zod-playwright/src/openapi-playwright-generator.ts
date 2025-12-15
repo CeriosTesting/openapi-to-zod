@@ -31,14 +31,12 @@ export class OpenApiPlaywrightGenerator {
 
 		this.options = {
 			mode: options.mode || "normal",
-			enumType: options.enumType || "zod",
-			nativeEnumType: options.nativeEnumType || "union",
 			includeDescriptions: options.includeDescriptions ?? true,
 			useDescribe: options.useDescribe ?? false,
 			showStats: options.showStats ?? true,
 			prefix: options.prefix || "",
 			suffix: options.suffix || "",
-			useOperationId: options.useOperationId ?? true, // Default to true
+			useOperationId: options.useOperationId ?? false, // Default to false
 			...options,
 			schemaType: "all", // Always enforce all schemas
 		};
@@ -168,7 +166,7 @@ export class OpenApiPlaywrightGenerator {
 			clientClassName,
 			this.options.basePath,
 			this.options.operationFilters,
-			this.options.useOperationId ?? true
+			this.options.useOperationId ?? false
 		);
 	}
 
@@ -190,8 +188,8 @@ export class OpenApiPlaywrightGenerator {
 			schemaImports,
 			serviceClassName,
 			clientClassName,
-			this.options.operationFilters,
-			this.options.useOperationId ?? true
+			this.options.useOperationId ?? false,
+			this.options.operationFilters
 		);
 	}
 

@@ -6,7 +6,6 @@ export default {
 	defaults: {
 		mode: "strict",
 		includeDescriptions: true,
-		enumType: "zod",
 		showStats: false,
 	},
 	specs: [

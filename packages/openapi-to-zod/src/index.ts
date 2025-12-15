@@ -12,14 +12,12 @@ export type {
 	CommonSchemaOptions,
 	ConfigFile,
 	ExecutionMode,
-	NativeEnumType,
 	OpenAPISchema,
 	OpenAPISpec,
 	OpenApiGeneratorOptions,
 	OperationFilters,
 	RequestOptions,
 	ResponseOptions,
-	TypeMode,
 } from "./types";
 export { defineConfig } from "./types";
 export {

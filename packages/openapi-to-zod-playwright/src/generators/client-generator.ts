@@ -1,6 +1,6 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import type { PlaywrightOperationFilters } from "../types";
-import { extractPathParams, generateMethodName, sanitizeParamName } from "../utils/method-naming";
+import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
 import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc } from "../utils/string-utils";
 
@@ -69,14 +69,14 @@ interface EndpointInfo {
  * @param className - Name for the generated client class (default: "ApiClient")
  * @param basePath - Optional base path to prepend to all endpoints
  * @param operationFilters - Optional operation filters to apply
- * @param useOperationId - Whether to use operationId for method names (default: true)
+ * @param useOperationId - Whether to use operationId for method names (default: false)
  */
 export function generateClientClass(
 	spec: OpenAPISpec,
 	className: string = "ApiClient",
 	basePath?: string,
 	operationFilters?: PlaywrightOperationFilters,
-	useOperationId: boolean = true
+	useOperationId: boolean = false
 ): string {
 	const endpoints = extractEndpoints(spec, operationFilters, useOperationId);
 
@@ -116,6 +116,32 @@ export function generateClientClass(
 export type MultipartFormValue = string | number | boolean | ReadStream | { name: string; mimeType: string; buffer: Buffer };
 
 /**
+ * Query string parameters
+ * Supports primitives, arrays, URLSearchParams, or raw query strings
+ */
+export type QueryParams = { [key: string]: string | number | boolean | string[] | number[] | boolean[] } | URLSearchParams | string;
+
+/**
+ * HTTP headers as key-value pairs
+ */
+export type HttpHeaders = { [key: string]: string };
+
+/**
+ * URL-encoded form data
+ */
+export type UrlEncodedFormData = { [key: string]: string | number | boolean };
+
+/**
+ * Multipart form data for file uploads
+ */
+export type MultipartFormData = FormData | { [key: string]: MultipartFormValue };
+
+/**
+ * Request body data (JSON, text, or binary)
+ */
+export type RequestBody = string | Buffer | any;
+
+/**
  * Options for API requests
  * Extends Playwright's APIRequestContext options with typed parameters
  * @property data - Request body data (JSON, text, or binary)
@@ -130,39 +156,17 @@ export type MultipartFormValue = string | number | boolean | ReadStream | { name
  * @property maxRetries - Maximum number of retries (default: 0)
  */
 export type ApiRequestContextOptions = {
-	data?: string | Buffer | any;
-	form?: { [key: string]: string | number | boolean } | FormData;
-	multipart?: FormData | { [key: string]: MultipartFormValue };
-	params?: { [key: string]: string | number | boolean | string[] | number[] | boolean[] } | URLSearchParams | string;
-	headers?: { [key: string]: string };
+	data?: RequestBody;
+	form?: UrlEncodedFormData | FormData;
+	multipart?: MultipartFormData;
+	params?: QueryParams;
+	headers?: HttpHeaders;
 	timeout?: number;
 	failOnStatusCode?: boolean;
 	ignoreHTTPSErrors?: boolean;
 	maxRedirects?: number;
 	maxRetries?: number;
 };
-
-/**
- * Serializes query parameters, converting arrays to comma-separated strings
- * @param params - Query parameters object
- * @returns Serialized params compatible with Playwright
- */
-function serializeParams(params: { [key: string]: string | number | boolean | string[] | number[] | boolean[] } | URLSearchParams | string | undefined): { [key: string]: string | number | boolean } | URLSearchParams | string | undefined {
-	if (!params || typeof params === 'string' || params instanceof URLSearchParams) {
-		return params;
-	}
-
-	const serialized: { [key: string]: string | number | boolean } = {};
-	for (const [key, value] of Object.entries(params)) {
-		if (Array.isArray(value)) {
-			// Serialize arrays as comma-separated strings
-			serialized[key] = value.join(',');
-		} else {
-			serialized[key] = value;
-		}
-	}
-	return serialized;
-}
 
 /**
  * Thin passthrough client for API requests
@@ -173,6 +177,28 @@ export class ${className} {
 	constructor(private readonly request: APIRequestContext) {}
 
 ${methods}
+
+	/**
+	 * Serializes query parameters, converting arrays to comma-separated strings
+	 * @param params - Query parameters object
+	 * @returns Serialized params compatible with Playwright
+	 */
+	private serializeParams(params: QueryParams | undefined): { [key: string]: string | number | boolean } | URLSearchParams | string | undefined {
+		if (!params || typeof params === 'string' || params instanceof URLSearchParams) {
+			return params;
+		}
+
+		const serialized: { [key: string]: string | number | boolean } = {};
+		for (const [key, value] of Object.entries(params)) {
+			if (Array.isArray(value)) {
+				// Serialize arrays as comma-separated strings
+				serialized[key] = value.join(',');
+			} else {
+				serialized[key] = value;
+			}
+		}
+		return serialized;
+	}
 }
 `;
 }
@@ -181,12 +207,12 @@ ${methods}
  * Extracts all endpoints from OpenAPI spec
  * @param spec - OpenAPI specification
  * @param operationFilters - Optional operation filters to apply
- * @param useOperationId - Whether to use operationId for method names (default: true)
+ * @param useOperationId - Whether to use operationId for method names (default: false)
  */
 function extractEndpoints(
 	spec: OpenAPISpec,
 	operationFilters?: PlaywrightOperationFilters,
-	useOperationId: boolean = true
+	useOperationId: boolean = false
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 
@@ -209,8 +235,11 @@ function extractEndpoints(
 			}
 
 			// Use operationId if useOperationId is true and operationId exists, otherwise generate from path
+			// Sanitize operationId to ensure it's a valid TypeScript identifier
 			const methodName =
-				useOperationId && operation.operationId ? operation.operationId : generateMethodName(method, path);
+				useOperationId && operation.operationId
+					? sanitizeOperationId(operation.operationId)
+					: generateMethodName(method, path);
 			const pathParams = extractPathParams(path);
 
 			endpoints.push({
@@ -274,7 +303,7 @@ function generateClientMethod(endpoint: EndpointInfo, basePath?: string): string
 
 	return `${jsdoc}
 	async ${methodName}(${paramList}): Promise<APIResponse> {
-		const serializedOptions = options ? { ...options, params: serializeParams(options.params) } : options;
+		const serializedOptions = options ? { ...options, params: this.serializeParams(options.params) } : options;
 		return await this.request.${methodLower}(\`${urlTemplate}\`, serializedOptions);
 	}`;
 }

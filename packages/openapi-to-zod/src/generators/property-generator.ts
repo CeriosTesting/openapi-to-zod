@@ -1,4 +1,4 @@
-import type { NativeEnumType, OpenAPISchema, OpenAPISpec, TypeMode } from "../types";
+import type { OpenAPISchema, OpenAPISpec } from "../types";
 import { LRUCache } from "../utils/lru-cache";
 import type { NamingOptions } from "../utils/name-utils";
 import { resolveRef, toCamelCase } from "../utils/name-utils";
@@ -17,8 +17,6 @@ export interface PropertyGeneratorContext {
 	mode: ObjectMode;
 	includeDescriptions: boolean;
 	useDescribe: boolean;
-	typeMode: TypeMode;
-	nativeEnumType: NativeEnumType;
 	namingOptions: NamingOptions;
 }
 

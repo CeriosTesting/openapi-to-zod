@@ -6,7 +6,7 @@ Transform OpenAPI YAML specifications into Zod v4 compliant schemas with full Ty
 
 - ✅ **Zod v4 Compatible**: Uses latest Zod features, no deprecated methods
 - 📝 **TypeScript Types**: Automatically generates TypeScript types from schemas using `z.infer`
-- 🎯 **Enums**: Creates proper TypeScript enums with PascalCase properties
+- 🎯 **Zod Enums**: Creates Zod enum schemas from OpenAPI enums
 - 🔧 **Flexible Modes**: Strict, normal, or loose validation
 - 📐 **Format Support**: Full support for string formats (uuid, email, url, date, etc.)
 - 🎨 **camelCase Schemas**: Schemas follow camelCase naming with Schema suffix
@@ -132,12 +132,6 @@ export default defineConfig({
 {
   "defaults": {
     "mode": "strict",
-    "includeDescriptions": true,
-    "enumType": "zod",
-```json
-{
-  "defaults": {
-    "mode": "strict",
     "includeDescriptions": true
   },
   "specs": [
@@ -218,15 +212,13 @@ openapi-to-zod
 | `output` | `string` | Output TypeScript file path (required) |
 | `mode` | `"strict"` \| `"normal"` \| `"loose"` | Validation mode |
 | `includeDescriptions` | `boolean` | Include JSDoc comments |
-| `enumType` | `"zod"` \| `"typescript"` | Enum generation type |
 | `useDescribe` | `boolean` | Add `.describe()` calls |
 | `schemaType` | `"all"` \| `"request"` \| `"response"` | Schema filtering |
 | `prefix` | `string` | Prefix for schema names |
 | `suffix` | `string` | Suffix for schema names |
 | `showStats` | `boolean` | Include generation statistics |
-| `nativeEnumType` | `"union"` \| `"enum"` | Native enum type when using TypeScript enums |
-| `request` | `object` | Request-specific options (mode, typeMode, enumType, etc.) |
-| `response` | `object` | Response-specific options (mode, enumType, etc.) |
+| `request` | `object` | Request-specific options (mode, includeDescriptions, etc.) |
+| `response` | `object` | Response-specific options (mode, includeDescriptions, etc.) |
 
 ### Batch Execution
 
@@ -440,10 +432,10 @@ OpenAPI's `nullable: true` is converted to `.nullable()`
 
 ### Enums
 
-Enums are generated as TypeScript enums with:
-- PascalCase property names
-- Original string values
+Enums are generated as Zod enums with:
+- Proper string value handling
 - Zod schema using `z.enum()`
+- TypeScript type inference from the Zod schema
 
 ## Schema Naming
 
@@ -475,7 +467,6 @@ Statistics are **included by default** in generated files. Use `--no-stats` to d
 ```typescript
 // Generation Statistics:
 //   Total schemas: 42
-//   Enums: 8
 //   Circular references: 3
 //   Discriminated unions: 5
 //   With constraints: 18
@@ -877,7 +868,7 @@ interface OpenApiGeneratorOptions {
 Comprehensive test suite with **364 passing tests** covering:
 
 - ✅ **Basic Schema Generation** (14 tests) - Core OpenAPI types, references, nested objects
-- ✅ **Enum Generation** (10 tests) - TypeScript enums, Zod enums, PascalCase conversion
+- ✅ **Enum Generation** (4 tests) - Zod enum generation and handling
 - ✅ **Circular References** (5 tests) - Self-references, mutual references, validation
 - ✅ **Format Support** (9 tests) - UUID, email, URL, date-time, and 15+ other formats
 - ✅ **Validation Modes** (7 tests) - Strict, normal, loose object validation

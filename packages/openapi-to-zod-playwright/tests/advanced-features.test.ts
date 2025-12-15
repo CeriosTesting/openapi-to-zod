@@ -113,29 +113,6 @@ describe("Advanced Features", () => {
 			expect(output).toContain(".strictObject(");
 		});
 
-		it("should respect requestTypeMode option", () => {
-			const nativeGenerator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				request: {
-					typeMode: "native",
-				},
-			});
-
-			const output = nativeGenerator.generateSchemasString();
-			// Should still have Zod schemas for responses
-			expect(output).toContain("z.object(");
-		});
-		it("should respect enumType option", () => {
-			const tsEnumGenerator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				enumType: "typescript",
-			});
-
-			const output = tsEnumGenerator.generateSchemasString();
-			// Should contain TypeScript enums if present in spec
-			expect(output).toBeTruthy();
-		});
-
 		it("should respect prefix and suffix options", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
