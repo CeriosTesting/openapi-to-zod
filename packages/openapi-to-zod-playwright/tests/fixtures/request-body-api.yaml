@@ -1,0 +1,22 @@
+openapi: 3.0.0
+info:
+  title: Request Body Test API
+  version: 1.0.0
+components:
+  schemas:
+    # Empty - to satisfy validation
+    Placeholder:
+      type: object
+paths:
+  /event:
+    post:
+      operationId: postEvent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Success

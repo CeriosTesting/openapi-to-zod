@@ -1,5 +1,13 @@
 # @cerios/openapi-to-zod-playwright
 
+## 0.6.2
+
+### Patch Changes
+
+- Fixes type alias matching to use word boundaries, preventing false positives when partial string matches occur (e.g., avoiding match of QueryParams within SomeQueryParams).
+
+  Conditionally imports zod package only when actually needed by checking for concrete usage of zod methods in the generated service code, reducing unnecessary dependencies in files without inline schemas.
+
 ## 0.6.1
 
 ### Patch Changes

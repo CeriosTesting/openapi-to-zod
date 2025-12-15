@@ -354,12 +354,19 @@ export class OpenApiPlaywrightGenerator {
 
 		const clientImports = [clientClassName];
 		for (const typeAlias of clientTypeAliases) {
-			if (serviceString.includes(typeAlias)) {
+			// Use word boundary regex to avoid matching partial strings (e.g., QueryParams shouldn't match SomeQueryParams)
+			const regex = new RegExp(`\\b${typeAlias}\\b`);
+			if (regex.test(serviceString)) {
 				clientImports.push(`type ${typeAlias}`);
 			}
 		}
 
-		output.push(`import { z } from "zod";`);
+		// Only import z from zod if it's actually used for inline schemas
+		// Check for actual Zod method calls like z.string(), z.array(), z.number(), etc.
+		const zodUsagePattern = /\bz\.(string|number|boolean|array|object|parse)\(/;
+		if (zodUsagePattern.test(serviceString)) {
+			output.push(`import { z } from "zod";`);
+		}
 		output.push(`import { expect } from "@playwright/test";`);
 		output.push(`import { ${clientImports.join(", ")} } from "${relativeImportClient}";`);
 		if (schemaImportStatement) {

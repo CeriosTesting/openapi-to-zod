@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Inline Schema Test API
+  version: 1.0.0
+components:
+  schemas:
+    # Empty - to satisfy validation
+    Placeholder:
+      type: object
+paths:
+  /test:
+    get:
+      operationId: getTest
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: string
