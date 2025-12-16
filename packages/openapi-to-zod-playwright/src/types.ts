@@ -124,6 +124,39 @@ export interface OpenApiPlaywrightGeneratorOptions
 	basePath?: string;
 
 	/**
+	 * Strip a common prefix from all paths before processing
+	 * Useful when OpenAPI spec has redundant path prefixes that you want to ignore
+	 *
+	 * Supports both literal strings and regex patterns:
+	 * - Literal string: "/api/v1" (must match exactly)
+	 * - Regex pattern: "^/api/v\\d+" (auto-detected or use RegExp for TypeScript configs)
+	 *
+	 * Regex auto-detection checks for: ^, $, \\d, \\w, \\s, .*, .+, [], ()
+	 *
+	 * This affects:
+	 * - Method name generation (shorter, cleaner names)
+	 * - JSDoc comments (shows stripped paths)
+	 * - Operation filtering (filters apply to stripped paths)
+	 *
+	 * The basePath option can add back a prefix for actual HTTP calls.
+	 *
+	 * @example
+	 * // Spec has: /api/v1.0/users, /api/v1.0/posts
+	 * // stripPathPrefix: "/api/v1.0"
+	 * // Results in: /users, /posts
+	 * // Method names: getUsers(), getPosts()
+	 * // Then use basePath: "/api/v1.0" to add it back for HTTP calls
+	 *
+	 * @example
+	 * // Strip any versioned prefix
+	 * // stripPathPrefix: "^/api/v\\d+\\.\\d+"
+	 * // Matches: /api/v1.0/, /api/v2.5/, etc.
+	 *
+	 * @default undefined (no stripping)
+	 */
+	stripPathPrefix?: string | RegExp;
+
+	/**
 	 * Whether to use operationId from OpenAPI spec for method names
 	 * When true: Uses operationId if available, falls back to generated names
 	 * When false: Always generates method names from HTTP method + path

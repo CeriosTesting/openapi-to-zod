@@ -1,0 +1,112 @@
+openapi: 3.0.0
+info:
+  title: Strip Path Prefix Test API
+  version: 1.0.0
+paths:
+  /api/v1.0/users:
+    get:
+      operationId: getUsers
+      summary: Get all users
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: createUser
+      summary: Create a user
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /api/v1.0/users/{id}:
+    get:
+      operationId: getUserById
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /api/v1.0/posts:
+    get:
+      operationId: getPosts
+      summary: Get all posts
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+  /api/v2.5/products:
+    get:
+      operationId: getProducts
+      summary: Get all products
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  /api/v1/users:
+    get:
+      operationId: getV1Users
+      responses:
+        '200':
+          description: Success
+  /api/v10/users:
+    get:
+      operationId: getV10AltUsers
+      responses:
+        '200':
+          description: Success
+  /api/v1:
+    get:
+      operationId: getRoot
+      responses:
+        '200':
+          description: Success
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string

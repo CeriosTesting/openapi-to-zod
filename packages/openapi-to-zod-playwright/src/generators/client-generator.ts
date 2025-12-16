@@ -3,6 +3,7 @@ import type { PlaywrightOperationFilters } from "../types";
 import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
 import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc } from "../utils/operation-jsdoc";
+import { stripPathPrefix } from "../utils/path-utils";
 
 /**
  * Normalizes a base path by ensuring it has a leading slash and no trailing slash
@@ -68,15 +69,17 @@ interface EndpointInfo {
  * @param basePath - Optional base path to prepend to all endpoints
  * @param operationFilters - Optional operation filters to apply
  * @param useOperationId - Whether to use operationId for method names (default: false)
+ * @param stripPrefix - Optional path prefix to strip before processing
  */
 export function generateClientClass(
 	spec: OpenAPISpec,
 	className: string = "ApiClient",
 	basePath?: string,
 	operationFilters?: PlaywrightOperationFilters,
-	useOperationId: boolean = false
+	useOperationId: boolean = false,
+	stripPrefix?: string | RegExp
 ): string {
-	const endpoints = extractEndpoints(spec, operationFilters, useOperationId);
+	const endpoints = extractEndpoints(spec, operationFilters, useOperationId, stripPrefix);
 
 	// Warn if all operations were filtered out
 	if (operationFilters && endpoints.length === 0) {
@@ -206,11 +209,13 @@ ${methods}
  * @param spec - OpenAPI specification
  * @param operationFilters - Optional operation filters to apply
  * @param useOperationId - Whether to use operationId for method names (default: false)
+ * @param stripPrefix - Optional path prefix to strip before processing
  */
 function extractEndpoints(
 	spec: OpenAPISpec,
 	operationFilters?: PlaywrightOperationFilters,
-	useOperationId: boolean = false
+	useOperationId: boolean = false,
+	stripPrefix?: string | RegExp
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 
@@ -218,8 +223,11 @@ function extractEndpoints(
 		return endpoints;
 	}
 
-	for (const [path, pathItem] of Object.entries(spec.paths)) {
+	for (const [originalPath, pathItem] of Object.entries(spec.paths)) {
 		if (!pathItem || typeof pathItem !== "object") continue;
+
+		// Strip prefix from path for processing
+		const path = stripPathPrefix(originalPath, stripPrefix);
 
 		const methods = ["get", "post", "put", "patch", "delete", "head", "options"];
 

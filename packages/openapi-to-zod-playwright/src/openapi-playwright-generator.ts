@@ -165,7 +165,8 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			clientClassName,
 			this.options.basePath,
 			this.options.operationFilters,
-			this.options.useOperationId ?? false
+			this.options.useOperationId ?? false,
+			this.options.stripPathPrefix
 		);
 	}
 
@@ -189,7 +190,8 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			clientClassName,
 			this.options.useOperationId ?? false,
 			this.options.operationFilters,
-			this.options.ignoreHeaders
+			this.options.ignoreHeaders,
+			this.options.stripPathPrefix
 		);
 	}
 

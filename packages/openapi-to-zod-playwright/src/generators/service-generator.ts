@@ -5,6 +5,7 @@ import { shouldIgnoreHeader } from "../utils/header-filters";
 import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
 import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc } from "../utils/operation-jsdoc";
+import { stripPathPrefix } from "../utils/path-utils";
 
 interface ResponseInfo {
 	statusCode: string;
@@ -108,6 +109,7 @@ function deduplicateSuffixes(suffixes: string[]): string[] {
  * @param useOperationId - Whether to use operationId for method names
  * @param operationFilters - Optional operation filters to apply
  * @param ignoreHeaders - Optional array of header patterns to ignore
+ * @param stripPrefix - Optional path prefix to strip before processing
  */
 export function generateServiceClass(
 	spec: OpenAPISpec,
@@ -116,9 +118,10 @@ export function generateServiceClass(
 	clientClassName: string = "ApiClient",
 	useOperationId: boolean,
 	operationFilters?: PlaywrightOperationFilters,
-	ignoreHeaders?: string[]
+	ignoreHeaders?: string[],
+	stripPrefix?: string | RegExp
 ): string {
-	const endpoints = extractEndpoints(spec, useOperationId, operationFilters, ignoreHeaders);
+	const endpoints = extractEndpoints(spec, useOperationId, operationFilters, ignoreHeaders, stripPrefix);
 
 	if (endpoints.length === 0) {
 		return "";
@@ -149,7 +152,8 @@ function extractEndpoints(
 	spec: OpenAPISpec,
 	useOperationId: boolean,
 	operationFilters?: PlaywrightOperationFilters,
-	ignoreHeaders?: string[]
+	ignoreHeaders?: string[],
+	stripPrefix?: string | RegExp
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 
@@ -157,8 +161,11 @@ function extractEndpoints(
 		return endpoints;
 	}
 
-	for (const [path, pathItem] of Object.entries(spec.paths)) {
+	for (const [originalPath, pathItem] of Object.entries(spec.paths)) {
 		if (!pathItem || typeof pathItem !== "object") continue;
+
+		// Strip prefix from path for processing
+		const path = stripPathPrefix(originalPath, stripPrefix);
 
 		const methods = ["get", "post", "put", "patch", "delete", "head", "options"];
 
