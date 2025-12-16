@@ -32,7 +32,33 @@ describe("Name Utilities", () => {
 		});
 
 		it("should handle underscores", () => {
-			expect(toCamelCase("User_Name")).toBe("user_Name");
+			expect(toCamelCase("User_Name")).toBe("userName");
+		});
+		it("should handle dotted names", () => {
+			expect(toCamelCase("Company.Models.User")).toBe("companyModelsUser");
+			expect(toCamelCase("Vendor.Api.Product")).toBe("vendorApiProduct");
+			expect(toCamelCase("System.IO.File")).toBe("systemIOFile");
+		});
+
+		it("should handle multiple consecutive dots", () => {
+			expect(toCamelCase("Company..Models...User")).toBe("companyModelsUser");
+		});
+
+		it("should handle leading and trailing dots", () => {
+			expect(toCamelCase(".Models.User.")).toBe("modelsUser");
+			expect(toCamelCase("...User...")).toBe("user");
+		});
+
+		it("should add prefix with dotted names", () => {
+			expect(toCamelCase("Company.Models.User", { prefix: "api" })).toBe("apiCompanyModelsUser");
+		});
+
+		it("should add suffix with dotted names", () => {
+			expect(toCamelCase("Company.Models.User", { suffix: "Dto" })).toBe("companyModelsUserDto");
+		});
+
+		it("should add both prefix and suffix with dotted names", () => {
+			expect(toCamelCase("Company.Models.User", { prefix: "api", suffix: "Dto" })).toBe("apiCompanyModelsUserDto");
 		});
 	});
 
@@ -42,7 +68,7 @@ describe("Name Utilities", () => {
 		});
 
 		it("should handle camelCase", () => {
-			expect(toPascalCase("userName")).toBe("Username");
+			expect(toPascalCase("userName")).toBe("UserName");
 		});
 
 		it("should handle snake_case", () => {
@@ -87,16 +113,39 @@ describe("Name Utilities", () => {
 		});
 
 		it("should handle all caps", () => {
-			expect(toPascalCase("USER")).toBe("User");
-			expect(toPascalCase("API_KEY")).toBe("ApiKey");
+			expect(toPascalCase("USER")).toBe("USER");
+			expect(toPascalCase("API_KEY")).toBe("APIKEY");
 		});
-
 		it("should preserve consecutive caps", () => {
-			expect(toPascalCase("XMLParser")).toBe("Xmlparser");
+			expect(toPascalCase("XMLParser")).toBe("XMLParser");
 		});
 
 		it("should handle dots in enum values", () => {
 			expect(toPascalCase("v1.0.0")).toBe("V100");
+		});
+
+		it("should handle dotted schema names", () => {
+			expect(toPascalCase("Company.Models.User")).toBe("CompanyModelsUser");
+			expect(toPascalCase("Vendor.Api.Product")).toBe("VendorApiProduct");
+			expect(toPascalCase("System.IO.File")).toBe("SystemIOFile");
+		});
+
+		it("should handle multiple consecutive dots", () => {
+			expect(toPascalCase("Company..Models...User")).toBe("CompanyModelsUser");
+		});
+
+		it("should handle leading and trailing dots", () => {
+			expect(toPascalCase(".Models.User.")).toBe("ModelsUser");
+			expect(toPascalCase("...User...")).toBe("User");
+		});
+
+		it("should preserve consecutive caps in dotted names", () => {
+			expect(toPascalCase("System.XML.Parser")).toBe("SystemXMLParser");
+		});
+
+		it("should handle mixed dots and other delimiters", () => {
+			expect(toPascalCase("Company.Models.User-Data")).toBe("CompanyModelsUserData");
+			expect(toPascalCase("System.IO.File_Handler")).toBe("SystemIOFileHandler");
 		});
 	});
 
@@ -131,6 +180,11 @@ describe("Name Utilities", () => {
 
 		it("should handle refs with special characters", () => {
 			expect(resolveRef("#/components/schemas/User-Model")).toBe("User-Model");
+		});
+
+		it("should handle dotted schema names", () => {
+			expect(resolveRef("#/components/schemas/Company.Models.User")).toBe("Company.Models.User");
+			expect(resolveRef("#/components/schemas/Vendor.Api.Product")).toBe("Vendor.Api.Product");
 		});
 	});
 });

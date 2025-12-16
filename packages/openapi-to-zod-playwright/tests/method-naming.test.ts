@@ -39,8 +39,13 @@ describe("Method Naming Utilities", () => {
 			expect(generateMethodName("get", "/")).toBe("getRoot");
 			expect(generateMethodName("post", "/")).toBe("postRoot");
 		});
-	});
 
+		it("should handle paths with dots in version numbers", () => {
+			expect(generateMethodName("get", "/api/v0.1/users")).toBe("getApiV01Users");
+			expect(generateMethodName("post", "/api/v1.2.3/documents")).toBe("postApiV123Documents");
+			expect(generateMethodName("get", "/v2.0/health")).toBe("getV20Health");
+		});
+	});
 	describe("extractPathParams", () => {
 		it("should extract path parameters", () => {
 			expect(extractPathParams("/users/{userId}")).toEqual(["userId"]);

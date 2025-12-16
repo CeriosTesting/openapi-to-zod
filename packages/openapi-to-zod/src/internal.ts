@@ -25,7 +25,7 @@ export { formatConfigValidationError } from "./utils/config-validation";
 export { LRUCache } from "./utils/lru-cache";
 
 // String and naming utilities
-export { toPascalCase } from "./utils/name-utils";
+export { toCamelCase, toPascalCase } from "./utils/name-utils";
 // Operation filtering utilities
 export {
 	createFilterStatistics,

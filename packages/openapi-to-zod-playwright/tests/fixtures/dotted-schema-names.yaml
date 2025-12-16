@@ -1,0 +1,95 @@
+openapi: 3.0.0
+info:
+  title: Dotted Schema Names API
+  version: 1.0.0
+paths:
+  /api/v1/users:
+    get:
+      operationId: getUsers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company.Models.User'
+    post:
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Company.Models.UserCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company.Models.User'
+  /api/v1/products/{id}:
+    get:
+      operationId: getProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor.Api.Product'
+components:
+  schemas:
+    Company.Models.Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        zipCode:
+          type: string
+    Company.Models.User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        address:
+          $ref: '#/components/schemas/Company.Models.Address'
+    Company.Models.UserCreate:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        address:
+          $ref: '#/components/schemas/Company.Models.Address'
+    Vendor.Api.Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number

@@ -1,5 +1,5 @@
 import type { NamingOptions } from "../utils/name-utils";
-import { toCamelCase } from "../utils/name-utils";
+import { toCamelCase, toPascalCase } from "../utils/name-utils";
 
 export interface EnumOpenApiGeneratorOptions extends NamingOptions {}
 
@@ -18,11 +18,12 @@ export function generateEnum(
 	options: EnumOpenApiGeneratorOptions
 ): EnumResult {
 	const schemaName = `${toCamelCase(name, options)}Schema`;
+	const typeName = toPascalCase(name);
 
 	// Generate Zod enum - z.enum only accepts string values, so convert numbers to strings
 	const enumValues = values.map(v => `"${v}"`).join(", ");
 	const schemaCode = `export const ${schemaName} = z.enum([${enumValues}]);`;
-	const typeCode = `export type ${name} = z.infer<typeof ${schemaName}>;`;
+	const typeCode = `export type ${typeName} = z.infer<typeof ${schemaName}>;`;
 
 	return { schemaCode, typeCode };
 }

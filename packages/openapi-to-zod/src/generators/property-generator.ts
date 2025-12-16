@@ -355,8 +355,8 @@ export class PropertyGenerator {
 			// Use the resolved name for the schema reference
 			const schemaName = `${toCamelCase(resolvedRefName, this.context.namingOptions)}Schema`;
 
-			// Check for circular dependency through alias
-			if (currentSchema && this.isCircularThroughAlias(currentSchema, refName)) {
+			// Check for direct self-reference or circular dependency through alias
+			if (currentSchema && (refName === currentSchema || this.isCircularThroughAlias(currentSchema, refName))) {
 				// Use lazy evaluation for circular references with explicit type annotation
 				const lazySchema = `z.lazy((): z.ZodTypeAny => ${schemaName})`;
 				return wrapNullable(lazySchema, nullable);

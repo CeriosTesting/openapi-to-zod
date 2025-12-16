@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: Self-Reference Test
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    TreeNode:
+      type: object
+      properties:
+        value:
+          type: string
+        left:
+          $ref: '#/components/schemas/TreeNode'
+        right:
+          $ref: '#/components/schemas/TreeNode'

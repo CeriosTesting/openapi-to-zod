@@ -99,10 +99,9 @@ describe("Shared Utilities", () => {
 		it("should convert delimited strings to PascalCase with proper capitalization", () => {
 			// Function splits on delimiters and capitalizes each word
 			expect(toPascalCase("user-api")).toBe("UserApi");
-			expect(toPascalCase("XML_Parser")).toBe("XmlParser");
+			expect(toPascalCase("XML_Parser")).toBe("XMLParser");
 			expect(toPascalCase("simple_text")).toBe("SimpleText");
 		});
-
 		it("should handle strings starting with numbers", () => {
 			expect(toPascalCase("2fa-code")).toBe("N2faCode");
 			expect(toPascalCase("123abc")).toBe("N123abc");

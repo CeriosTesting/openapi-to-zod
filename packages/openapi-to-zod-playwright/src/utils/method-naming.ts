@@ -41,13 +41,13 @@ export function generateMethodName(httpMethod: string, path: string): string {
 
 /**
  * Capitalizes the first letter of a string and converts rest to camelCase
- * Handles kebab-case, snake_case, and regular words
+ * Handles kebab-case, snake_case, dots, and regular words
  */
 function capitalize(str: string): string {
-	// Handle kebab-case and snake_case
-	if (str.includes("-") || str.includes("_")) {
+	// Handle kebab-case, snake_case, and dots
+	if (str.includes("-") || str.includes("_") || str.includes(".")) {
 		return str
-			.split(/[-_]/)
+			.split(/[-_.]/)
 			.map((part, index) => {
 				if (index === 0) {
 					return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();

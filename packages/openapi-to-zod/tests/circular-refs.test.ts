@@ -49,4 +49,20 @@ describe("Circular Reference Handling", () => {
 		expect(output).toContain("export const parentNodeSchema");
 		expect(output).toContain("export const childNodeSchema");
 	});
+
+	it("should handle self-referencing schemas with z.lazy", () => {
+		// Test a schema that directly references itself (e.g., tree node with left/right children)
+		const generator = new OpenApiGenerator({
+			input: TestUtils.getFixturePath("self-reference.yaml"),
+			mode: "normal",
+		});
+
+		const output = generator.generateString();
+
+		// Should use z.lazy for self-references
+		expect(output).toContain("z.lazy((): z.ZodTypeAny => treeNodeSchema)");
+		// Should not have "variable used before declaration" errors
+		expect(output).toContain("export const treeNodeSchema");
+		expect(output).toContain("export type TreeNode");
+	});
 });

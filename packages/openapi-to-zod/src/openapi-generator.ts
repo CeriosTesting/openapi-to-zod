@@ -196,9 +196,11 @@ export class OpenApiGenerator {
 				output.push(schemaCode);
 
 				// Add type immediately after schema (if not already included)
-				if (!schemaCode.includes(`export type ${name}`)) {
+				// Convert schema name to valid TypeScript type name (handles dotted names)
+				const typeName = toPascalCase(name);
+				if (!schemaCode.includes(`export type ${typeName}`)) {
 					const schemaName = `${toCamelCase(name, { prefix: this.options.prefix, suffix: this.options.suffix })}Schema`;
-					output.push(`export type ${name} = z.infer<typeof ${schemaName}>;`);
+					output.push(`export type ${typeName} = z.infer<typeof ${schemaName}>;`);
 				}
 
 				output.push("");
@@ -208,7 +210,6 @@ export class OpenApiGenerator {
 				output.push("");
 			}
 		}
-
 		return output.join("\n");
 	}
 

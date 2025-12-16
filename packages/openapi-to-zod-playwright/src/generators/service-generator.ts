@@ -1,5 +1,5 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
-import { toPascalCase } from "@cerios/openapi-to-zod/internal";
+import { toCamelCase, toPascalCase } from "@cerios/openapi-to-zod/internal";
 import type { PlaywrightOperationFilters } from "../types";
 import { shouldIgnoreHeader } from "../utils/header-filters";
 import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
@@ -449,9 +449,11 @@ function generateInlineSchemaCode(inlineSchema: any): { schemaCode: string; type
 	if (inlineSchema.type === "array" && inlineSchema.items?.$ref) {
 		const refParts = inlineSchema.items.$ref.split("/");
 		const itemSchemaName = refParts[refParts.length - 1];
-		const itemTypeName = itemSchemaName.endsWith("Schema") ? itemSchemaName.slice(0, -6) : itemSchemaName;
+		// Convert schema name to valid TypeScript identifiers (handles dotted names)
+		const itemSchemaVarName = toCamelCase(itemSchemaName);
+		const itemTypeName = toPascalCase(itemSchemaName);
 		return {
-			schemaCode: `z.array(${itemSchemaName.charAt(0).toLowerCase() + itemSchemaName.slice(1)}Schema)`,
+			schemaCode: `z.array(${itemSchemaVarName}Schema)`,
 			typeName: `${itemTypeName}[]`,
 		};
 	}
@@ -569,7 +571,9 @@ function generateServiceMethod(
 					requestBody.content[requestContentType]?.schema || requestBody.content["application/json"]?.schema;
 				if (schema?.$ref) {
 					const schemaName = schema.$ref.split("/").pop();
-					optionsProps.push(`data${optionalMarker}: ${schemaName}`);
+					// Convert schema name to valid TypeScript type name (handles dotted names)
+					const typeName = toPascalCase(schemaName);
+					optionsProps.push(`data${optionalMarker}: ${typeName}`);
 					schemaImports.add(schemaName);
 				} else {
 					optionsProps.push(`data${optionalMarker}: RequestBody`);
@@ -595,7 +599,12 @@ function generateServiceMethod(
 	// Determine return type
 	let returnType = "Promise<void>";
 	if (response?.hasBody && response.schemaName) {
-		const typeName = response.schemaName.endsWith("Schema") ? response.schemaName.slice(0, -6) : response.schemaName;
+		// Convert schema name to valid TypeScript type name (handles dotted names)
+		// First remove Schema suffix if present, then convert to PascalCase
+		const baseSchemaName = response.schemaName.endsWith("Schema")
+			? response.schemaName.slice(0, -6)
+			: response.schemaName;
+		const typeName = toPascalCase(baseSchemaName);
 		returnType = `Promise<${typeName}>`;
 		schemaImports.add(response.schemaName);
 	} else if (response?.hasBody && response.inlineSchema) {
@@ -636,7 +645,8 @@ function generateServiceMethod(
 
 	// Add response validation
 	if (response?.hasBody && response.schemaName) {
-		const schemaVar = `${response.schemaName.charAt(0).toLowerCase() + response.schemaName.slice(1)}Schema`;
+		// Convert schema name to camelCase variable name (handles dotted names)
+		const schemaVar = `${toCamelCase(response.schemaName)}Schema`;
 		const isJson = response.contentType === "application/json";
 		const parseMethod = isJson ? "response.json()" : "response.text()";
 
