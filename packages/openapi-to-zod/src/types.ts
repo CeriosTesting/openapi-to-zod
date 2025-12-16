@@ -139,11 +139,35 @@ export interface OpenApiGeneratorOptions {
 	 * }
 	 */
 	operationFilters?: OperationFilters;
+
+	/**
+	 * Header parameters to ignore during schema generation
+	 * Supports glob patterns for flexible matching
+	 * Case-insensitive matching (HTTP header semantics)
+	 *
+	 * @internal Used by Playwright generator
+	 */
+	ignoreHeaders?: string[];
+
+	/**
+	 * Cache size for pattern regex compilation
+	 * Higher values improve performance for large specifications with many string patterns
+	 * @default 1000
+	 */
+	cacheSize?: number;
+
+	/**
+	 * Batch size for parallel execution
+	 * Controls how many specifications are processed concurrently in parallel mode
+	 * Higher values increase memory usage but may improve throughput
+	 * @default 10
+	 */
+	batchSize?: number;
 }
 
 /**
  * Operation filtering options
- * Controls which operations from the OpenAPI spec are included in generation
+ * Controls which operations from the OpenAPI specification are included in generation
  */
 export interface OperationFilters {
 	/**
@@ -274,8 +298,8 @@ export interface OpenAPISpec {
 
 /**
  * Execution mode for batch processing
- * - 'parallel': Process all specs concurrently (default, faster)
- * - 'sequential': Process specs one at a time (safer for resource constraints)
+ * - 'parallel': Process all specifications concurrently (default, faster)
+ * - 'sequential': Process specifications one at a time (safer for resource constraints)
  */
 export type ExecutionMode = "parallel" | "sequential";
 
@@ -284,14 +308,14 @@ export type ExecutionMode = "parallel" | "sequential";
  */
 export interface ConfigFile {
 	/**
-	 * Global default options applied to all specs
-	 * Can be overridden by individual spec configurations
+	 * Global default options applied to all specifications
+	 * Can be overridden by individual specification configurations
 	 */
 	defaults?: Partial<Omit<OpenApiGeneratorOptions, "input" | "output">>;
 
 	/**
 	 * Array of OpenAPI specifications to process
-	 * Each spec must have input and output paths
+	 * Each specification must have input and output paths
 	 */
 	specs: OpenApiGeneratorOptions[];
 

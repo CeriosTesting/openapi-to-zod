@@ -5,6 +5,7 @@ import { Command } from "commander";
 import prompts from "prompts";
 import { executeBatch, getBatchExitCode } from "./batch-executor";
 import { CliOptionsError } from "./errors";
+import { OpenApiGenerator } from "./openapi-generator";
 import type { ConfigFile, ExecutionMode } from "./types";
 import { loadConfig, mergeConfigWithDefaults } from "./utils/config-loader";
 
@@ -20,17 +21,13 @@ program
 		`
 Examples:
   # Create a new config file
-  $ openapi-to-zod --init
+  $ openapi-to-zod init
 
   # Generate with auto-discovered config
   $ openapi-to-zod
 
   # Generate with custom config path
   $ openapi-to-zod --config custom.config.ts
-
-Breaking Changes (v2.0):
-  CLI options removed. Use configuration file instead.
-  Run 'openapi-to-zod --init' to create a config file.
 `
 	)
 	.action(async options => {
@@ -120,7 +117,7 @@ async function executeConfigMode(options: { config?: string }): Promise<void> {
 	try {
 		config = await loadConfig(options.config);
 	} catch {
-		throw new CliOptionsError("No config file found. Run 'openapi-to-zod --init' to create one.", {
+		throw new CliOptionsError("No config file found. Run 'openapi-to-zod init' to create one.", {
 			configPath: options.config,
 		});
 	}
@@ -131,17 +128,18 @@ async function executeConfigMode(options: { config?: string }): Promise<void> {
 	// Determine execution mode
 	const executionMode: ExecutionMode = config.executionMode || "parallel";
 
-	// Execute batch
-	const summary = await executeBatch(specs, executionMode);
+	// Extract batchSize from first spec's options or use default
+	const batchSize = specs[0]?.batchSize ?? 10;
+
+	// Execute batch with generator factory
+	const summary = await executeBatch(specs, executionMode, spec => new OpenApiGenerator(spec), batchSize);
 
 	// Exit with appropriate code
 	const exitCode = getBatchExitCode(summary);
 	if (exitCode !== 0) {
 		process.exit(exitCode);
 	}
-}
-
-/**
+} /**
  * Initialize a new config file with prompts
  */
 async function initConfigFile(): Promise<void> {
@@ -288,7 +286,7 @@ export default defineConfig({
     mode: 'strict',
     includeDescriptions: true,
 	useDescribe: false,
-    showStats: false,
+    showStats: true,
 	schemaType: 'all',
   },
   specs: [

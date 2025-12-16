@@ -29,7 +29,9 @@ export function toCamelCase(str: string, options?: NamingOptions): string {
 }
 
 /**
- * Convert enum value to PascalCase and sanitize for TypeScript enum keys
+ * @shared Convert enum value to PascalCase and sanitize for TypeScript enum keys
+ * @since 1.0.0
+ * Utility used by core and playwright packages
  */
 export function toPascalCase(str: string | number): string {
 	const stringValue = String(str);

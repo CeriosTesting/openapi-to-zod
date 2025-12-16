@@ -1,8 +1,10 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
+import { toPascalCase } from "@cerios/openapi-to-zod/internal";
 import type { PlaywrightOperationFilters } from "../types";
+import { shouldIgnoreHeader } from "../utils/header-filters";
 import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
 import { shouldIncludeOperation } from "../utils/operation-filters";
-import { generateOperationJSDoc, toPascalCase } from "../utils//string-utils";
+import { generateOperationJSDoc } from "../utils/operation-jsdoc";
 
 interface ResponseInfo {
 	statusCode: string;
@@ -105,6 +107,7 @@ function deduplicateSuffixes(suffixes: string[]): string[] {
  * @param clientClassName - Name of the client class to inject (default: "ApiClient")
  * @param useOperationId - Whether to use operationId for method names
  * @param operationFilters - Optional operation filters to apply
+ * @param ignoreHeaders - Optional array of header patterns to ignore
  */
 export function generateServiceClass(
 	spec: OpenAPISpec,
@@ -112,15 +115,18 @@ export function generateServiceClass(
 	className: string = "ApiService",
 	clientClassName: string = "ApiClient",
 	useOperationId: boolean,
-	operationFilters?: PlaywrightOperationFilters
+	operationFilters?: PlaywrightOperationFilters,
+	ignoreHeaders?: string[]
 ): string {
-	const endpoints = extractEndpoints(spec, useOperationId, operationFilters);
+	const endpoints = extractEndpoints(spec, useOperationId, operationFilters, ignoreHeaders);
 
 	if (endpoints.length === 0) {
 		return "";
 	}
 
-	const methods = endpoints.flatMap(endpoint => generateSuccessMethods(endpoint, schemaImports)).join("\n\n");
+	const methods = endpoints
+		.flatMap(endpoint => generateSuccessMethods(endpoint, schemaImports, ignoreHeaders))
+		.join("\n\n");
 
 	return `
 /**
@@ -142,7 +148,8 @@ ${methods}
 function extractEndpoints(
 	spec: OpenAPISpec,
 	useOperationId: boolean,
-	operationFilters?: PlaywrightOperationFilters
+	operationFilters?: PlaywrightOperationFilters,
+	ignoreHeaders?: string[]
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 
@@ -252,11 +259,15 @@ function extractEndpoints(
 				}
 			}
 
-			// Check if operation has header parameters
+			// Check if operation has header parameters (excluding ignored ones)
 			let headerParamSchemaName: string | undefined;
 			if (operation.operationId && operation.parameters && Array.isArray(operation.parameters)) {
 				const hasHeaderParams = operation.parameters.some(
-					(param: any) => param && typeof param === "object" && param.in === "header"
+					(param: any) =>
+						param &&
+						typeof param === "object" &&
+						param.in === "header" &&
+						!shouldIgnoreHeader(param.name, ignoreHeaders)
 				);
 				if (hasHeaderParams) {
 					// Generate schema name matching the base generator pattern
@@ -292,7 +303,11 @@ function extractEndpoints(
  * Generates success methods for an endpoint
  * Creates method variants for each request content-type and response status/content-type combination
  */
-function generateSuccessMethods(endpoint: EndpointInfo, schemaImports: Set<string>): string[] {
+function generateSuccessMethods(
+	endpoint: EndpointInfo,
+	schemaImports: Set<string>,
+	ignoreHeaders?: string[]
+): string[] {
 	const { responses, requestBody } = endpoint;
 	const methods: string[] = [];
 
@@ -307,7 +322,7 @@ function generateSuccessMethods(endpoint: EndpointInfo, schemaImports: Set<strin
 	// If no request body, generate methods without request content-type suffix
 	if (requestContentTypes.length === 0) {
 		if (responses.length === 0) {
-			return [generateServiceMethod(endpoint, undefined, schemaImports, "", "", "")];
+			return [generateServiceMethod(endpoint, undefined, schemaImports, "", "", "", ignoreHeaders)];
 		}
 
 		// Group responses by status code
@@ -325,13 +340,23 @@ function generateSuccessMethods(endpoint: EndpointInfo, schemaImports: Set<strin
 			const hasMultipleContentTypes = responseGroup.length > 1;
 
 			if (!hasMultipleContentTypes) {
-				methods.push(generateServiceMethod(endpoint, responseGroup[0], schemaImports, statusSuffix, "", ""));
+				methods.push(
+					generateServiceMethod(endpoint, responseGroup[0], schemaImports, statusSuffix, "", "", ignoreHeaders)
+				);
 			} else {
 				const suffixes = responseGroup.map(r => extractContentTypeSuffix(r.contentType));
 				const deduplicated = deduplicateSuffixes(suffixes);
 				for (let i = 0; i < responseGroup.length; i++) {
 					methods.push(
-						generateServiceMethod(endpoint, responseGroup[i], schemaImports, statusSuffix, deduplicated[i], "")
+						generateServiceMethod(
+							endpoint,
+							responseGroup[i],
+							schemaImports,
+							statusSuffix,
+							deduplicated[i],
+							"",
+							ignoreHeaders
+						)
 					);
 				}
 			}
@@ -349,7 +374,7 @@ function generateSuccessMethods(endpoint: EndpointInfo, schemaImports: Set<strin
 		const requestSuffix = requestSuffixes[reqIdx];
 
 		if (responses.length === 0) {
-			methods.push(generateServiceMethod(endpoint, undefined, schemaImports, "", "", requestSuffix));
+			methods.push(generateServiceMethod(endpoint, undefined, schemaImports, "", "", requestSuffix, ignoreHeaders));
 			continue;
 		}
 
@@ -368,7 +393,17 @@ function generateSuccessMethods(endpoint: EndpointInfo, schemaImports: Set<strin
 			const hasMultipleContentTypes = responseGroup.length > 1;
 
 			if (!hasMultipleContentTypes) {
-				methods.push(generateServiceMethod(endpoint, responseGroup[0], schemaImports, statusSuffix, "", requestSuffix));
+				methods.push(
+					generateServiceMethod(
+						endpoint,
+						responseGroup[0],
+						schemaImports,
+						statusSuffix,
+						"",
+						requestSuffix,
+						ignoreHeaders
+					)
+				);
 			} else {
 				const suffixes = responseGroup.map(r => extractContentTypeSuffix(r.contentType));
 				const deduplicated = deduplicateSuffixes(suffixes);
@@ -380,7 +415,8 @@ function generateSuccessMethods(endpoint: EndpointInfo, schemaImports: Set<strin
 							schemaImports,
 							statusSuffix,
 							deduplicated[i],
-							requestSuffix
+							requestSuffix,
+							ignoreHeaders
 						)
 					);
 				}
@@ -446,7 +482,8 @@ function generateServiceMethod(
 	schemaImports: Set<string>,
 	statusSuffix: string,
 	responseContentTypeSuffix: string,
-	requestContentTypeSuffix: string
+	requestContentTypeSuffix: string,
+	ignoreHeaders?: string[]
 ): string {
 	const { path, method, methodName, pathParams, requestBody } = endpoint;
 
@@ -464,7 +501,9 @@ function generateServiceMethod(
 
 	// Determine what parameters we need in options
 	const hasQueryParams = endpoint.parameters?.some((p: any) => p.in === "query");
-	const hasHeaderParams = endpoint.parameters?.some((p: any) => p.in === "header");
+	const hasHeaderParams = endpoint.parameters?.some(
+		(p: any) => p.in === "header" && !shouldIgnoreHeader(p.name, ignoreHeaders)
+	);
 
 	// Extract request content-type info if we have a request body
 	let requestContentType = "";

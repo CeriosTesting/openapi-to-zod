@@ -1,28 +1,9 @@
-import { cosmiconfig, type Loader } from "cosmiconfig";
+import { cosmiconfig } from "cosmiconfig";
 import { z } from "zod";
 import type { ConfigFile, OpenApiGeneratorOptions } from "../types";
-
-/**
- * Zod schema for strict validation of config files
- * Rejects unknown properties to catch typos and invalid options
- */
-const RequestResponseOptionsSchema = z.strictObject({
-	mode: z.enum(["strict", "normal", "loose"]).optional(),
-	useDescribe: z.boolean().optional(),
-	includeDescriptions: z.boolean().optional(),
-});
-
-const OperationFiltersSchema = z.strictObject({
-	includeTags: z.array(z.string()).optional(),
-	excludeTags: z.array(z.string()).optional(),
-	includePaths: z.array(z.string()).optional(),
-	excludePaths: z.array(z.string()).optional(),
-	includeMethods: z.array(z.string()).optional(),
-	excludeMethods: z.array(z.string()).optional(),
-	includeOperationIds: z.array(z.string()).optional(),
-	excludeOperationIds: z.array(z.string()).optional(),
-	excludeDeprecated: z.boolean().optional(),
-});
+import { OperationFiltersSchema, RequestResponseOptionsSchema } from "./config-schemas";
+import { formatConfigValidationError } from "./config-validation";
+import { createTypeScriptLoader } from "./typescript-loader";
 
 const OpenApiGeneratorOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
@@ -38,6 +19,8 @@ const OpenApiGeneratorOptionsSchema = z.strictObject({
 	response: RequestResponseOptionsSchema.optional(),
 	name: z.string().optional(),
 	operationFilters: OperationFiltersSchema.optional(),
+	cacheSize: z.number().positive().optional(),
+	batchSize: z.number().positive().optional(),
 });
 
 const ConfigFileSchema = z.strictObject({
@@ -53,54 +36,21 @@ const ConfigFileSchema = z.strictObject({
 			request: RequestResponseOptionsSchema.optional(),
 			response: RequestResponseOptionsSchema.optional(),
 			operationFilters: OperationFiltersSchema.optional(),
+			cacheSize: z.number().positive().optional(),
+			batchSize: z.number().positive().optional(),
 		})
 		.optional(),
-	specs: z.array(OpenApiGeneratorOptionsSchema).min(1, "At least one spec is required"),
+	specs: z
+		.array(OpenApiGeneratorOptionsSchema)
+		.min(1, {
+			message:
+				"Configuration must include at least one specification. Each specification should have 'input' and 'output' paths.",
+		})
+		.refine(specs => specs.every(spec => spec.input && spec.output), {
+			message: "Each specification must have both 'input' and 'output' paths defined",
+		}),
 	executionMode: z.enum(["parallel", "sequential"]).optional(),
 });
-
-/**
- * TypeScript loader using tsx for executing .ts config files
- * Uses Node's module._compile to execute TypeScript after transpiling with esbuild
- */
-const createTypeScriptLoader = (): Loader => {
-	return async (filepath: string) => {
-		try {
-			// Use esbuild to transpile TypeScript to JavaScript
-			const esbuild = await import("esbuild");
-			const fs = await import("node:fs");
-			const path = await import("node:path");
-
-			const tsCode = fs.readFileSync(filepath, "utf-8");
-			const result = await esbuild.build({
-				stdin: {
-					contents: tsCode,
-					loader: "ts",
-					resolveDir: path.dirname(filepath),
-					sourcefile: filepath,
-				},
-				format: "cjs",
-				platform: "node",
-				target: "node18",
-				bundle: false,
-				write: false,
-			});
-
-			const jsCode = result.outputFiles[0].text;
-
-			// Create a module and execute it
-			const module = { exports: {} } as any;
-			const func = new Function("exports", "module", "require", "__filename", "__dirname", jsCode);
-			func(module.exports, module, require, filepath, path.dirname(filepath));
-
-			return module.exports.default || module.exports;
-		} catch (error) {
-			throw new Error(
-				`Failed to load TypeScript config from ${filepath}: ${error instanceof Error ? error.message : String(error)}`
-			);
-		}
-	};
-};
 
 /**
  * Load and validate configuration file
@@ -142,28 +92,7 @@ export async function loadConfig(configPath?: string): Promise<ConfigFile> {
 		return validatedConfig;
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			const formattedErrors =
-				error.issues
-					?.map(err => {
-						const path = err.path.length > 0 ? err.path.join(".") : "root";
-						return `  - ${path}: ${err.message}`;
-					})
-					.join("\n") || "Unknown validation error";
-
-			const configSource = result.filepath || configPath || "config file";
-			const errorMessage = [
-				`Invalid configuration file at: ${configSource}`,
-				"",
-				"Validation errors:",
-				formattedErrors,
-				"",
-				"Please check your configuration file and ensure:",
-				"  - All required fields are present (specs array with input/output)",
-				"  - Field names are spelled correctly (no typos)",
-				"  - Values match the expected types (e.g., mode: 'strict' | 'normal' | 'loose')",
-				"  - No unknown/extra properties are included",
-			].join("\n");
-
+			const errorMessage = formatConfigValidationError(error, result.filepath, configPath);
 			throw new Error(errorMessage);
 		}
 		throw error;

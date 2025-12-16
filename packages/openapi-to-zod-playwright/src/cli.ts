@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { executeBatch } from "@cerios/openapi-to-zod/internal";
 import { Command } from "commander";
 import prompts from "prompts";
 import { CliOptionsError } from "./errors";
@@ -23,17 +24,13 @@ program
 		`
 Examples:
   # Create a new config file
-  $ openapi-to-zod-playwright --init
+  $ openapi-to-zod-playwright init
 
   # Generate with auto-discovered config
   $ openapi-to-zod-playwright
 
   # Generate with custom config path
   $ openapi-to-zod-playwright --config custom.config.ts
-
-Breaking Changes (v2.0):
-  CLI options removed. Use configuration file instead.
-  Run 'openapi-to-zod-playwright --init' to create a config file.
 `
 	)
 	.action(async options => {
@@ -123,17 +120,20 @@ async function executeConfigMode(options: { config?: string }): Promise<void> {
 	try {
 		config = await loadConfig(options.config);
 	} catch {
-		throw new CliOptionsError("No config file found. Run 'openapi-to-zod-playwright --init' to create one.");
+		throw new CliOptionsError("No config file found. Run 'openapi-to-zod-playwright init' to create one.");
 	}
 
 	// Merge defaults with specs
 	const specs = mergeConfigWithDefaults(config);
 
-	// Generate for each spec
-	for (const spec of specs) {
-		const generator = new OpenApiPlaywrightGenerator(spec);
-		generator.generate();
-	}
+	// Determine execution mode (always sequential for now, could be configurable)
+	const executionMode = "sequential";
+
+	// Extract batchSize from first spec's options or use default
+	const batchSize = specs[0]?.batchSize ?? 10;
+
+	// Generate for all specs using batch executor
+	executeBatch(specs, executionMode, spec => new OpenApiPlaywrightGenerator(spec), batchSize);
 }
 
 /**
@@ -305,7 +305,7 @@ export default defineConfig({
     mode: 'strict',
     includeDescriptions: true,
 	useDescribe: false,
-    showStats: false,
+    showStats: true,
     validateServiceRequest: false,
   },
   specs: [

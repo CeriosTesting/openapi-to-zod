@@ -19,7 +19,9 @@ export function escapePattern(str: string): string {
 }
 
 /**
- * Escape JSDoc comment content
+ * @shared Escape JSDoc comment content to prevent injection
+ * @since 1.0.0
+ * Utility used by core and playwright packages
  */
 export function escapeJSDoc(str: string): string {
 	return str.replace(/\*\//g, "*\\/");

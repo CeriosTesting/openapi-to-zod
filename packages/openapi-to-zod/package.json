@@ -1,6 +1,6 @@
 {
 	"name": "@cerios/openapi-to-zod",
-	"version": "0.6.0",
+	"version": "1.0.0",
 	"author": "Ronald Veth - Cerios",
 	"description": "Generate Zod schemas from OpenAPI specifications. A TypeScript code generator that converts OpenAPI/Swagger YAML definitions into type-safe Zod validation schemas.",
 	"license": "MIT",
@@ -25,6 +25,16 @@
 				"default": "./dist/index.js"
 			}
 		},
+		"./internal": {
+			"import": {
+				"types": "./dist/internal.d.mts",
+				"default": "./dist/internal.mjs"
+			},
+			"require": {
+				"types": "./dist/internal.d.ts",
+				"default": "./dist/internal.js"
+			}
+		},
 		"./package.json": "./package.json"
 	},
 	"bugs": {
@@ -44,33 +54,34 @@
 		"compile": "tsc --noEmit",
 		"dev": "tsup --watch",
 		"lint": "biome lint",
+		"pack": "npm pack --pack-destination=../..",
 		"prepare": "husky",
 		"test": "vitest run",
 		"test:generate": "node dist/cli.js -i src/phx-case-management-api.openapi.yaml -o output/schemas.ts",
 		"update-all-packages": "npx npm-check-updates -u && npm i"
 	},
 	"dependencies": {
-		"commander": "^12.1.0",
+		"commander": "^14.0.2",
 		"cosmiconfig": "^9.0.0",
 		"esbuild": "^0.27.1",
-		"minimatch": "^10.0.1",
-		"yaml": "^2.6.1"
+		"minimatch": "^10.1.1",
+		"yaml": "^2.8.2"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.18.2",
-		"@biomejs/biome": "2.3.6",
-		"@changesets/cli": "^2.29.7",
-		"@types/node": "^24.10.1",
+		"@biomejs/biome": "2.3.9",
+		"@changesets/cli": "^2.29.8",
+		"@types/node": "^25.0.2",
 		"@types/prompts": "^2.4.9",
 		"husky": "^9.1.7",
-		"lint-staged": "^16.2.6",
-		"npm-check-updates": "^19.1.2",
+		"lint-staged": "^16.2.7",
+		"npm-check-updates": "^19.2.0",
 		"prompts": "^2.4.2",
 		"tsup": "^8.5.1",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.15",
-		"zod": "^4.1.13"
+		"zod": "^4.2.0"
 	},
 	"peerDependencies": {
 		"zod": "^4.0.0"

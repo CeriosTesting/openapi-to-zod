@@ -1,4 +1,10 @@
-import { cosmiconfig, type Loader } from "cosmiconfig";
+import {
+	OperationFiltersSchema as BaseOperationFiltersSchema,
+	createTypeScriptLoader,
+	formatConfigValidationError,
+	RequestResponseOptionsSchema,
+} from "@cerios/openapi-to-zod/internal";
+import { cosmiconfig } from "cosmiconfig";
 import { z } from "zod";
 import type { OpenApiPlaywrightGeneratorOptions, PlaywrightConfigFile } from "../types";
 
@@ -6,22 +12,9 @@ import type { OpenApiPlaywrightGeneratorOptions, PlaywrightConfigFile } from "..
  * Zod schema for strict validation of Playwright config files
  * Extends base config schema but enforces schemaType: "all"
  */
-const RequestResponseOptionsSchema = z.strictObject({
-	mode: z.enum(["strict", "normal", "loose"]).optional(),
-	useDescribe: z.boolean().optional(),
-	includeDescriptions: z.boolean().optional(),
-});
 
-const OperationFiltersSchema = z.strictObject({
-	includeTags: z.array(z.string()).optional(),
-	excludeTags: z.array(z.string()).optional(),
-	includePaths: z.array(z.string()).optional(),
-	excludePaths: z.array(z.string()).optional(),
-	includeMethods: z.array(z.string()).optional(),
-	excludeMethods: z.array(z.string()).optional(),
-	includeOperationIds: z.array(z.string()).optional(),
-	excludeOperationIds: z.array(z.string()).optional(),
-	excludeDeprecated: z.boolean().optional(),
+// Extend base operation filters with Playwright-specific status code filtering
+const OperationFiltersSchema = BaseOperationFiltersSchema.extend({
 	includeStatusCodes: z.array(z.string()).optional(),
 	excludeStatusCodes: z.array(z.string()).optional(),
 });
@@ -33,6 +26,7 @@ const OpenApiPlaywrightGeneratorOptionsSchema = z.strictObject({
 	outputClient: z.string().optional(),
 	outputService: z.string().optional(),
 	validateServiceRequest: z.boolean().optional(),
+	ignoreHeaders: z.array(z.string()).optional(),
 	useDescribe: z.boolean().optional(),
 	prefix: z.string().optional(),
 	suffix: z.string().optional(),
@@ -42,6 +36,8 @@ const OpenApiPlaywrightGeneratorOptionsSchema = z.strictObject({
 	name: z.string().optional(),
 	basePath: z.string().optional(),
 	operationFilters: OperationFiltersSchema.optional(),
+	cacheSize: z.number().positive().optional(),
+	batchSize: z.number().positive().optional(),
 	// schemaType is not included - always "all" for Playwright
 });
 
@@ -58,58 +54,26 @@ const PlaywrightConfigFileSchema = z.strictObject({
 			response: RequestResponseOptionsSchema.optional(),
 			generateService: z.boolean().optional(),
 			validateServiceRequest: z.boolean().optional(),
+			ignoreHeaders: z.array(z.string()).optional(),
 			outputClient: z.string().optional(),
 			outputService: z.string().optional(),
 			basePath: z.string().optional(),
 			operationFilters: OperationFiltersSchema.optional(),
+			cacheSize: z.number().positive().optional(),
+			batchSize: z.number().positive().optional(),
 		})
 		.optional(),
-	specs: z.array(OpenApiPlaywrightGeneratorOptionsSchema).min(1, "At least one spec is required"),
+	specs: z
+		.array(OpenApiPlaywrightGeneratorOptionsSchema)
+		.min(1, {
+			message:
+				"Configuration must include at least one specification. Each specification should have 'input' and 'output' paths.",
+		})
+		.refine(specs => specs.every(spec => spec.input), {
+			message: "Each specification must have an 'input' path defined",
+		}),
 	executionMode: z.enum(["parallel", "sequential"]).optional(),
 });
-
-/**
- * TypeScript loader using esbuild for executing .ts config files
- * Uses Node's module._compile to execute TypeScript after transpiling with esbuild
- */
-const createTypeScriptLoader = (): Loader => {
-	return async (filepath: string) => {
-		try {
-			// Use esbuild to transpile TypeScript to JavaScript
-			const esbuild = await import("esbuild");
-			const fs = await import("node:fs");
-			const path = await import("node:path");
-
-			const tsCode = fs.readFileSync(filepath, "utf-8");
-			const result = await esbuild.build({
-				stdin: {
-					contents: tsCode,
-					loader: "ts",
-					resolveDir: path.dirname(filepath),
-					sourcefile: filepath,
-				},
-				format: "cjs",
-				platform: "node",
-				target: "node18",
-				bundle: false,
-				write: false,
-			});
-
-			const jsCode = result.outputFiles[0].text;
-
-			// Create a module and execute it
-			const module = { exports: {} } as any;
-			const func = new Function("exports", "module", "require", "__filename", "__dirname", jsCode);
-			func(module.exports, module, require, filepath, path.dirname(filepath));
-
-			return module.exports.default || module.exports;
-		} catch (error) {
-			throw new Error(
-				`Failed to load TypeScript config from ${filepath}: ${error instanceof Error ? error.message : String(error)}`
-			);
-		}
-	};
-};
 
 /**
  * Load and validate Playwright configuration file
@@ -151,36 +115,14 @@ export async function loadConfig(configPath?: string): Promise<PlaywrightConfigF
 		return validatedConfig;
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			const formattedErrors =
-				error.issues
-					?.map(err => {
-						const path = err.path.length > 0 ? err.path.join(".") : "root";
-						return `  - ${path}: ${err.message}`;
-					})
-					.join("\n") || "Unknown validation error";
-
-			const configSource = result.filepath || configPath || "config file";
-			const errorMessage = [
-				`Invalid Playwright configuration file at: ${configSource}`,
-				"",
-				"Validation errors:",
-				formattedErrors,
-				"",
-				"Please check your configuration file and ensure:",
-				"  - All required fields are present (specs array with input)",
-				"  - Field names are spelled correctly (no typos)",
-				"  - Values match the expected types (e.g., mode: 'strict' | 'normal' | 'loose')",
-				"  - No unknown/extra properties are included",
-				"  - Note: schemaType is always 'all' for Playwright generator (both request/response schemas)",
-			].join("\n");
-
+			const errorMessage = formatConfigValidationError(error, result.filepath, configPath, [
+				"Note: schemaType is always 'all' for Playwright generator (both request/response schemas)",
+			]);
 			throw new Error(errorMessage);
 		}
 		throw error;
 	}
-}
-
-/**
+} /**
  * Merge global defaults with per-spec configuration
  * CLI arguments have highest precedence and are merged separately in CLI layer
  * Automatically enforces schemaType: "all" for all specs
@@ -206,13 +148,12 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPl
 			suffix: defaults.suffix,
 			showStats: defaults.showStats,
 			validateServiceRequest: defaults.validateServiceRequest,
-			outputClient: defaults.outputClient,
-			outputService: defaults.outputService,
+			ignoreHeaders: defaults.ignoreHeaders,
+			// outputClient and outputService are intentionally NOT inherited from defaults
+			// Each spec should define its own file paths
 
 			// Override with spec-specific values (including required input)
 			...spec,
-			// Always enforce schemaType: "all" for Playwright
-			schemaType: "all",
 		};
 		return merged;
 	});

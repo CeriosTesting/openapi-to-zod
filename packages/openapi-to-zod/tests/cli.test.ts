@@ -27,9 +27,8 @@ describe("CLI", () => {
 		it("should display help with new usage", () => {
 			const output = execSync(`node ${cliPath} --help`, { encoding: "utf-8" });
 			expect(output).toContain("Generate Zod v4 schemas");
-			expect(output).toContain("--init");
+			expect(output).toContain("init");
 			expect(output).toContain("--config");
-			expect(output).toContain("Breaking Changes (v2.0)");
 		});
 	});
 
@@ -74,7 +73,7 @@ describe("CLI", () => {
 			} catch (error: any) {
 				const stderr = error.stderr?.toString() || error.stdout?.toString() || error.message;
 				expect(stderr).toContain("No config file found");
-				expect(stderr).toContain("--init");
+				expect(stderr).toContain("init");
 			}
 		});
 	});

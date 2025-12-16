@@ -1,5 +1,11 @@
 # @cerios/openapi-to-zod
 
+## 1.0.0
+
+### Major Changes
+
+- First official release. Enjoy!
+
 ## 0.6.0
 
 ### Minor Changes

@@ -32,25 +32,25 @@ describe("Config Loading - Playwright", () => {
 
 		it("should throw error for invalid config structure", async () => {
 			const configPath = TestUtils.getConfigPath("invalid-config.json");
-			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid Playwright configuration file/);
+			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid configuration file|Unrecognized key/);
 		});
 
 		it("should reject config with unknown properties (strict validation)", async () => {
 			const configPath = TestUtils.getConfigPath("invalid-config.json");
 
-			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid Playwright configuration file/);
+			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid configuration file|Unrecognized key/);
 		});
 
 		it("should validate that at least one spec is required", async () => {
 			const configPath = TestUtils.getConfigPath("empty-specs-config.json");
 
-			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid Playwright configuration file/);
+			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid configuration file|At least one spec is required/);
 		});
 
 		it("should reject schemaType in config (always 'all' for Playwright)", async () => {
 			const configPath = TestUtils.getConfigPath("invalid-schema-type-config.json");
 
-			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid Playwright configuration file/);
+			await expect(loadConfig(configPath)).rejects.toThrow(/Invalid configuration file|Unrecognized key.*schemaType/);
 		});
 	});
 
@@ -82,24 +82,6 @@ describe("Config Loading - Playwright", () => {
 			expect(merged[1].includeDescriptions).toBe(true);
 		});
 
-		it("should enforce schemaType: 'all' for all specs", () => {
-			const config: PlaywrightConfigFile = {
-				defaults: {
-					mode: "strict",
-				},
-				specs: [
-					{ input: "api.yaml", output: "api.ts" },
-					{ input: "api2.yaml", output: "api2.ts" },
-				],
-			};
-
-			const merged = mergeConfigWithDefaults(config);
-
-			expect(merged).toHaveLength(2);
-			expect(merged[0].schemaType).toBe("all");
-			expect(merged[1].schemaType).toBe("all");
-		});
-
 		it("should handle config without defaults", () => {
 			const config: PlaywrightConfigFile = {
 				specs: [{ input: "api.yaml", output: "api.ts", mode: "loose" }],
@@ -110,7 +92,6 @@ describe("Config Loading - Playwright", () => {
 			expect(merged).toHaveLength(1);
 			expect(merged[0].mode).toBe("loose");
 			expect(merged[0].input).toBe("api.yaml");
-			expect(merged[0].schemaType).toBe("all");
 		});
 
 		it("should preserve spec-specific options that override defaults", () => {
@@ -119,7 +100,6 @@ describe("Config Loading - Playwright", () => {
 					prefix: "default",
 					suffix: "dto",
 					mode: "strict",
-					outputClient: "default-client.ts",
 				},
 				specs: [
 					{
@@ -138,16 +118,15 @@ describe("Config Loading - Playwright", () => {
 			expect(merged[0].prefix).toBe("api");
 			expect(merged[0].suffix).toBe("dto");
 			expect(merged[0].mode).toBe("normal");
+			// outputClient and outputService come from spec, not defaults
 			expect(merged[0].outputClient).toBe("api-client.ts");
 			expect(merged[0].outputService).toBe("api-service.ts");
-			expect(merged[0].schemaType).toBe("all");
 		});
 
 		it("should handle Playwright-specific options", () => {
 			const config: PlaywrightConfigFile = {
 				defaults: {
 					validateServiceRequest: true,
-					outputClient: "client.ts",
 				},
 				specs: [
 					{
@@ -166,7 +145,8 @@ describe("Config Loading - Playwright", () => {
 			const merged = mergeConfigWithDefaults(config);
 
 			expect(merged[0].validateServiceRequest).toBe(true);
-			expect(merged[0].outputClient).toBe("client.ts");
+			// outputClient not set in spec, so should be undefined (not inherited from defaults)
+			expect(merged[0].outputClient).toBeUndefined();
 			expect(merged[1].validateServiceRequest).toBe(false);
 			expect(merged[1].outputClient).toBe("api2-client.ts");
 		});
@@ -179,7 +159,6 @@ describe("Config Loading - Playwright", () => {
 				output: "api.ts",
 				mode: "normal",
 				includeDescriptions: true,
-				schemaType: "all",
 			};
 
 			const cliOptions: Partial<OpenApiPlaywrightGeneratorOptions> = {
@@ -195,31 +174,12 @@ describe("Config Loading - Playwright", () => {
 			expect(merged.input).toBe("api.yaml");
 		});
 
-		it("should always enforce schemaType: 'all' even if CLI provides different value", () => {
-			const specConfig: OpenApiPlaywrightGeneratorOptions = {
-				input: "api.yaml",
-				output: "api.ts",
-				mode: "normal",
-				schemaType: "all",
-			};
-
-			const cliOptions: Partial<OpenApiPlaywrightGeneratorOptions> = {
-				mode: "strict",
-			};
-
-			const merged = mergeCliWithConfig(specConfig, cliOptions);
-
-			expect(merged.schemaType).toBe("all");
-			expect(merged.mode).toBe("strict");
-		});
-
 		it("should ignore undefined CLI options", () => {
 			const specConfig: OpenApiPlaywrightGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "normal",
 				showStats: true,
-				schemaType: "all",
 			};
 
 			const cliOptions: Partial<OpenApiPlaywrightGeneratorOptions> = {
@@ -231,7 +191,6 @@ describe("Config Loading - Playwright", () => {
 
 			expect(merged.mode).toBe("normal");
 			expect(merged.prefix).toBe("test");
-			expect(merged.schemaType).toBe("all");
 		});
 
 		it("should handle empty CLI options", () => {
@@ -239,14 +198,12 @@ describe("Config Loading - Playwright", () => {
 				input: "api.yaml",
 				output: "api.ts",
 				mode: "loose",
-				schemaType: "all",
 			};
 
 			const merged = mergeCliWithConfig(specConfig, {});
 
 			expect(merged.mode).toBe("loose");
 			expect(merged.input).toBe("api.yaml");
-			expect(merged.schemaType).toBe("all");
 		});
 
 		it("should handle Playwright-specific CLI options", () => {
@@ -254,7 +211,6 @@ describe("Config Loading - Playwright", () => {
 				input: "api.yaml",
 				output: "api.ts",
 				validateServiceRequest: false,
-				schemaType: "all",
 			};
 
 			const cliOptions: Partial<OpenApiPlaywrightGeneratorOptions> = {
@@ -302,8 +258,7 @@ describe("Config Loading - Playwright", () => {
 			expect(withCli.suffix).toBe("model");
 
 			// Defaults used when not overridden
-			expect(withCli.showStats).toBe(true); // schemaType always enforced
-			expect(withCli.schemaType).toBe("all");
+			expect(withCli.showStats).toBe(true);
 		});
 	});
 });

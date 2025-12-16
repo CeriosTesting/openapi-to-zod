@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { executeBatch, getBatchExitCode } from "../src/batch-executor";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
@@ -18,7 +19,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 
 			expect(summary.total).toBe(2);
 			expect(summary.successful).toBe(2);
@@ -39,7 +40,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(1);
 			expect(summary.failed).toBe(1);
 			expect(summary.results[0].success).toBe(false);
@@ -63,7 +64,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(1);
 			expect(summary.failed).toBe(2);
 			expect(existsSync(specs[1].output)).toBe(true);
@@ -83,7 +84,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "sequential");
+			const summary = await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(2);
 			expect(summary.failed).toBe(0);
 			expect(existsSync(specs[0].output)).toBe(true);
@@ -102,7 +103,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "sequential");
+			const summary = await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.results[0].success).toBe(false);
 			expect(summary.results[0].error).toBeDefined();
 			expect(summary.results[1].success).toBe(true);
@@ -124,7 +125,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "sequential");
+			const summary = await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.results[0].success).toBe(true);
 			expect(summary.results[1].success).toBe(false);
 			expect(summary.results[2].success).toBe(true);
@@ -140,7 +141,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(getBatchExitCode(summary)).toBe(0);
 		});
 
@@ -156,7 +157,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(getBatchExitCode(summary)).toBe(1);
 		});
 	});
@@ -170,7 +171,7 @@ describe("Batch Execution", () => {
 				},
 			];
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.failed).toBe(1);
 			expect(summary.results[0].error).toBeDefined();
 			expect(summary.results[0].error).toMatch(/Implicit keys need to be on a single line/);
@@ -179,7 +180,9 @@ describe("Batch Execution", () => {
 
 	describe("Edge Cases", () => {
 		it("should throw error if no specs provided", async () => {
-			await expect(executeBatch([], "parallel")).rejects.toThrow(/No specs provided/);
+			await expect(executeBatch([], "parallel", spec => new OpenApiGenerator(spec), 10)).rejects.toThrow(
+				/No specs provided/
+			);
 		});
 
 		it("should handle large batch of specs", async () => {
@@ -188,7 +191,7 @@ describe("Batch Execution", () => {
 				output: TestUtils.getOutputPath(`batch-large-${i}.ts`),
 			}));
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(10);
 			expect(summary.failed).toBe(0);
 		});

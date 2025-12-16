@@ -1,5 +1,7 @@
 /**
- * Simple LRU Cache implementation for performance optimization
+ * @shared Simple LRU Cache implementation for performance optimization
+ * @since 1.0.0
+ * Utility used by core and playwright packages
  * Prevents memory leaks from unbounded cache growth
  */
 export class LRUCache<K, V> {
@@ -8,6 +10,10 @@ export class LRUCache<K, V> {
 
 	constructor(maxSize: number) {
 		this.maxSize = maxSize;
+	}
+
+	get capacity(): number {
+		return this.maxSize;
 	}
 
 	get(key: K): V | undefined {

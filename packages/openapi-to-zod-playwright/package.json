@@ -1,6 +1,6 @@
 {
 	"name": "@cerios/openapi-to-zod-playwright",
-	"version": "0.6.2",
+	"version": "1.0.1",
 	"author": "Ronald Veth - Cerios",
 	"description": "Generate type-safe Playwright API clients from OpenAPI specifications with Zod validation",
 	"license": "MIT",
@@ -51,28 +51,29 @@
 		"build": "tsup",
 		"compile": "tsc --noEmit",
 		"dev": "tsup --watch",
+		"pack": "npm pack --pack-destination=../..",
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"commander": "^12.1.0",
+		"commander": "^14.0.2",
 		"cosmiconfig": "^9.0.0",
 		"esbuild": "^0.27.1",
-		"minimatch": "^10.0.1",
-		"yaml": "^2.6.1"
+		"minimatch": "^10.1.1",
+		"yaml": "^2.8.2"
 	},
 	"peerDependencies": {
-		"@cerios/openapi-to-zod": "^0.6.0",
+		"@cerios/openapi-to-zod": ">=1.0.0",
 		"@playwright/test": "^1.48.0",
 		"zod": "^4.0.0"
 	},
 	"devDependencies": {
-		"@arethetypeswrong/cli": "^0.17.3",
-		"@biomejs/biome": "1.9.4",
-		"@playwright/test": "^1.48.2",
-		"@types/node": "^22.10.1",
-		"tsup": "^8.3.5",
-		"typescript": "^5.7.2",
+		"@arethetypeswrong/cli": "^0.18.2",
+		"@biomejs/biome": "2.3.9",
+		"@playwright/test": "^1.57.0",
+		"@types/node": "^25.0.2",
+		"tsup": "^8.5.1",
+		"typescript": "^5.9.3",
 		"vitest": "^4.0.15",
-		"zod": "^4.0.0"
+		"zod": "^4.2.0"
 	}
 }

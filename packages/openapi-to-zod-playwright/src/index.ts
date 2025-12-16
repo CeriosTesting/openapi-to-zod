@@ -26,4 +26,3 @@ export type {
 	PlaywrightOperationFilters,
 } from "./types";
 export { defineConfig } from "./types";
-export { loadConfig, mergeCliWithConfig, mergeConfigWithDefaults } from "./utils/config-loader";

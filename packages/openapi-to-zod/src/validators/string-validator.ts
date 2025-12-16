@@ -2,8 +2,19 @@ import type { OpenAPISchema } from "../types";
 import { LRUCache } from "../utils/lru-cache";
 import { addDescription, escapePattern } from "../utils/string-utils";
 
-// Performance optimization: Cache compiled regex patterns with size limit
-const PATTERN_CACHE = new LRUCache<string, string>(1000);
+// Performance optimization: Cache compiled regex patterns with configurable size limit
+// Cache is shared across all generators for performance, but size can be configured per generator
+let PATTERN_CACHE = new LRUCache<string, string>(1000);
+
+/**
+ * Configure the pattern cache size
+ * Should be called before generating schemas for large specifications
+ */
+export function configurePatternCache(size: number): void {
+	if (size > 0 && size !== PATTERN_CACHE.capacity) {
+		PATTERN_CACHE = new LRUCache<string, string>(size);
+	}
+}
 
 const FORMAT_MAP: Record<string, string> = {
 	uuid: "z.uuid()",

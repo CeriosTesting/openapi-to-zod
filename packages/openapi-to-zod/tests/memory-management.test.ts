@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { executeBatch } from "../src/batch-executor";
+import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
@@ -16,7 +17,7 @@ describe("Memory Management", () => {
 
 			const memBefore = process.memoryUsage().heapUsed;
 
-			const summary = await executeBatch(specs, "sequential");
+			const summary = await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 
 			// Force GC if available
 			if (global.gc) {
@@ -38,7 +39,7 @@ describe("Memory Management", () => {
 				output: TestUtils.getOutputPath(`small-batch-${i}.ts`),
 			}));
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 
 			expect(summary.successful).toBe(5);
 			expect(summary.failed).toBe(0);
@@ -53,11 +54,9 @@ describe("Memory Management", () => {
 			const memBefore = process.memoryUsage().heapUsed;
 			const startTime = Date.now();
 
-			const summary = await executeBatch(specs, "parallel");
+			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 
-			const duration = Date.now() - startTime;
-
-			// Force GC
+			const duration = Date.now() - startTime; // Force GC
 			if (global.gc) {
 				global.gc();
 			}
@@ -80,7 +79,7 @@ describe("Memory Management", () => {
 					output: TestUtils.getOutputPath(`repeat-batch-${batch}-${i}.ts`),
 				}));
 
-				await executeBatch(specs, "sequential");
+				await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			}
 
 			// Force GC

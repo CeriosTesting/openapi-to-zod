@@ -35,14 +35,12 @@ npm install @cerios/openapi-to-zod
 
 ## CLI Usage
 
-> **Breaking Change in v2.0:** All CLI options have been removed. Use configuration files instead.
-
 ### Quick Start
 
 #### 1. Initialize Configuration
 
 ```bash
-npx @cerios/openapi-to-zod --init
+npx @cerios/openapi-to-zod init
 ```
 
 This interactive command will:
@@ -150,48 +148,21 @@ openapi-to-zod [options]
 
 Options:
   -c, --config <path>  Path to config file (optional if using auto-discovery)
-  --init               Initialize a new config file
   -V, --version        Output version number
   -h, --help           Display help
 
+Commands:
+  init                 Initialize a new config file
+
 Examples:
   # Create config
-  $ openapi-to-zod --init
+  $ openapi-to-zod init
 
   # Generate (auto-discover config)
   $ openapi-to-zod
 
   # Generate with custom config path
   $ openapi-to-zod --config custom.config.ts
-```
-
-### Migration from v1.x
-
-**Before (v1.x):**
-```bash
-openapi-to-zod -i openapi.yaml -o schemas.ts --mode strict --prefix Api
-```
-
-**After (v2.0):**
-```typescript
-// openapi-to-zod.config.ts
-import { defineConfig } from '@cerios/openapi-to-zod';
-
-export default defineConfig({
-  specs: [
-    {
-      input: 'openapi.yaml',
-      output: 'schemas.ts',
-      mode: 'strict',
-      prefix: 'Api',
-    },
-  ],
-});
-```
-
-Then run:
-```bash
-openapi-to-zod
 ```
 
 ### Configuration Options
@@ -217,8 +188,40 @@ openapi-to-zod
 | `prefix` | `string` | Prefix for schema names |
 | `suffix` | `string` | Suffix for schema names |
 | `showStats` | `boolean` | Include generation statistics |
-| `request` | `object` | Request-specific options (mode, includeDescriptions, etc.) |
-| `response` | `object` | Response-specific options (mode, includeDescriptions, etc.) |
+| `request` | `object` | Request-specific options (mode, includeDescriptions, useDescribe) |
+| `response` | `object` | Response-specific options (mode, includeDescriptions, useDescribe) |
+| `operationFilters` | `object` | Filter operations by tags, paths, methods, etc. (see below) |
+
+#### Operation Filters
+
+Filter which operations to include/exclude during schema generation. Useful for generating separate schemas for different API subsets.
+
+| Filter | Type | Description |
+|--------|------|-------------|
+| `includeTags` | `string[]` | Include only operations with these tags |
+| `excludeTags` | `string[]` | Exclude operations with these tags |
+| `includePaths` | `string[]` | Include only these paths (supports glob patterns like `/users/**`) |
+| `excludePaths` | `string[]` | Exclude these paths (supports glob patterns) |
+| `includeMethods` | `string[]` | Include only these HTTP methods (`get`, `post`, etc.) |
+| `excludeMethods` | `string[]` | Exclude these HTTP methods |
+| `includeOperationIds` | `string[]` | Include only these operationIds (supports glob patterns) |
+| `excludeOperationIds` | `string[]` | Exclude these operationIds (supports glob patterns) |
+| `excludeDeprecated` | `boolean` | Exclude deprecated operations |
+
+**Example:**
+```typescript
+export default defineConfig({
+  specs: [{
+    input: 'openapi.yaml',
+    output: 'schemas.ts',
+    operationFilters: {
+      includeTags: ['public'],        // Only public endpoints
+      excludeDeprecated: true,         // Skip deprecated operations
+      excludePaths: ['/internal/**']  // Exclude internal paths
+    }
+  }]
+});
+```
 
 ### Batch Execution
 
@@ -408,6 +411,141 @@ The generator supports all OpenAPI string formats with Zod v4:
 
 ## Advanced Features
 
+### Operation Filtering
+
+Filter which operations are included in schema generation. This is useful when you want to generate schemas for only a subset of your API.
+
+**Example 1: Filter by tags**
+```typescript
+export default defineConfig({
+  specs: [{
+    input: 'openapi.yaml',
+    output: 'public-schemas.ts',
+    operationFilters: {
+      includeTags: ['public', 'users']  // Only include operations tagged with 'public' or 'users'
+    }
+  }]
+});
+```
+
+**Example 2: Filter by paths**
+```typescript
+export default defineConfig({
+  specs: [{
+    input: 'openapi.yaml',
+    output: 'v1-schemas.ts',
+    operationFilters: {
+      includePaths: ['/api/v1/**'],     // Only v1 endpoints
+      excludePaths: ['/api/v1/admin/**'] // But exclude admin endpoints
+    }
+  }]
+});
+```
+
+**Example 3: Exclude deprecated operations**
+```typescript
+export default defineConfig({
+  specs: [{
+    input: 'openapi.yaml',
+    output: 'current-schemas.ts',
+    operationFilters: {
+      excludeDeprecated: true  // Skip all deprecated operations
+    }
+  }]
+});
+```
+
+**Filtering Logic:**
+1. If no filters specified, all operations are included
+2. Empty arrays are treated as "no constraint"
+3. Include filters are applied first (allowlist)
+4. Exclude filters are applied second (blocklist)
+5. Exclude rules always win over include rules
+
+**Statistics:** When using operation filters, generation statistics will show how many operations were filtered out.
+
+### Request/Response Schema Separation
+
+Generate separate schemas for requests and responses by filtering `readOnly` and `writeOnly` properties.
+
+**Example: Request schemas (exclude readOnly)**
+```typescript
+export default defineConfig({
+  specs: [{
+    input: 'openapi.yaml',
+    output: 'request-schemas.ts',
+    schemaType: 'request'  // Excludes readOnly properties like 'id', 'createdAt'
+  }]
+});
+```
+
+**Example: Response schemas (exclude writeOnly)**
+```typescript
+export default defineConfig({
+  specs: [{
+    input: 'openapi.yaml',
+    output: 'response-schemas.ts',
+    schemaType: 'response'  // Excludes writeOnly properties like 'password'
+  }]
+});
+```
+
+**Example: Context-specific validation**
+```typescript
+export default defineConfig({
+  specs: [{
+    input: 'openapi.yaml',
+    output: 'schemas.ts',
+    request: {
+      mode: 'strict',           // Strict validation for incoming data
+      includeDescriptions: false
+    },
+    response: {
+      mode: 'loose',            // Flexible validation for API responses
+      includeDescriptions: true
+    }
+  }]
+});
+```
+
+**OpenAPI Spec:**
+```yaml
+User:
+  type: object
+  properties:
+    id:
+      type: string
+      readOnly: true      # Excluded in 'request' mode
+    email:
+      type: string
+    password:
+      type: string
+      writeOnly: true     # Excluded in 'response' mode
+    createdAt:
+      type: string
+      format: date-time
+      readOnly: true      # Excluded in 'request' mode
+```
+
+**Generated Request Schema** (`schemaType: 'request'`):
+```typescript
+export const userSchema = z.object({
+  email: z.string(),
+  password: z.string(),  // writeOnly included
+  // id and createdAt excluded (readOnly)
+});
+```
+
+**Generated Response Schema** (`schemaType: 'response'`):
+```typescript
+export const userSchema = z.object({
+  id: z.string(),        // readOnly included
+  email: z.string(),
+  createdAt: z.string().datetime(),  // readOnly included
+  // password excluded (writeOnly)
+});
+```
+
 ### String Constraints
 
 - `minLength` and `maxLength` are automatically applied
@@ -441,18 +579,18 @@ Enums are generated as Zod enums with:
 
 Customize schema names with prefixes and suffixes:
 
-```bash
-# Add API prefix
-openapi-to-zod -i openapi.yaml -o schemas.ts -p api
-# Output: apiUserSchema, apiProductSchema, etc.
-
-# Add DTO suffix
-openapi-to-zod -i openapi.yaml -o schemas.ts --suffix dto
-# Output: userDtoSchema, productDtoSchema, etc.
-
-# Combine both
-openapi-to-zod -i openapi.yaml -o schemas.ts -p api --suffix dto
-# Output: apiUserDtoSchema, apiProductDtoSchema, etc.
+```typescript
+// In your config file
+export default defineConfig({
+  specs: [
+    {
+      input: 'openapi.yaml',
+      output: 'schemas.ts',
+      prefix: 'api',  // Output: apiUserSchema, apiProductSchema
+      suffix: 'dto',  // Output: userDtoSchema, productDtoSchema
+    },
+  ],
+});
 ```
 
 This is useful when:
@@ -462,7 +600,7 @@ This is useful when:
 
 ## Generation Statistics
 
-Statistics are **included by default** in generated files. Use `--no-stats` to disable:
+Statistics are **included by default** in generated files. Use `showStats: false` to disable:
 
 ```typescript
 // Generation Statistics:
@@ -477,8 +615,6 @@ Helpful for:
 - Understanding your API complexity
 - Tracking changes over time
 - Debugging generation issues
-
-To disable: `openapi-to-zod -i openapi.yaml -o schemas.ts --no-stats`
 
 ## OpenAPI Features Supported
 
@@ -822,6 +958,89 @@ All errors include:
 - Line and column numbers (when available)
 - Clear description of the problem
 - Context about what was expected
+
+## Public Utility Exports
+
+Starting from **v0.7.0**, this package exports several utilities that can be used by other packages (like `@cerios/openapi-to-zod-playwright`):
+
+### `LRUCache<K, V>`
+
+A Least Recently Used (LRU) cache implementation for efficient caching.
+
+```typescript
+import { LRUCache } from '@cerios/openapi-to-zod';
+
+const cache = new LRUCache<string, ParsedSpec>(50);
+cache.set('spec-key', parsedSpec);
+const spec = cache.get('spec-key');
+```
+
+### `toPascalCase(str: string | number): string`
+
+Converts strings to PascalCase, handling kebab-case, snake_case, and special characters.
+
+```typescript
+import { toPascalCase } from '@cerios/openapi-to-zod';
+
+toPascalCase('my-api-client');  // => 'MyApiClient'
+toPascalCase('user_name');      // => 'UserName'
+```
+
+### `escapeJSDoc(str: string): string`
+
+Escapes JSDoc comment terminators to prevent injection.
+
+```typescript
+import { escapeJSDoc } from '@cerios/openapi-to-zod';
+
+escapeJSDoc('Comment with */ terminator');  // => 'Comment with *\\/ terminator'
+```
+
+### `executeBatch<T>()` and `Generator` Interface
+
+Execute batch processing with custom generators.
+
+```typescript
+import { executeBatch, type Generator } from '@cerios/openapi-to-zod';
+
+class MyGenerator implements Generator {
+  generate(): void {
+    // Your generation logic
+  }
+}
+
+await executeBatch(
+  specs,
+  'sequential',  // or 'parallel'
+  spec => new MyGenerator(spec)
+);
+```
+
+### Config Validation Utilities
+
+Shared utilities for configuration file validation:
+
+```typescript
+import {
+  createTypeScriptLoader,
+  formatConfigValidationError,
+  type RequestResponseOptions,
+  type BaseOperationFilters
+} from '@cerios/openapi-to-zod';
+
+// Create TypeScript config loader for cosmiconfig
+const loader = createTypeScriptLoader();
+
+// Format Zod validation errors
+const errorMessage = formatConfigValidationError(
+  zodError,
+  filePath,
+  configPath,
+  ['Additional note 1', 'Additional note 2']
+);
+```
+
+These utilities are marked with `@shared` tags in the source code and are covered by comprehensive tests.
 
 ## API Reference
 

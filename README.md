@@ -83,18 +83,6 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) for ve
 npm run changeset
 ```
 
-### Version packages
-
-```bash
-npm run changeset version
-```
-
-### Publish to npm
-
-```bash
-npm run release
-```
-
 Packages are independently versioned and can be released separately.
 
 ## Requirements

@@ -93,6 +93,27 @@ export interface OpenApiPlaywrightGeneratorOptions
 	validateServiceRequest?: boolean;
 
 	/**
+	 * Header parameters to ignore during schema and service generation
+	 * Supports glob patterns for flexible matching (e.g., "X-*", "Authorization")
+	 * Use ["*"] to ignore all headers
+	 *
+	 * Matching is case-insensitive (follows HTTP header semantics)
+	 * Empty array or undefined = include all headers
+	 *
+	 * When headers are ignored:
+	 * - No Zod schemas generated for those headers
+	 * - No TypeScript types created
+	 * - Service methods won't include them in parameters
+	 * - Client methods remain unaffected (passthrough)
+	 *
+	 * @example ["Authorization"] - Ignore Authorization header
+	 * @example ["X-*"] - Ignore all headers starting with X-
+	 * @example ["*"] - Ignore all headers
+	 * @default undefined (include all headers)
+	 */
+	ignoreHeaders?: string[];
+
+	/**
 	 * Base path to prepend to all API endpoints
 	 * Useful for API versioning or common path prefixes
 	 * Note: This applies to all operations in the spec. For different base paths,
@@ -111,13 +132,6 @@ export interface OpenApiPlaywrightGeneratorOptions
 	 * @default true
 	 */
 	useOperationId?: boolean;
-
-	/**
-	 * Schema type is always "all" for Playwright generator
-	 * Both request and response schemas are required
-	 * @internal
-	 */
-	schemaType?: "all";
 }
 
 /**
@@ -127,8 +141,9 @@ export interface PlaywrightConfigFile {
 	/**
 	 * Global default options applied to all specs
 	 * Can be overridden by individual spec configurations
+	 * Note: File paths (input, output, outputClient, outputService) must be specified per-spec
 	 */
-	defaults?: Partial<Omit<OpenApiPlaywrightGeneratorOptions, "input" | "output">>;
+	defaults?: Partial<Omit<OpenApiPlaywrightGeneratorOptions, "input" | "output" | "outputClient" | "outputService">>;
 
 	/**
 	 * Array of OpenAPI specifications to process

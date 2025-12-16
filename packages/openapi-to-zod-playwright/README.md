@@ -4,13 +4,33 @@ Generate type-safe Playwright API clients from OpenAPI specifications with Zod v
 
 ## Features
 
+### Playwright-Specific Features
+
 - 🎭 **Playwright Integration**: Uses `ApiRequestContext` for API testing
-- 🔒 **Type Safety**: Full TypeScript support with Zod schemas
 - 🎯 **Two-Layer Architecture**: Thin client layer + validated service layer
-- ✅ **Automatic Validation**: Request and response validation with Zod
 - 🧪 **Testing Friendly**: Separate error methods for testing failure scenarios
 - 📝 **Status Code Validation**: Uses Playwright's `expect()` for status checks
 - 🔄 **Multiple Responses**: Separate methods per status code when needed
+- 📁 **File Splitting**: Separate files for schemas, client, and service layers
+- 🎨 **Method Naming**: Automatic method names from paths or operationIds
+- 🔍 **Status Code Filtering**: Include/exclude specific status codes (e.g., `includeStatusCodes: ["2xx"]`)
+- 🚫 **Header Filtering**: Ignore specific headers with glob patterns (e.g., `ignoreHeaders: ["Authorization"]`)
+- 🔗 **Base Path Support**: Prepend common base paths to all endpoints (e.g., `basePath: "/api/v1"`)
+- ✅ **Request Validation**: Optional Zod validation for request bodies (`validateServiceRequest`)
+- 🏷️ **Operation Filtering**: Filter by tags, paths, methods, deprecated status, and more
+
+### Core Features (from @cerios/openapi-to-zod)
+
+For complete Zod schema generation features, see the [@cerios/openapi-to-zod README](../openapi-to-zod/README.md):
+
+- ✅ **Zod v4 Compatible** with latest features
+- 📝 **TypeScript Types** from `z.infer`
+- 🔧 **Flexible Modes**: Strict, normal, or loose validation
+- 📐 **Format Support**: uuid, email, url, date, etc.
+- 🔀 **Discriminated Unions**: Automatic `z.discriminatedUnion()`
+- 🔐 **readOnly/writeOnly**: Separate request/response schemas
+- 📋 **Constraint Support**: multipleOf, additionalProperties, etc.
+- And many more schema generation features...
 
 ## Installation
 
@@ -25,7 +45,7 @@ npm install @cerios/openapi-to-zod-playwright @playwright/test zod
 ### 1. Initialize Configuration
 
 ```bash
-npx openapi-to-zod-playwright --init
+npx openapi-to-zod-playwright init
 ```
 
 This will guide you through creating a configuration file:
@@ -103,9 +123,28 @@ test('handle error response', async ({ request }) => {
 
 ## Architecture
 
-This package generates two layers:
+This package generates up to three separate files:
 
-### 1. ApiClient (Thin Passthrough Layer)
+### 1. Schemas (Always Generated)
+
+- Zod validation schemas for all request/response types
+- TypeScript type definitions via `z.infer`
+- Located in the main `output` file
+
+```typescript
+// Generated schemas
+export const userSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string()
+});
+
+export type User = z.infer<typeof userSchema>;
+```
+
+### 2. ApiClient (Optional - Thin Passthrough Layer)
+
+Generated when `outputClient` is specified:
 
 - Direct passthrough to Playwright's `ApiRequestContext`
 - No validation - allows testing invalid requests
@@ -121,9 +160,11 @@ const response = await client.postUsers({
 });
 ```
 
-### 2. ApiService (Validated Layer)
+### 3. ApiService (Optional - Validated Layer)
 
-- Validates requests with Zod schemas
+Generated when `outputService` is specified (requires `outputClient`):
+
+- Validates requests with Zod schemas (when `validateServiceRequest: true`)
 - Validates response status with Playwright `expect()`
 - Validates response bodies with Zod schemas
 - Separate methods per status code for multiple responses
@@ -160,7 +201,7 @@ Examples:
 ### Initialize a New Config File
 
 ```bash
-npx openapi-to-zod-playwright --init
+npx openapi-to-zod-playwright init
 ```
 
 Interactive prompts guide you through:
@@ -187,6 +228,9 @@ npx openapi-to-zod-playwright --version
 
 # Display help
 npx openapi-to-zod-playwright --help
+
+# Display help for init command
+npx openapi-to-zod-playwright init --help
 ```
 
 ## Configuration File
@@ -202,7 +246,8 @@ export default defineConfig({
   defaults: {
     mode: 'strict',
     includeDescriptions: true,
-    showStats: false
+    showStats: false,
+    validateServiceRequest: false, // Optional request validation
   },
   specs: [
     {
@@ -213,9 +258,16 @@ export default defineConfig({
       input: 'specs/api-v2.yaml',
       output: 'src/generated/api-v2.ts',
       outputClient: 'src/generated/api-v2-client.ts',
-      outputService: 'src/generated/api-v2-service.ts', // Automatically enables service generation
+      outputService: 'src/generated/api-v2-service.ts',
+      basePath: '/api/v2', // Prepend base path to all endpoints
       mode: 'normal',
-      prefix: 'v2'
+      prefix: 'v2',
+      ignoreHeaders: ['Authorization', 'X-*'], // Ignore specific headers
+      operationFilters: {
+        includeTags: ['public'], // Only include operations with 'public' tag
+        includeStatusCodes: ['2xx', '4xx'], // Only generate for success and client errors
+      },
+      useOperationId: true, // Use operationId from spec for method names
     }
   ],
   executionMode: 'parallel' // or 'serial'
@@ -251,36 +303,43 @@ export default defineConfig({
 
 ### Configuration Options
 
-- **`defaults`**: Default options applied to all specs
-- **`specs`**: Array of spec configurations (per-spec options override defaults)
-- **`executionMode`**: `"parallel"` (default) or `"serial"`
+#### Playwright-Specific Options
 
-Each spec supports all generator options. See the [Configuration Reference](#configuration-reference) below.
+| Option | Type | Description | Default |
+|--------|------|-------------|---------|
+| `outputClient` | `string` | Optional path for client class file | `undefined` |
+| `outputService` | `string` | Optional path for service class file (requires `outputClient`) | `undefined` |
+| `validateServiceRequest` | `boolean` | Enable Zod validation for request bodies in service methods | `false` |
+| `ignoreHeaders` | `string[]` | Header patterns to ignore (supports glob patterns like `"X-*"`, `"*"`) | `undefined` |
+| `basePath` | `string` | Base path to prepend to all endpoints (e.g., `"/api/v1"`) | `undefined` |
+| `useOperationId` | `boolean` | Use operationId from spec for method names | `true` |
+| `operationFilters` | `object` | Filter operations (see below) | `undefined` |
 
-## Migration from v1.x
+#### Operation Filters
 
-**Breaking Change:** CLI options have been removed in v2.0. You must use a configuration file.
+| Filter | Type | Description |
+|--------|------|-------------|
+| `includeTags` | `string[]` | Include only operations with these tags |
+| `excludeTags` | `string[]` | Exclude operations with these tags |
+| `includePaths` | `string[]` | Include only these paths (supports glob patterns) |
+| `excludePaths` | `string[]` | Exclude these paths (supports glob patterns) |
+| `includeMethods` | `string[]` | Include only these HTTP methods |
+| `excludeMethods` | `string[]` | Exclude these HTTP methods |
+| `includeOperationIds` | `string[]` | Include only these operationIds |
+| `excludeOperationIds` | `string[]` | Exclude these operationIds |
+| `includeDeprecated` | `boolean` | Include deprecated operations |
+| `includeStatusCodes` | `string[]` | Include only these status codes (e.g., `["2xx", "404"]`) |
+| `excludeStatusCodes` | `string[]` | Exclude these status codes (e.g., `["5xx"]`) |
 
-### Before (v1.x)
+#### Core Generator Options
 
-```bash
-openapi-to-zod-playwright -i openapi.yaml -o src/api.ts --mode strict
-```
+For schema generation options inherited from `@cerios/openapi-to-zod` (like `mode`, `includeDescriptions`, `prefix`, `suffix`, etc.), see the [@cerios/openapi-to-zod Configuration](../openapi-to-zod/README.md#configuration-options).
 
-### After (v2.0)
-
-1. Run `--init` to create a config file:
-
-```bash
-npx openapi-to-zod-playwright --init
-```
-
-2. Customize the generated config file as needed
-3. Run without options:
-
-```bash
-npx openapi-to-zod-playwright
-```
+Common inherited options:
+- `mode`: `"strict"` | `"normal"` | `"loose"` - Validation strictness
+- `includeDescriptions`: Include JSDoc comments in generated schemas
+- `showStats`: Include generation statistics in output
+- `prefix`/`suffix`: Add prefixes/suffixes to schema names
 
 ## Response Handling
 
@@ -410,6 +469,20 @@ test('send invalid data', async ({ request }) => {
 });
 ```
 
+## Requirements
+
+- Node.js >= 16
+- @playwright/test >= 1.40.0
+- Zod >= 4.0.0
+
 ## License
 
 MIT © Ronald Veth - Cerios
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support
+
+For issues and questions, please use the [GitHub issues](https://github.com/CeriosTesting/openapi-to-zod/issues) page.

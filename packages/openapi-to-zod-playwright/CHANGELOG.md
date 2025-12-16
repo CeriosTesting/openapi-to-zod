@@ -1,5 +1,16 @@
 # @cerios/openapi-to-zod-playwright
 
+## 1.0.1
+
+### Major Changes
+
+- First official release. Enjoy!
+
+### Patch Changes
+
+- Updated dependencies
+  - @cerios/openapi-to-zod@1.0.1
+
 ## 0.6.2
 
 ### Patch Changes

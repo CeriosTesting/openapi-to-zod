@@ -6,6 +6,7 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"@cerios/openapi-to-zod": ["../openapi-to-zod/src"],
+			"@cerios/openapi-to-zod/internal": ["../openapi-to-zod/src/internal.ts"],
 			"@cerios/openapi-to-zod-playwright": ["./src"]
 		},
 		"resolveJsonModule": true,

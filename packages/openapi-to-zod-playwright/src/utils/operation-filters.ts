@@ -1,13 +1,13 @@
 import type { PlaywrightOperationFilters } from "../types";
 
-// Re-export base operation filtering utilities from public API
+// Re-export base operation filtering utilities from internal API
 export {
 	createFilterStatistics,
 	type FilterStatistics,
 	formatFilterStatistics,
 	shouldIncludeOperation,
 	validateFilters,
-} from "@cerios/openapi-to-zod";
+} from "@cerios/openapi-to-zod/internal";
 
 /**
  * Extended filter statistics for Playwright (includes status code filtering)

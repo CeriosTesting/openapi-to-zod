@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, normalize } from "node:path";
+import { minimatch } from "minimatch";
 import { parse } from "yaml";
 import { ConfigurationError, FileOperationError, SchemaGenerationError, SpecValidationError } from "./errors";
 import { generateEnum } from "./generators/enum-generator";
@@ -14,6 +15,7 @@ import {
 	shouldIncludeOperation,
 	validateFilters,
 } from "./utils/operation-filters";
+import { configurePatternCache } from "./validators/string-validator";
 
 type SchemaContext = "request" | "response" | "both";
 
@@ -49,7 +51,15 @@ export class OpenApiGenerator {
 			request: options.request,
 			response: options.response,
 			operationFilters: options.operationFilters,
+			ignoreHeaders: options.ignoreHeaders,
+			cacheSize: options.cacheSize ?? 1000,
+			batchSize: options.batchSize ?? 10,
 		};
+
+		// Configure pattern cache size if specified
+		if (this.options.cacheSize) {
+			configurePatternCache(this.options.cacheSize);
+		}
 
 		// Validate input file exists
 		try {
@@ -228,6 +238,7 @@ export class OpenApiGenerator {
 		const normalizedOutput = normalize(this.options.output);
 		this.ensureDirectoryExists(normalizedOutput);
 		writeFileSync(normalizedOutput, output);
+		console.log(`  ✓ Generated ${normalizedOutput}`);
 	}
 
 	/**
@@ -769,6 +780,28 @@ export class OpenApiGenerator {
 	}
 
 	/**
+	 * Check if a header should be ignored based on filter patterns
+	 * @internal
+	 */
+	private shouldIgnoreHeader(headerName: string): boolean {
+		const ignorePatterns = this.options.ignoreHeaders;
+		if (!ignorePatterns || ignorePatterns.length === 0) {
+			return false;
+		}
+
+		if (ignorePatterns.includes("*")) {
+			return true;
+		}
+
+		const headerLower = headerName.toLowerCase();
+
+		return ignorePatterns.some((pattern: string) => {
+			const patternLower = pattern.toLowerCase();
+			return minimatch(headerLower, patternLower);
+		});
+	}
+
+	/**
 	 * Generate header parameter schemas for each operation
 	 * Header parameters are always string type (HTTP header semantics)
 	 */
@@ -796,9 +829,10 @@ export class OpenApiGenerator {
 					continue;
 				}
 
-				// Filter for header parameters only
+				// Filter for header parameters only, excluding ignored ones
 				const headerParams = operation.parameters.filter(
-					(param: any) => param && typeof param === "object" && param.in === "header"
+					(param: any) =>
+						param && typeof param === "object" && param.in === "header" && !this.shouldIgnoreHeader(param.name)
 				);
 
 				if (headerParams.length === 0) {

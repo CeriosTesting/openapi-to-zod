@@ -2,19 +2,20 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, normalize, relative } from "node:path";
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { OpenApiGenerator } from "@cerios/openapi-to-zod";
+import type { Generator } from "@cerios/openapi-to-zod/internal";
+import { LRUCache, toPascalCase } from "@cerios/openapi-to-zod/internal";
 import { parse } from "yaml";
 import { ClientGenerationError, ConfigurationError, FileOperationError, SpecValidationError } from "./errors";
 import { generateClientClass } from "./generators/client-generator";
 import { generateServiceClass } from "./generators/service-generator";
 import type { OpenApiPlaywrightGeneratorOptions } from "./types";
-import { LRUCache } from "./utils/lru-cache";
-import { toPascalCase } from "./utils/string-utils";
+import { validateIgnorePatterns } from "./utils/header-filters";
 
 /**
  * Main generator class for Playwright API clients
  * Supports file splitting: schemas (always), client (optional), service (optional, requires client)
  */
-export class OpenApiPlaywrightGenerator {
+export class OpenApiPlaywrightGenerator implements Generator {
 	private options: OpenApiPlaywrightGeneratorOptions & { schemaType: "all" };
 	private spec: OpenAPISpec | null = null;
 	private static specCache = new LRUCache<string, OpenAPISpec>(50); // Cache for parsed specs
@@ -80,8 +81,6 @@ export class OpenApiPlaywrightGenerator {
 			);
 		}
 
-		console.log(`Generating Playwright client for ${this.options.input}...`);
-
 		try {
 			const { output, outputClient, outputService } = this.options;
 
@@ -99,16 +98,14 @@ export class OpenApiPlaywrightGenerator {
 			const schemasString = this.generateSchemasString();
 			this.ensureDirectoryExists(normalizedOutput);
 			writeFileSync(normalizedOutput, schemasString, "utf-8");
-
-			let generatedComponents = "schemas";
+			console.log(`  ✓ Generated ${normalizedOutput}`);
 
 			// Conditionally generate client
 			if (normalizedClient) {
 				const clientOutput = this.generateClientFile();
 				this.ensureDirectoryExists(normalizedClient);
 				writeFileSync(normalizedClient, clientOutput, "utf-8");
-				generatedComponents += " + client";
-				console.log(`✓ Generated ${normalizedClient}`);
+				console.log(`  ✓ Generated ${normalizedClient}`);
 			}
 
 			// Conditionally generate service (validation already ensures outputClient exists)
@@ -123,11 +120,8 @@ export class OpenApiPlaywrightGenerator {
 				const serviceOutput = this.generateServiceFile(normalizedService, normalizedOutput, normalizedClient);
 				this.ensureDirectoryExists(normalizedService);
 				writeFileSync(normalizedService, serviceOutput, "utf-8");
-				generatedComponents += " + service";
-				console.log(`✓ Generated ${normalizedService}`);
+				console.log(`  ✓ Generated ${normalizedService}`);
 			}
-
-			console.log(`✓ Generated ${normalizedOutput} (${generatedComponents})`);
 		} catch (error) {
 			throw new ClientGenerationError(
 				`Failed to generate Playwright client: ${error instanceof Error ? error.message : String(error)}`,
@@ -144,6 +138,11 @@ export class OpenApiPlaywrightGenerator {
 		// Ensure spec is parsed
 		if (!this.spec) {
 			this.spec = this.parseSpec();
+		}
+
+		// Validate ignoreHeaders patterns and warn about issues
+		if (this.options.ignoreHeaders) {
+			validateIgnorePatterns(this.options.ignoreHeaders, this.spec);
 		}
 
 		const schemaGenerator = new OpenApiGenerator(this.options);
@@ -189,7 +188,8 @@ export class OpenApiPlaywrightGenerator {
 			serviceClassName,
 			clientClassName,
 			this.options.useOperationId ?? false,
-			this.options.operationFilters
+			this.options.operationFilters,
+			this.options.ignoreHeaders
 		);
 	}
 
@@ -213,29 +213,38 @@ export class OpenApiPlaywrightGenerator {
 
 			// Try parsing as YAML first (works for both YAML and JSON)
 			let spec: OpenAPISpec;
+			let yamlError: Error | null = null;
+			let jsonError: Error | null = null;
+
 			try {
 				spec = parse(content) as OpenAPISpec;
-			} catch (yamlError) {
+			} catch (error) {
+				yamlError = error instanceof Error ? error : new Error(String(error));
+
 				// If YAML parsing fails, try JSON
 				try {
 					spec = JSON.parse(content) as OpenAPISpec;
-				} catch {
-					const errorMessage = [
+				} catch (error) {
+					jsonError = error instanceof Error ? error : new Error(String(error));
+
+					// Both YAML and JSON parsing failed - provide detailed error
+					const errorLines = [
 						`Failed to parse OpenAPI specification from: ${this.options.input}`,
 						`File size: ${errorContext.fileSize}`,
-						`Error: ${yamlError instanceof Error ? yamlError.message : String(yamlError)}`,
+						"",
+						"YAML parsing error:",
+						`  ${yamlError.message}`,
+						"",
+						"JSON parsing error:",
+						`  ${jsonError.message}`,
 						"",
 						"Please ensure:",
 						"  - The file exists and is readable",
 						"  - The file contains valid YAML or JSON syntax",
 						"  - The file is a valid OpenAPI 3.x specification",
-					].join("\n");
+					];
 
-					throw new SpecValidationError(
-						errorMessage,
-						this.options.input,
-						yamlError instanceof Error ? yamlError : undefined
-					);
+					throw new SpecValidationError(errorLines.join("\n"), this.options.input, yamlError);
 				}
 			}
 

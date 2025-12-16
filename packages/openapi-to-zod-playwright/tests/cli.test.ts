@@ -29,7 +29,7 @@ describe("CLI - Playwright", () => {
 	it("should display help", () => {
 		const output = execSync(`node ${CLI_PATH} --help`, { encoding: "utf-8" });
 		expect(output).toContain("Generate type-safe Playwright API clients");
-		expect(output).toContain("--init");
+		expect(output).toContain("init");
 		expect(output).toContain("--config");
 	});
 
