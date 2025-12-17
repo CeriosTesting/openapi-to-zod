@@ -1,9 +1,9 @@
-import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+import { TestUtils } from "./utils/test-utils";
 
 describe("Ignore Headers Feature", () => {
-	const fixtureFile = resolve(__dirname, "fixtures/headers-api.yaml");
+	const fixtureFile = TestUtils.getFixturePath("headers-api.yaml");
 
 	describe("Schema Generation", () => {
 		it("should generate header parameter schemas when ignoreHeaders is not set", () => {
@@ -295,7 +295,7 @@ describe("Ignore Headers Feature", () => {
 
 		it("should warn when ignoreHeaders is set but no headers exist in spec", () => {
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			const simpleFixture = resolve(__dirname, "fixtures/simple-api.yaml");
+			const simpleFixture = TestUtils.getFixturePath("simple-api.yaml");
 
 			const generator = new OpenApiPlaywrightGenerator({
 				input: simpleFixture,

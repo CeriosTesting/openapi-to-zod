@@ -1,80 +1,45 @@
+import { minimatch } from "minimatch";
+
 /**
  * Pattern matching utilities for prefix stripping
  *
  * Shared utility used by core and playwright packages
  *
- * Supports both literal string matching and regex patterns for stripping
+ * Supports both literal string matching and glob patterns for stripping
  * prefixes from strings (paths, schema names, etc.)
  */
 
 /**
- * Detects if a string pattern should be treated as a regex
- * Checks for common regex indicators:
- * - Starts with ^ (anchor) or ends with $ (anchor)
- * - Contains \d, \w, \s (character classes)
- * - Contains .* or .+ (quantifiers)
- * - Contains [], (), {} (groups/classes)
+ * Validates if a glob pattern is syntactically valid
+ * @param pattern - The glob pattern to validate
+ * @returns true if valid, false otherwise
  */
-function isRegexPattern(pattern: string): boolean {
-	// Check for regex anchors
-	if (pattern.startsWith("^") || pattern.endsWith("$")) {
+function isValidGlobPattern(pattern: string): boolean {
+	try {
+		// Try to create a minimatch instance to validate the pattern
+		new minimatch.Minimatch(pattern);
 		return true;
+	} catch {
+		return false;
 	}
-
-	// Check for escaped character classes
-	if (/\\[dDwWsS]/.test(pattern)) {
-		return true;
-	}
-
-	// Check for quantifiers and wildcards
-	if (/\.\*|\.\+/.test(pattern)) {
-		return true;
-	}
-
-	// Check for character classes and groups
-	if (/[[\]()]/.test(pattern)) {
-		return true;
-	}
-
-	// Check for quantifiers in regex context
-	if (/[^/][+?*]\{/.test(pattern)) {
-		return true;
-	}
-
-	return false;
 }
 
 /**
- * Converts a string pattern to a RegExp if it looks like a regex
- * Otherwise treats it as a literal string prefix
- * @param pattern - The pattern (string or RegExp)
- * @returns A RegExp object or null for literal string matching
+ * Checks if a pattern contains glob special characters
+ * @param pattern - The pattern to check
+ * @returns true if pattern contains glob wildcards
  */
-function patternToRegex(pattern: string | RegExp): RegExp | null {
-	if (pattern instanceof RegExp) {
-		return pattern;
-	}
-
-	if (isRegexPattern(pattern)) {
-		try {
-			return new RegExp(pattern);
-		} catch (error) {
-			console.warn(`⚠️  Invalid regex pattern "${pattern}": ${error instanceof Error ? error.message : String(error)}`);
-			return null;
-		}
-	}
-
-	// Literal string - return null to indicate literal matching
-	return null;
+function isGlobPattern(pattern: string): boolean {
+	return /[*?[\]{}!]/.test(pattern);
 }
 
 /**
- * @shared Strips a prefix from a string using either literal string matching or regex
+ * @shared Strips a prefix from a string using either literal string matching or glob patterns
  * @since 1.1.0
  * Shared utility used by core and playwright packages
  *
  * @param input - The full string to strip from
- * @param pattern - The pattern to strip (string or RegExp)
+ * @param pattern - The glob pattern to strip
  * @param ensureLeadingChar - Optional character to ensure at start (e.g., "/" for paths)
  * @returns The string with prefix removed, or original string if no match
  *
@@ -84,23 +49,40 @@ function patternToRegex(pattern: string | RegExp): RegExp | null {
  * stripPrefix("Company.Models.User", "Company.Models.") // => "User"
  *
  * @example
- * // Regex pattern matching
- * stripPrefix("/api/v1.0/users", "^/api/v\\d+\\.\\d+") // => "/users"
- * stripPrefix("api_v2_UserSchema", "^api_v\\d+_") // => "UserSchema"
+ * // Glob pattern matching
+ * stripPrefix("/api/v1.0/users", "/api/v*") // => matches and strips
+ * stripPrefix("Company.Models.User", "*.Models.") // => "User"
+ * stripPrefix("api_v2_UserSchema", "api_v[0-9]_") // => "UserSchema"
  */
-export function stripPrefix(input: string, pattern: string | RegExp | undefined, ensureLeadingChar?: string): string {
+export function stripPrefix(input: string, pattern: string | undefined, ensureLeadingChar?: string): string {
 	if (!pattern) {
 		return input;
 	}
 
-	const regex = patternToRegex(pattern);
+	// Validate glob pattern if it contains special characters
+	if (isGlobPattern(pattern) && !isValidGlobPattern(pattern)) {
+		console.warn(`⚠️  Invalid glob pattern "${pattern}": Pattern is malformed`);
+		return input;
+	}
 
-	if (regex) {
-		// Regex matching
-		const match = input.match(regex);
-		if (match && match.index === 0) {
-			// Remove the matched prefix
-			const stripped = input.substring(match[0].length);
+	// Check if pattern contains glob wildcards
+	if (isGlobPattern(pattern)) {
+		// Use glob matching to find the prefix
+		// We need to find what part of the input matches the pattern as a prefix
+		// Try matching progressively longer prefixes to find the longest match
+		let longestMatch = -1;
+
+		for (let i = 1; i <= input.length; i++) {
+			const testPrefix = input.substring(0, i);
+			if (minimatch(testPrefix, pattern)) {
+				// Found a match - keep looking for a longer match
+				longestMatch = i;
+			}
+		}
+
+		if (longestMatch > 0) {
+			// Strip the longest matching prefix
+			const stripped = input.substring(longestMatch);
 
 			// Ensure result starts with specified character if provided
 			if (ensureLeadingChar) {
@@ -112,28 +94,28 @@ export function stripPrefix(input: string, pattern: string | RegExp | undefined,
 				}
 			}
 
-			return stripped;
+			return stripped === "" && !ensureLeadingChar ? input : stripped;
 		}
-	} else {
-		// Literal string matching
-		const stringPattern = pattern as string;
 
-		// For exact matching, use the pattern as-is
-		if (input.startsWith(stringPattern)) {
-			const stripped = input.substring(stringPattern.length);
+		// No match found
+		return input;
+	}
 
-			// Ensure result starts with specified character if provided
-			if (ensureLeadingChar) {
-				if (stripped === "") {
-					return ensureLeadingChar;
-				}
-				if (!stripped.startsWith(ensureLeadingChar)) {
-					return `${ensureLeadingChar}${stripped}`;
-				}
+	// Literal string matching
+	if (input.startsWith(pattern)) {
+		const stripped = input.substring(pattern.length);
+
+		// Ensure result starts with specified character if provided
+		if (ensureLeadingChar) {
+			if (stripped === "") {
+				return ensureLeadingChar;
 			}
-
-			return stripped;
+			if (!stripped.startsWith(ensureLeadingChar)) {
+				return `${ensureLeadingChar}${stripped}`;
+			}
 		}
+
+		return stripped;
 	}
 
 	// No match - return original input
@@ -146,23 +128,22 @@ export function stripPrefix(input: string, pattern: string | RegExp | undefined,
  * Shared utility used by playwright package for path manipulation
  *
  * @param path - The full path to strip from
- * @param pattern - The pattern to strip (string or RegExp)
+ * @param pattern - The glob pattern to strip
  * @returns The path with prefix removed, or original path if no match
  *
  * @example
  * stripPathPrefix("/api/v1/users", "/api/v1") // => "/users"
- * stripPathPrefix("/api/v2/posts", "^/api/v\\d+") // => "/posts"
+ * stripPathPrefix("/api/v2/posts", "/api/v*") // => "/posts"
+ * stripPathPrefix("/api/v1.0/items", "/api/v[0-9].*") // => "/items"
  */
-export function stripPathPrefix(path: string, pattern: string | RegExp | undefined): string {
+export function stripPathPrefix(path: string, pattern: string | undefined): string {
 	if (!pattern) {
 		return path;
 	}
 
-	const regex = patternToRegex(pattern);
-
-	if (!regex) {
-		// For literal string matching with paths, normalize the pattern
-		let normalizedPattern = (pattern as string).trim();
+	// For literal string matching with paths, normalize the pattern
+	if (!isGlobPattern(pattern)) {
+		let normalizedPattern = pattern.trim();
 		if (!normalizedPattern.startsWith("/")) {
 			normalizedPattern = `/${normalizedPattern}`;
 		}
@@ -173,5 +154,6 @@ export function stripPathPrefix(path: string, pattern: string | RegExp | undefin
 		return stripPrefix(path, normalizedPattern, "/");
 	}
 
-	return stripPrefix(path, regex, "/");
+	// For glob patterns, use as-is
+	return stripPrefix(path, pattern, "/");
 }

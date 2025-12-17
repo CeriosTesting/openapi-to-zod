@@ -6,7 +6,7 @@ describe("Operation Filtering", () => {
 	const fixtureFile = TestUtils.getFixturePath("filtering-test.yaml");
 
 	describe("Tag Filtering", () => {
-		it("should include only operations with specified tags", () => {
+		describe("should include only operations with specified tags", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				useOperationId: true,
@@ -15,52 +15,118 @@ describe("Operation Filtering", () => {
 				},
 			});
 
-			const clientOutput = generator.generateClientString();
+			it("client", () => {
+				const clientOutput = generator.generateClientString();
 
-			// Should include user operations
-			expect(clientOutput).toContain("getUsers");
-			expect(clientOutput).toContain("createUser");
+				// Should include user operations
+				expect(clientOutput).toContain("getUsers");
+				expect(clientOutput).toContain("createUser");
 
-			// Should NOT include product or admin operations
-			expect(clientOutput).not.toContain("getProducts");
-			expect(clientOutput).not.toContain("getAdminSettings");
+				// Should NOT include product or admin operations
+				expect(clientOutput).not.toContain("getProducts");
+				expect(clientOutput).not.toContain("getAdminSettings");
+			});
+
+			it("service", () => {
+				const clientOutput = generator.generateServiceString();
+
+				// Should include user operations
+				expect(clientOutput).toContain("getUsers");
+				expect(clientOutput).toContain("createUser");
+
+				// Should NOT include product or admin operations
+				expect(clientOutput).not.toContain("getProducts");
+				expect(clientOutput).not.toContain("getAdminSettings");
+			});
+
+			it("schema and type", () => {
+				const clientOutput = generator.generateSchemasString();
+
+				// Should include user types and schemas
+				expect(clientOutput).toContain("User");
+				expect(clientOutput).toContain("userSchema");
+
+				// Should NOT include product or admin operations
+				expect(clientOutput).not.toContain("Product");
+				expect(clientOutput).not.toContain("productSchema");
+			});
 		});
 
-		it("should exclude operations with specified tags", () => {
+		describe("should exclude operations with specified tags", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				output: "output.ts",
 				useOperationId: true,
 				operationFilters: {
 					excludeTags: ["internal", "admin"],
 				},
 			});
 
-			const clientOutput = generator.generateClientString();
+			it("client", () => {
+				const clientOutput = generator.generateClientString();
 
-			// Should include user and product operations
-			expect(clientOutput).toContain("getUsers");
-			expect(clientOutput).toContain("getProducts");
+				// Should include user and product operations
+				expect(clientOutput).toContain("getUsers");
+				expect(clientOutput).toContain("getProducts");
 
-			// Should NOT include internal/admin operations
-			expect(clientOutput).not.toContain("getInternalMetrics");
-			expect(clientOutput).not.toContain("getAdminSettings");
+				// Should NOT include internal/admin operations
+				expect(clientOutput).not.toContain("getInternalMetrics");
+				expect(clientOutput).not.toContain("getAdminSettings");
+			});
+
+			it("service", () => {
+				const serviceOutput = generator.generateServiceString();
+
+				// Should include user and product operations
+				expect(serviceOutput).toContain("getUsers");
+				expect(serviceOutput).toContain("getProducts");
+
+				// Should NOT include internal/admin operations
+				expect(serviceOutput).not.toContain("getInternalMetrics");
+				expect(serviceOutput).not.toContain("getAdminSettings");
+			});
+
+			it("schema and type", () => {
+				const schemasOutput = generator.generateSchemasString();
+
+				// Should include user and product types and schemas
+				expect(schemasOutput).toContain("User");
+				expect(schemasOutput).toContain("Product");
+
+				// Should NOT include internal/admin types
+				expect(schemasOutput).not.toContain("InternalMetrics");
+				expect(schemasOutput).not.toContain("AdminSettings");
+			});
 		});
 
-		it("should handle multiple tag matching", () => {
+		describe("should handle multiple tag matching", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				output: "output.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["users", "products"],
 				},
 			});
 
-			const clientOutput = generator.generateClientString();
+			it("client", () => {
+				const clientOutput = generator.generateClientString();
 
-			expect(clientOutput).toContain("getUsers");
-			expect(clientOutput).toContain("getProducts");
+				expect(clientOutput).toContain("getUsers");
+				expect(clientOutput).toContain("getProducts");
+			});
+
+			it("service", () => {
+				const serviceOutput = generator.generateServiceString();
+
+				expect(serviceOutput).toContain("getUsers");
+				expect(serviceOutput).toContain("getProducts");
+			});
+
+			it("schema and type", () => {
+				const schemasOutput = generator.generateSchemasString();
+
+				expect(schemasOutput).toContain("User");
+				expect(schemasOutput).toContain("Product");
+			});
 		});
 	});
 

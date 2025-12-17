@@ -158,6 +158,10 @@ export class OpenApiGenerator {
 
 		// Generate schemas and track dependencies
 		for (const [name, schema] of Object.entries(this.spec.components.schemas)) {
+			// Skip schemas not referenced by filtered operations when operation filters are active
+			if (this.options.operationFilters && this.schemaUsageMap.size > 0 && !this.schemaUsageMap.has(name)) {
+				continue;
+			}
 			this.generateComponentSchema(name, schema);
 		}
 

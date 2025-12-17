@@ -1,11 +1,22 @@
-import { existsSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { existsSync, unlinkSync } from "node:fs";
+import { afterAll, describe, expect, it } from "vitest";
 import { executeBatch, getBatchExitCode } from "../src/batch-executor";
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
 
 describe("Batch Execution", () => {
+	const outputFiles: string[] = [];
+
+	afterAll(() => {
+		// Clean up all generated output files
+		for (const file of outputFiles) {
+			if (existsSync(file)) {
+				unlinkSync(file);
+			}
+		}
+		outputFiles.length = 0;
+	});
 	describe("Parallel Execution", () => {
 		it("should process multiple specs in parallel", async () => {
 			const specs: (OpenApiGeneratorOptions & { output: string })[] = [
@@ -18,6 +29,8 @@ describe("Batch Execution", () => {
 					output: TestUtils.getOutputPath("batch-parallel-composition.ts"),
 				},
 			];
+
+			outputFiles.push(...specs.map(s => s.output));
 
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 
@@ -39,6 +52,8 @@ describe("Batch Execution", () => {
 					output: TestUtils.getOutputPath("batch-parallel-valid.ts"),
 				},
 			];
+
+			outputFiles.push(...specs.map(s => s.output));
 
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(1);
@@ -64,6 +79,8 @@ describe("Batch Execution", () => {
 				},
 			];
 
+			outputFiles.push(...specs.map(s => s.output));
+
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(1);
 			expect(summary.failed).toBe(2);
@@ -84,6 +101,8 @@ describe("Batch Execution", () => {
 				},
 			];
 
+			outputFiles.push(...specs.map(s => s.output));
+
 			const summary = await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(2);
 			expect(summary.failed).toBe(0);
@@ -102,6 +121,8 @@ describe("Batch Execution", () => {
 					output: TestUtils.getOutputPath("batch-sequential-valid.ts"),
 				},
 			];
+
+			outputFiles.push(...specs.map(s => s.output).filter((o): o is string => o !== undefined));
 
 			const summary = await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.results[0].success).toBe(false);
@@ -125,6 +146,8 @@ describe("Batch Execution", () => {
 				},
 			];
 
+			outputFiles.push(...specs.map(s => s.output).filter((o): o is string => o !== undefined));
+
 			const summary = await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.results[0].success).toBe(true);
 			expect(summary.results[1].success).toBe(false);
@@ -140,6 +163,8 @@ describe("Batch Execution", () => {
 					output: TestUtils.getOutputPath("batch-exit-success.ts"),
 				},
 			];
+
+			outputFiles.push(...specs.map(s => s.output).filter((o): o is string => o !== undefined));
 
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(getBatchExitCode(summary)).toBe(0);
@@ -157,6 +182,8 @@ describe("Batch Execution", () => {
 				},
 			];
 
+			outputFiles.push(...specs.map(s => s.output).filter((o): o is string => o !== undefined));
+
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(getBatchExitCode(summary)).toBe(1);
 		});
@@ -170,6 +197,8 @@ describe("Batch Execution", () => {
 					output: TestUtils.getOutputPath("batch-error-report.ts"),
 				},
 			];
+
+			outputFiles.push(...specs.map(s => s.output).filter((o): o is string => o !== undefined));
 
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.failed).toBe(1);
@@ -190,6 +219,8 @@ describe("Batch Execution", () => {
 				input: TestUtils.getFixturePath("simple.yaml"),
 				output: TestUtils.getOutputPath(`batch-large-${i}.ts`),
 			}));
+
+			outputFiles.push(...specs.map(s => s.output).filter((o): o is string => o !== undefined));
 
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 			expect(summary.successful).toBe(10);

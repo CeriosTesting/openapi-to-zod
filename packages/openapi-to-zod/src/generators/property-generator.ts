@@ -19,7 +19,7 @@ export interface PropertyGeneratorContext {
 	includeDescriptions: boolean;
 	useDescribe: boolean;
 	namingOptions: NamingOptions;
-	stripSchemaPrefix?: string | RegExp;
+	stripSchemaPrefix?: string;
 }
 
 /**

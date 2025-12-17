@@ -187,7 +187,7 @@ Examples:
 | `schemaType` | `"all"` \| `"request"` \| `"response"` | Schema filtering |
 | `prefix` | `string` | Prefix for schema names |
 | `suffix` | `string` | Suffix for schema names |
-| `stripSchemaPrefix` | `string \| RegExp` | Strip prefix from schema names before generating (e.g., `"Company.Models."` or `/^[A-Z]+\./`) |
+| `stripSchemaPrefix` | `string` | Strip prefix from schema names before generating using glob patterns (e.g., `"Company.Models."` or `"*.Models."`) |
 | `showStats` | `boolean` | Include generation statistics |
 | `request` | `object` | Request-specific options (mode, includeDescriptions, useDescribe) |
 | `response` | `object` | Response-specific options (mode, includeDescriptions, useDescribe) |
@@ -684,39 +684,39 @@ export default defineConfig({
 });
 ```
 
-#### Regex Patterns
+#### Glob Patterns
 
-Use regex patterns to strip dynamic prefixes:
+Use glob patterns to strip dynamic prefixes:
 
 ```typescript
 export default defineConfig({
   specs: [{
     input: 'openapi.yaml',
     output: 'schemas.ts',
-    // Strip any namespace prefix ending with a dot
-    stripSchemaPrefix: '^[A-Z][a-z]+\\.'
+    // Strip any namespace prefix with wildcard
+    stripSchemaPrefix: '*.Models.'
   }]
 });
 ```
 
-**Regex Auto-Detection:**
+**Glob Pattern Syntax:**
 
-Regex patterns are auto-detected if they contain: `^`, `$`, `\\d`, `\\w`, `\\s`, `.*`, `.+`, `[]`, `()`
-
-```typescript
-// These are all treated as regex patterns:
-stripSchemaPrefix: '^Company\\.'       // Starts with ^
-stripSchemaPrefix: '[A-Z]+\\.'         // Contains []
-stripSchemaPrefix: '.*\\.Models\\.'    // Contains .*
-
-// This is a literal string:
-stripSchemaPrefix: 'Company.Models.'   // No regex markers
-```
-
-For TypeScript configs, you can also use `RegExp` objects:
+Glob patterns support powerful matching using [minimatch](https://github.com/isaacs/minimatch):
+- `*` matches any characters within a single segment (stops at `.`)
+- `**` matches any characters across multiple segments (crosses `.` boundaries)
+- `?` matches a single character
+- `[abc]` matches any character in the set
+- `{a,b}` matches any of the alternatives
+- `!(pattern)` matches anything except the pattern
 
 ```typescript
-stripSchemaPrefix: /^[A-Z][a-z]+\./
+// Examples of glob patterns:
+stripSchemaPrefix: '*.Models.'                      // Matches Company.Models., App.Models.
+stripSchemaPrefix: '**.Models.'                     // Matches any depth: Company.Api.Models., App.V2.Models.
+stripSchemaPrefix: 'Company.{Models,Services}.'     // Matches Company.Models. or Company.Services.
+stripSchemaPrefix: 'api_v[0-9]_'                   // Matches api_v1_, api_v2_, etc.
+stripSchemaPrefix: 'v*.*.'                          // Matches v1.0., v2.1., etc.
+stripSchemaPrefix: '!(Internal)*.'                  // Matches any prefix except those starting with Internal
 ```
 
 #### Common Patterns
@@ -730,22 +730,42 @@ stripSchemaPrefix: /^[A-Z][a-z]+\./
 // Company.Models.Post → Post
 ```
 
-**Pattern 2: Multiple Namespaces**
+**Pattern 2: Multiple Namespaces with Wildcard**
 ```typescript
 {
-  stripSchemaPrefix: '^[A-Za-z]+\\.Models\\.'
+  stripSchemaPrefix: '*.Models.'
 }
 // MyApp.Models.User → User
 // OtherApp.Models.User → User
+// Company.Models.Post → Post
 ```
 
-**Pattern 3: Version Prefixes**
+**Pattern 3: Multiple Namespace Types**
 ```typescript
 {
-  stripSchemaPrefix: '^v\\d+\\.'
+  stripSchemaPrefix: '*.{Models,Services}.'
+}
+// App.Models.User → User
+// App.Services.UserService → UserService
+```
+
+**Pattern 4: Version Prefixes with Character Class**
+```typescript
+{
+  stripSchemaPrefix: 'v[0-9].'
 }
 // v1.User → User
 // v2.Product → Product
+```
+
+**Pattern 5: Versioned Prefixes with Wildcards**
+```typescript
+{
+  stripSchemaPrefix: 'api_v*_'
+}
+// api_v1_User → User
+// api_v2_Product → Product
+// api_v10_Comment → Comment
 ```
 
 #### Interaction with prefix/suffix Options

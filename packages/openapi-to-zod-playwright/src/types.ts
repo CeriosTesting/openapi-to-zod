@@ -127,11 +127,17 @@ export interface OpenApiPlaywrightGeneratorOptions
 	 * Strip a common prefix from all paths before processing
 	 * Useful when OpenAPI spec has redundant path prefixes that you want to ignore
 	 *
-	 * Supports both literal strings and regex patterns:
+	 * Supports both literal strings and glob patterns:
 	 * - Literal string: "/api/v1" (must match exactly)
-	 * - Regex pattern: "^/api/v\\d+" (auto-detected or use RegExp for TypeScript configs)
+	 * - Glob pattern: "/api/v*" (uses minimatch for pattern matching)
 	 *
-	 * Regex auto-detection checks for: ^, $, \\d, \\w, \\s, .*, .+, [], ()
+	 * Glob pattern syntax:
+	 * - * matches any characters within a single path segment (stops at /)
+	 * - ** matches any characters across multiple path segments (crosses / boundaries)
+	 * - ? matches a single character
+	 * - [abc] matches any character in the set
+	 * - {a,b} matches any of the alternatives
+	 * - !(pattern) matches anything except the pattern
 	 *
 	 * This affects:
 	 * - Method name generation (shorter, cleaner names)
@@ -148,13 +154,18 @@ export interface OpenApiPlaywrightGeneratorOptions
 	 * // Then use basePath: "/api/v1.0" to add it back for HTTP calls
 	 *
 	 * @example
-	 * // Strip any versioned prefix
-	 * // stripPathPrefix: "^/api/v\\d+\\.\\d+"
+	 * // Strip any versioned prefix using glob pattern
+	 * // stripPathPrefix: "/api/v*"
+	 * // Matches: /api/v1/, /api/v2/, /api/v10/, etc.
+	 *
+	 * @example
+	 * // Strip versioned prefix with dots
+	 * // stripPathPrefix: "/api/v[0-9].*"
 	 * // Matches: /api/v1.0/, /api/v2.5/, etc.
 	 *
 	 * @default undefined (no stripping)
 	 */
-	stripPathPrefix?: string | RegExp;
+	stripPathPrefix?: string;
 
 	/**
 	 * Whether to use operationId from OpenAPI spec for method names

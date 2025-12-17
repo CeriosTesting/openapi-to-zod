@@ -18,10 +18,9 @@ describe("Operation Filtering", () => {
 
 			const output = generator.generateString();
 
-			// Component schemas are still generated (they can be shared)
-			// But stats should show filtered operations
+			// Only schemas referenced by filtered operations are generated
 			expect(output).toContain("userSchema");
-			expect(output).toContain("productSchema"); // Still generated as it's in components
+			expect(output).not.toContain("productSchema"); // Not generated as it's only used by filtered-out operations
 
 			// Check that statistics show filtering
 			expect(output).toContain("Total operations:");

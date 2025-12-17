@@ -13,9 +13,10 @@ export function escapeDescription(str: string): string {
 
 /**
  * Escape regex pattern for use in code
+ * Only escapes forward slashes which would terminate the regex literal
  */
 export function escapePattern(str: string): string {
-	return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+	return str.replace(/\//g, "\\/");
 }
 
 /**

@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { existsSync, unlinkSync } from "node:fs";
+import { afterAll, describe, expect, it } from "vitest";
 import { executeBatch } from "../src/batch-executor";
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
@@ -8,12 +9,28 @@ import { TestUtils } from "./utils/test-utils";
  * Tests for memory management in batch executor
  */
 describe("Memory Management", () => {
+	const outputFiles: string[] = [];
+
+	afterAll(() => {
+		// Clean up all generated output files
+		for (const file of outputFiles) {
+			if (existsSync(file)) {
+				unlinkSync(file);
+			}
+		}
+		outputFiles.length = 0;
+	});
+
 	describe("Batch Executor Cleanup", () => {
 		it("should clean up memory after large batch execution", async () => {
-			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 15 }, (_, i) => ({
-				input: TestUtils.getFixturePath("simple.yaml"),
-				output: TestUtils.getOutputPath(`memory-test-${i}.ts`),
-			}));
+			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 15 }, (_, i) => {
+				const outputPath = TestUtils.getOutputPath(`memory-test-${i}.ts`);
+				outputFiles.push(outputPath);
+				return {
+					input: TestUtils.getFixturePath("simple.yaml"),
+					output: outputPath,
+				};
+			});
 
 			const memBefore = process.memoryUsage().heapUsed;
 
@@ -34,10 +51,14 @@ describe("Memory Management", () => {
 		}, 30000);
 
 		it("should handle small batches without triggering cleanup", async () => {
-			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 5 }, (_, i) => ({
-				input: TestUtils.getFixturePath("simple.yaml"),
-				output: TestUtils.getOutputPath(`small-batch-${i}.ts`),
-			}));
+			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 5 }, (_, i) => {
+				const outputPath = TestUtils.getOutputPath(`small-batch-${i}.ts`);
+				outputFiles.push(outputPath);
+				return {
+					input: TestUtils.getFixturePath("simple.yaml"),
+					output: outputPath,
+				};
+			});
 
 			const summary = await executeBatch(specs, "parallel", spec => new OpenApiGenerator(spec), 10);
 
@@ -46,10 +67,14 @@ describe("Memory Management", () => {
 		});
 
 		it("should handle very large batches efficiently", async () => {
-			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 25 }, (_, i) => ({
-				input: TestUtils.getFixturePath("simple.yaml"),
-				output: TestUtils.getOutputPath(`large-batch-${i}.ts`),
-			}));
+			const specs: OpenApiGeneratorOptions[] = Array.from({ length: 25 }, (_, i) => {
+				const outputPath = TestUtils.getOutputPath(`large-batch-${i}.ts`);
+				outputFiles.push(outputPath);
+				return {
+					input: TestUtils.getFixturePath("simple.yaml"),
+					output: outputPath,
+				};
+			});
 
 			const memBefore = process.memoryUsage().heapUsed;
 			const startTime = Date.now();
@@ -74,10 +99,14 @@ describe("Memory Management", () => {
 
 			// Run 10 small batches
 			for (let batch = 0; batch < 10; batch++) {
-				const specs: OpenApiGeneratorOptions[] = Array.from({ length: 3 }, (_, i) => ({
-					input: TestUtils.getFixturePath("simple.yaml"),
-					output: TestUtils.getOutputPath(`repeat-batch-${batch}-${i}.ts`),
-				}));
+				const specs: OpenApiGeneratorOptions[] = Array.from({ length: 3 }, (_, i) => {
+					const outputPath = TestUtils.getOutputPath(`repeat-batch-${batch}-${i}.ts`);
+					outputFiles.push(outputPath);
+					return {
+						input: TestUtils.getFixturePath("simple.yaml"),
+						output: outputPath,
+					};
+				});
 
 				await executeBatch(specs, "sequential", spec => new OpenApiGenerator(spec), 10);
 			}

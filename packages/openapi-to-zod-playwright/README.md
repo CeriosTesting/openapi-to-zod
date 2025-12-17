@@ -244,17 +244,17 @@ getPosts()    // GET /posts (shown in JSDoc)
 // GET {baseURL}/api/v1.0/posts
 ```
 
-### Regex Patterns
+### Glob Patterns
 
-Use regex patterns to strip dynamic prefixes (e.g., version numbers):
+Use glob patterns to strip dynamic prefixes (e.g., version numbers):
 
 ```typescript
 export default defineConfig({
   specs: [{
     input: 'openapi.yaml',
     output: 'client.ts',
-    // Strip any versioned API prefix
-    stripPathPrefix: '^/api/v\\d+\\.\\d+'
+    // Strip any versioned API prefix using wildcards
+    stripPathPrefix: '/api/v*'
   }]
 });
 ```
@@ -264,24 +264,24 @@ export default defineConfig({
 - `/api/v2.5/posts` → `/posts`
 - `/api/v10.3/products` → `/products`
 
-**Regex Auto-Detection:**
+**Glob Pattern Syntax:**
 
-Regex patterns are auto-detected if they contain: `^`, `$`, `\d`, `\w`, `\s`, `.*`, `.+`, `[]`, `()`
-
-```typescript
-// These are all treated as regex patterns:
-stripPathPrefix: '^/api/v\\d+'      // Starts with ^
-stripPathPrefix: '/api/v[0-9]+'     // Contains []
-stripPathPrefix: '/api/.*/v\\d+'   // Contains .*
-
-// This is a literal string:
-stripPathPrefix: '/api/v1'          // No regex markers
-```
-
-For TypeScript configs, you can also use `RegExp` objects:
+Glob patterns support powerful matching using [minimatch](https://github.com/isaacs/minimatch):
+- `*` matches any characters within a single path segment (stops at `/`)
+- `**` matches any characters across multiple path segments (crosses `/` boundaries)
+- `?` matches a single character
+- `[abc]` matches any character in the set
+- `{a,b}` matches any of the alternatives
+- `!(pattern)` matches anything except the pattern
 
 ```typescript
-stripPathPrefix: /^\/api\/v\d+\.\d+/
+// Examples of glob patterns:
+stripPathPrefix: '/api/v*'                          // Matches /api/v1, /api/v2, /api/v10
+stripPathPrefix: '/api/**/v1'                       // Matches /api/v1, /api/internal/v1, /api/public/v1
+stripPathPrefix: '/api/v*.*'                        // Matches /api/v1.0, /api/v2.5
+stripPathPrefix: '/api/v[0-9]'                      // Matches /api/v1, /api/v2
+stripPathPrefix: '/api/{v1,v2}'                     // Matches /api/v1 or /api/v2
+stripPathPrefix: '/!(internal)/**'                  // Matches any path except those starting with /internal/
 ```
 
 ### Normalization
@@ -306,16 +306,25 @@ stripPathPrefix: '/api/v1/'     // Trailing slash removed
 // Paths: /api/v1.0/users → getUsers() → GET /api/v1.0/users
 ```
 
-**Pattern 2: Multiple API Versions**
+**Pattern 2: Multiple API Versions with Wildcard**
 ```typescript
 {
-  stripPathPrefix: '^/api/v\\d+',
+  stripPathPrefix: '/api/v*',
   basePath: '/api/v2'  // Or determined at runtime
 }
 // All versions stripped, base path can vary
 ```
 
-**Pattern 3: Organization Prefix**
+**Pattern 3: Versioned Paths with Dots**
+```typescript
+{
+  stripPathPrefix: '/api/v*.*',
+  basePath: '/api/v2.0'
+}
+// Matches: /api/v1.0, /api/v2.5, etc.
+```
+
+**Pattern 4: Organization Prefix**
 ```typescript
 {
   stripPathPrefix: '/myorg/api',
@@ -329,7 +338,7 @@ stripPathPrefix: '/api/v1/'     // Trailing slash removed
 1. **Cleaner Method Names**: Generates `getUsers()` from path `/users` instead of `getApiV10Users()` from `/api/v1.0/users`
 2. **Better JSDoc**: Shows `/users` instead of `/api/v1.0/users` in documentation
 3. **Flexible Routing**: Strip prefix for naming, add back with `basePath` for requests
-4. **Version Independence**: Use regex to handle multiple API versions
+4. **Version Independence**: Use glob patterns to handle multiple API versions
 
 ## CLI Usage
 
@@ -446,7 +455,7 @@ export default defineConfig({
 | `outputClient` | `string` | Optional path for client class file | `undefined` |
 | `outputService` | `string` | Optional path for service class file (requires `outputClient`) | `undefined` |
 | `validateServiceRequest` | `boolean` | Enable Zod validation for request bodies in service methods | `false` |
-| `stripPathPrefix` | `string \| RegExp` | Strip prefix from paths before generating method names (literal string or regex pattern) | `undefined` |
+| `stripPathPrefix` | `string` | Strip prefix from paths before generating method names using glob patterns (literal string or glob pattern) | `undefined` |
 | `ignoreHeaders` | `string[]` | Header patterns to ignore (supports glob patterns like `"X-*"`, `"*"`) | `undefined` |
 | `basePath` | `string` | Base path to prepend to all endpoints (e.g., `"/api/v1"`) | `undefined` |
 | `useOperationId` | `boolean` | Use operationId from spec for method names | `true` |
