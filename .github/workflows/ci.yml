@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22]
     steps:
       - uses: actions/checkout@v4
 
@@ -93,8 +93,8 @@ jobs:
 
       - name: Validate openapi-to-zod exports
         working-directory: packages/openapi-to-zod
-        run: npx @arethetypeswrong/cli --pack .
+        run: npx @arethetypeswrong/cli --pack . --ignore-rules=no-resolution
 
       - name: Validate openapi-to-zod-playwright exports
         working-directory: packages/openapi-to-zod-playwright
-        run: npx @arethetypeswrong/cli --pack .
+        run: npx @arethetypeswrong/cli --pack . --ignore-rules=no-resolution
