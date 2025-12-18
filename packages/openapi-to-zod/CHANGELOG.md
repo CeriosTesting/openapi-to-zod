@@ -1,5 +1,13 @@
 # @cerios/openapi-to-zod
 
+## 1.1.1
+
+### Patch Changes
+
+- d32ec53: Fixed the filtering in the schemas and types in openapi-to-zod based on operationFilters in openapi-to-zod-playwright package.
+
+  Glob Pattern Support for Path Prefixes: The stripPathPrefix option in openapi-to-zod-playwright now exclusively supports glob patterns (using minimatch), replacing previous regex-based or RegExp support. This affects the generator’s TypeScript types, implementation, and documentation.
+
 ## 1.1.0
 
 ### Minor Changes
