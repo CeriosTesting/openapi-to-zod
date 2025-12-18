@@ -39,20 +39,24 @@ describe("String Utilities", () => {
 	});
 
 	describe("escapePattern", () => {
-		it("should escape backslashes", () => {
-			expect(escapePattern("\\d+")).toBe("\\\\d+");
+		it("should not escape backslashes (regex literal handles them)", () => {
+			expect(escapePattern("\\d+")).toBe("\\d+");
 		});
 
-		it("should escape single quotes", () => {
-			expect(escapePattern("it's")).toBe("it\\'s");
+		it("should not escape single quotes (not needed in regex literal)", () => {
+			expect(escapePattern("it's")).toBe("it's");
 		});
 
-		it("should handle both escapes", () => {
-			expect(escapePattern("\\d+ isn't")).toBe("\\\\d+ isn\\'t");
+		it("should escape forward slashes to prevent terminating regex literal", () => {
+			expect(escapePattern("date/time")).toBe("date\\/time");
 		});
 
-		it("should handle regex patterns", () => {
+		it("should handle regex patterns without modification", () => {
 			expect(escapePattern("^[a-z]+$")).toBe("^[a-z]+$");
+		});
+
+		it("should handle complex patterns with forward slashes", () => {
+			expect(escapePattern("^https://example.com/path$")).toBe("^https:\\/\\/example.com\\/path$");
 		});
 	});
 

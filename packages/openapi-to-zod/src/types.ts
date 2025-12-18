@@ -92,11 +92,17 @@ export interface OpenApiGeneratorOptions {
 	 * Strip a common prefix from all schema names before processing
 	 * Useful when OpenAPI spec has redundant schema prefixes that you want to ignore
 	 *
-	 * Supports both literal strings and regex patterns:
+	 * Supports both literal strings and glob patterns:
 	 * - Literal string: "Company.Models." (must match exactly)
-	 * - Regex pattern: "^[A-Z][a-z]+\\." (auto-detected or use RegExp for TypeScript configs)
+	 * - Glob pattern: "*.Models." (uses minimatch for pattern matching)
 	 *
-	 * Regex auto-detection checks for: ^, $, \\d, \\w, \\s, .*, .+, [], ()
+	 * Glob pattern syntax:
+	 * - * matches any characters within a single segment (stops at .)
+	 * - ** matches any characters across multiple segments (crosses . boundaries)
+	 * - ? matches a single character
+	 * - [abc] matches any character in the set
+	 * - {a,b} matches any of the alternatives
+	 * - !(pattern) matches anything except the pattern
 	 *
 	 * This affects:
 	 * - Schema name generation (shorter, cleaner names)
@@ -112,13 +118,18 @@ export interface OpenApiGeneratorOptions {
 	 * // Schema names: userSchema, postSchema
 	 *
 	 * @example
-	 * // Strip any namespace prefix
-	 * // stripSchemaPrefix: "^[A-Za-z]+\\."
-	 * // Matches: "Namespace.User", "App.User", etc.
+	 * // Strip any namespace prefix using glob pattern
+	 * // stripSchemaPrefix: "*.Models."
+	 * // Matches: "Company.Models.User", "App.Models.User", etc.
+	 *
+	 * @example
+	 * // Strip versioned prefix
+	 * // stripSchemaPrefix: "api_v[0-9]_"
+	 * // Matches: "api_v1_User", "api_v2_Post", etc.
 	 *
 	 * @default undefined (no stripping)
 	 */
-	stripSchemaPrefix?: string | RegExp;
+	stripSchemaPrefix?: string;
 
 	/**
 	 * Whether to include generation statistics in output file
@@ -268,7 +279,7 @@ export interface OperationFilters {
 export interface OpenAPISchema {
 	type?: string | string[];
 	format?: string;
-	enum?: (string | number)[];
+	enum?: (string | number | boolean)[];
 	const?: string | number | boolean | null;
 	properties?: Record<string, OpenAPISchema>;
 	required?: string[];

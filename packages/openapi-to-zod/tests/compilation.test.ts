@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process";
+import { existsSync, unlinkSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
@@ -29,6 +30,14 @@ describe("Comprehensive Compilation Tests", () => {
 				stdio: "pipe",
 			});
 		}).not.toThrow();
+
+		// Clean up all generated output files
+		for (const file of outputFiles) {
+			if (existsSync(file)) {
+				unlinkSync(file);
+			}
+		}
+		outputFiles.length = 0;
 	}, 30000); // 30 second timeout for batch compilation
 
 	describe("Mode Options", () => {

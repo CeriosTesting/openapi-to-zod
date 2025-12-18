@@ -31,12 +31,14 @@ export const TestUtils = {
 		return path.join(__dirname, "..", "..", "dist", normalizedFileName);
 	},
 
-	cleanupTestOutput(outputFileName: string): () => void {
+	cleanupTestOutput(outputFileNames: string[]): () => void {
 		return () => {
-			const outputFilePath = this.getOutputPath(outputFileName);
-			if (existsSync(outputFilePath)) {
-				unlinkSync(outputFilePath);
-			}
+			outputFileNames.forEach(fileName => {
+				const outputFilePath = this.getOutputPath(fileName);
+				if (existsSync(outputFilePath)) {
+					unlinkSync(outputFilePath);
+				}
+			});
 		};
 	},
 

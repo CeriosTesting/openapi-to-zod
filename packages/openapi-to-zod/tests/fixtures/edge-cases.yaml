@@ -123,6 +123,33 @@ components:
       enum:
         - onlyValue
 
+    # Mixed enum with numbers and strings
+    MixedEnum:
+      description: Enum with both numeric and string values
+      enum:
+        - 0
+        - "none"
+        - 1
+        - "some"
+        - 2
+        - "many"
+
+    # Boolean enum
+    BooleanEnum:
+      type: boolean
+      enum:
+        - true
+        - false
+
+    # Numeric enum with floats
+    FloatEnum:
+      type: number
+      enum:
+        - 0.0
+        - 0.5
+        - 1.0
+        - 1.5
+
     # Enum with special characters
     EnumWithSpecialChars:
       type: string

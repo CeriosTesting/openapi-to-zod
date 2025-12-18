@@ -72,11 +72,11 @@ describe("stripPathPrefix feature", () => {
 		});
 	});
 
-	describe("regex pattern prefix stripping", () => {
-		it("should strip using regex pattern with version number", () => {
+	describe("glob pattern prefix stripping", () => {
+		it("should strip using glob pattern with version number", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				stripPathPrefix: "^/api/v\\d+\\.\\d+", // Matches /api/v1.0, /api/v2.5, etc.
+				stripPathPrefix: "/api/v*", // Matches /api/v1.0, /api/v2.5, etc.
 			});
 
 			const clientCode = generator.generateClientString();
@@ -92,10 +92,10 @@ describe("stripPathPrefix feature", () => {
 			expect(clientCode).toContain("GET /products");
 		});
 
-		it("should detect regex pattern with character classes", () => {
+		it("should detect glob pattern with character classes", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				stripPathPrefix: "/api/v[0-9]+\\.[0-9]+", // Uses character class
+				stripPathPrefix: "/api/v[0-9]*", // Uses character class
 			});
 
 			const clientCode = generator.generateClientString();
@@ -105,28 +105,15 @@ describe("stripPathPrefix feature", () => {
 			expect(clientCode).toContain("GET /products");
 		});
 
-		it("should detect regex pattern with wildcard", () => {
+		it("should use glob with wildcard for flexible matching", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				stripPathPrefix: "^/api/v[^/]+", // Wildcard pattern
+				stripPathPrefix: "/api/v*.*", // Matches version patterns like v1.0, v2.5
 			});
 
 			const clientCode = generator.generateClientString();
 
 			// Should strip entire prefix including version
-			expect(clientCode).toContain("GET /users");
-			expect(clientCode).toContain("GET /products");
-		});
-
-		it("should use RegExp object directly in TypeScript configs", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				stripPathPrefix: /^\/api\/v\d+\.\d+/, // RegExp literal
-			});
-
-			const clientCode = generator.generateClientString();
-
-			// Should work with RegExp objects
 			expect(clientCode).toContain("GET /users");
 			expect(clientCode).toContain("GET /products");
 		});
@@ -155,7 +142,7 @@ describe("stripPathPrefix feature", () => {
 		it("should work with different stripPrefix and basePath", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				stripPathPrefix: "^/api/v\\d+\\.\\d+", // Strip any version
+				stripPathPrefix: "/api/v*", // Strip any version with glob
 				basePath: "/api/v2.0", // But use v2.0 for actual calls
 			});
 
@@ -284,16 +271,16 @@ describe("stripPathPrefix feature", () => {
 			expect(clientCode).toMatch(/request\.get\(`\/users\/\$\{id\}`/);
 		});
 
-		it("should handle invalid regex pattern gracefully", () => {
+		it("should handle invalid glob pattern gracefully", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
-				stripPathPrefix: "^/api/v[", // Invalid regex
+				stripPathPrefix: "/api/v[", // Invalid glob - unclosed bracket
 			});
 
 			// Should not throw, but log warning
 			const clientCode = generator.generateClientString();
 
-			// Should keep original paths when regex is invalid
+			// Should keep original paths when glob is invalid
 			expect(clientCode).toContain("GET /api/v1.0/users");
 		});
 	});

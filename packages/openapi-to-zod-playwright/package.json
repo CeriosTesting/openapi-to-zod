@@ -4,6 +4,10 @@
 	"author": "Ronald Veth - Cerios",
 	"description": "Generate type-safe Playwright API clients from OpenAPI specifications with Zod validation",
 	"license": "MIT",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
 	"keywords": [
 		"playwright",
 		"openapi",

@@ -77,7 +77,7 @@ export function generateClientClass(
 	basePath?: string,
 	operationFilters?: PlaywrightOperationFilters,
 	useOperationId: boolean = false,
-	stripPrefix?: string | RegExp
+	stripPrefix?: string
 ): string {
 	const endpoints = extractEndpoints(spec, operationFilters, useOperationId, stripPrefix);
 
@@ -215,7 +215,7 @@ function extractEndpoints(
 	spec: OpenAPISpec,
 	operationFilters?: PlaywrightOperationFilters,
 	useOperationId: boolean = false,
-	stripPrefix?: string | RegExp
+	stripPrefix?: string
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 

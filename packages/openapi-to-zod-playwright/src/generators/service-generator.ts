@@ -118,7 +118,7 @@ export function generateServiceClass(
 	useOperationId: boolean,
 	operationFilters?: PlaywrightOperationFilters,
 	ignoreHeaders?: string[],
-	stripPrefix?: string | RegExp
+	stripPrefix?: string
 ): string {
 	const endpoints = extractEndpoints(spec, useOperationId, operationFilters, ignoreHeaders, stripPrefix);
 
@@ -152,7 +152,7 @@ function extractEndpoints(
 	useOperationId: boolean,
 	operationFilters?: PlaywrightOperationFilters,
 	ignoreHeaders?: string[],
-	stripPrefix?: string | RegExp
+	stripPrefix?: string
 ): EndpointInfo[] {
 	const endpoints: EndpointInfo[] = [];
 

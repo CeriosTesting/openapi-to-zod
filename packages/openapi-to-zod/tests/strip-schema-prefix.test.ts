@@ -71,27 +71,27 @@ describe("stripSchemaPrefix option", () => {
 		});
 	});
 
-	describe("regex pattern prefix stripping", () => {
-		it("should strip using regex pattern with character class", async () => {
+	describe("glob pattern prefix stripping", () => {
+		it("should strip using glob pattern with wildcard", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
-				stripSchemaPrefix: "^[A-Z][a-z]+\\.",
+				stripSchemaPrefix: "*.Models.",
 			});
 
 			const output = generator.generateString();
 
-			// Company.Models.User -> Models.User -> strip Company. -> modelsUserSchema
-			expect(output).toContain("export const modelsUserSchema");
-			expect(output).toContain("export const modelsPostSchema");
+			// Company.Models.User -> *.Models. matches "Company.Models." -> strips entire prefix -> userSchema
+			expect(output).toContain("export const userSchema");
+			expect(output).toContain("export const postSchema");
 
-			// App.V1.Comment -> V1.Comment -> strip App. -> v1CommentSchema
-			expect(output).toContain("export const v1CommentSchema");
+			// App.V1.Comment -> doesn't match *.Models. pattern
+			expect(output).toContain("export const appV1CommentSchema");
 		});
 
-		it("should strip exact namespace prefix with regex", async () => {
+		it("should strip exact namespace prefix", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
-				stripSchemaPrefix: "^Company\\.Models\\.",
+				stripSchemaPrefix: "Company.Models.",
 			});
 
 			const output = generator.generateString();
@@ -105,10 +105,10 @@ describe("stripSchemaPrefix option", () => {
 			expect(output).toContain("export const appV1CommentSchema");
 		});
 
-		it("should handle regex that matches multiple prefixes", async () => {
+		it("should handle glob pattern that matches multiple prefixes", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
-				stripSchemaPrefix: "^[A-Z][a-z]+\\.[A-Z][a-z0-9]+\\.",
+				stripSchemaPrefix: "*.{Models,V1}.",
 			});
 
 			const output = generator.generateString();

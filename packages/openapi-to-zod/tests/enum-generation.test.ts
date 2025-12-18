@@ -30,13 +30,51 @@ describe("Enum Generation", () => {
 			expect(output).toContain("export type Status = z.infer<typeof statusSchema>");
 		});
 
-		it("should handle numeric enums as strings in zod mode", () => {
+		it("should handle numeric enums as literal unions", () => {
 			const output = generateWithZodEnum("complex.yaml");
 
-			// Numeric values should be converted to strings
-			expect(output).toContain('"1"');
-			expect(output).toContain('"2"');
-			expect(output).toContain('"3"');
+			// Numeric values should be generated as z.literal() in a union
+			expect(output).toContain("z.union([");
+			expect(output).toContain("z.literal(1)");
+			expect(output).toContain("z.literal(2)");
+			expect(output).toContain("z.literal(3)");
+		});
+
+		it("should handle mixed string and numeric enums", () => {
+			const output = generateWithZodEnum("edge-cases.yaml");
+
+			// Mixed enums should generate z.union with both string and numeric literals
+			expect(output).toContain("mixedEnumSchema");
+			expect(output).toContain("z.union([");
+			expect(output).toContain("z.literal(0)");
+			expect(output).toContain('z.literal("none")');
+			expect(output).toContain("z.literal(1)");
+			expect(output).toContain('z.literal("some")');
+			expect(output).toContain("z.literal(2)");
+			expect(output).toContain('z.literal("many")');
+		});
+
+		it("should handle boolean enums", () => {
+			const output = generateWithZodEnum("edge-cases.yaml");
+
+			// Boolean enums should generate z.boolean()
+			expect(output).toContain("booleanEnumSchema");
+			expect(output).toContain("export const booleanEnumSchema = z.boolean()");
+			expect(output).not.toContain("z.literal(true)");
+			expect(output).not.toContain("z.literal(false)");
+		});
+
+		it("should handle float/decimal enums", () => {
+			const output = generateWithZodEnum("edge-cases.yaml");
+
+			// Float enums should generate z.union with numeric literals
+			// Note: JavaScript normalizes 0.0 to 0 and 1.0 to 1
+			expect(output).toContain("floatEnumSchema");
+			expect(output).toContain("z.union([");
+			expect(output).toContain("z.literal(0)");
+			expect(output).toContain("z.literal(0.5)");
+			expect(output).toContain("z.literal(1)");
+			expect(output).toContain("z.literal(1.5)");
 		});
 	});
 

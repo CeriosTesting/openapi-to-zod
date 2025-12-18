@@ -158,6 +158,10 @@ export class OpenApiGenerator {
 
 		// Generate schemas and track dependencies
 		for (const [name, schema] of Object.entries(this.spec.components.schemas)) {
+			// Skip schemas not referenced by filtered operations when operation filters are active
+			if (this.options.operationFilters && this.schemaUsageMap.size > 0 && !this.schemaUsageMap.has(name)) {
+				continue;
+			}
 			this.generateComponentSchema(name, schema);
 		}
 
@@ -940,8 +944,29 @@ export class OpenApiGenerator {
 
 		// Handle enums
 		if (schema.enum) {
-			const enumValues = schema.enum.map(v => (typeof v === "string" ? `"${v}"` : v)).join(", ");
-			return `z.enum([${enumValues}])`;
+			// Check if all values are booleans
+			const allBooleans = schema.enum.every((v: any) => typeof v === "boolean");
+			if (allBooleans) {
+				return "z.boolean()";
+			}
+
+			// Check if all values are strings
+			const allStrings = schema.enum.every((v: any) => typeof v === "string");
+			if (allStrings) {
+				const enumValues = schema.enum.map(v => `"${v}"`).join(", ");
+				return `z.enum([${enumValues}])`;
+			}
+
+			// For numeric or mixed enums, use z.union with z.literal
+			const literalValues = schema.enum
+				.map((v: any) => {
+					if (typeof v === "string") {
+						return `z.literal("${v}")`;
+					}
+					return `z.literal(${v})`;
+				})
+				.join(", ");
+			return `z.union([${literalValues}])`;
 		}
 
 		// Handle primitive types

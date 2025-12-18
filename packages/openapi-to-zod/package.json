@@ -4,27 +4,18 @@
 	"author": "Ronald Veth - Cerios",
 	"description": "Generate Zod schemas from OpenAPI specifications. A TypeScript code generator that converts OpenAPI/Swagger YAML definitions into type-safe Zod validation schemas.",
 	"license": "MIT",
-	"keywords": [
-		"zod",
-		"openapi",
-		"validation",
-		"typescript",
-		"schema",
-		"generator",
-		"api",
-		"yaml",
-		"codegen",
-		"cerios"
-	],
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"keywords": ["zod", "openapi", "validation", "typescript", "schema", "generator", "api", "yaml", "codegen", "cerios"],
 	"bin": {
 		"openapi-to-zod": "./dist/cli.js"
 	},
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"type": "commonjs",
 	"sideEffects": false,
 	"exports": {

@@ -30,43 +30,36 @@ describe("stripPrefix", () => {
 		});
 	});
 
-	describe("regex pattern matching", () => {
-		it("should detect and use regex with ^ anchor", () => {
-			expect(stripPrefix("api_v1_User", "^api_v\\d+_")).toBe("User");
-			expect(stripPrefix("api_v2_Post", "^api_v\\d+_")).toBe("Post");
-			expect(stripPrefix("api_v10_Comment", "^api_v\\d+_")).toBe("Comment");
+	describe("glob pattern matching", () => {
+		it("should detect and use glob with wildcard", () => {
+			expect(stripPrefix("api_v1_User", "api_v*_")).toBe("User");
+			expect(stripPrefix("api_v2_Post", "api_v*_")).toBe("Post");
+			expect(stripPrefix("api_v10_Comment", "api_v*_")).toBe("Comment");
 		});
 
-		it("should detect and use regex with character classes", () => {
-			expect(stripPrefix("Namespace.User", "^[A-Z][a-z]+\\.")).toBe("User");
-			expect(stripPrefix("Company.Post", "^[A-Z][a-z]+\\.")).toBe("Post");
-			expect(stripPrefix("App.Comment", "^[A-Z][a-z]+\\.")).toBe("Comment");
+		it("should detect and use glob with character classes", () => {
+			expect(stripPrefix("Company.User", "*[yY].")).toBe("User");
+			expect(stripPrefix("App.Comment", "A*.")).toBe("Comment");
 		});
 
-		it("should detect and use regex with quantifiers", () => {
-			expect(stripPrefix("v1.2.3.User", "^v\\d+\\.\\d+\\.\\d+\\.")).toBe("User");
-			expect(stripPrefix("test123User", "^test\\d+")).toBe("User");
-			expect(stripPrefix("prefix_User", "^[a-z]+_")).toBe("User");
+		it("should use glob with question mark for single character", () => {
+			expect(stripPrefix("v1.User", "v?.")).toBe("User");
+			expect(stripPrefix("a_User", "?_")).toBe("User");
 		});
 
-		it("should use regex with .* wildcard", () => {
-			expect(stripPrefix("any.prefix.User", "^.*\\.")).toBe("User");
-			expect(stripPrefix("a.b.c.d.User", "^.*\\.d\\.")).toBe("User");
+		it("should use glob with alternatives", () => {
+			expect(stripPrefix("Company.Models.User", "*.{Models,Services}.")).toBe("User");
+			expect(stripPrefix("App.Services.Post", "*.{Models,Services}.")).toBe("Post");
 		});
 
-		it("should return original string when regex doesn't match", () => {
-			expect(stripPrefix("User", "^api_v\\d+_")).toBe("User");
-			expect(stripPrefix("api_User", "^api_v\\d+_")).toBe("api_User");
+		it("should return original string when glob doesn't match", () => {
+			expect(stripPrefix("User", "api_v*_")).toBe("User");
+			expect(stripPrefix("api_User", "api_v*_")).toBe("api_User");
 		});
 
-		it("should handle RegExp objects directly", () => {
-			expect(stripPrefix("api_v1_User", /^api_v\d+_/)).toBe("User");
-			expect(stripPrefix("Company.User", /^[A-Z][a-z]+\./)).toBe("User");
-		});
-
-		it("should handle invalid regex gracefully", () => {
-			// Invalid regex should be treated as no match
-			expect(stripPrefix("User", "^[invalid")).toBe("User");
+		it("should handle invalid glob gracefully", () => {
+			// Invalid glob should warn and return original
+			expect(stripPrefix("User", "[invalid")).toBe("User");
 		});
 	});
 
@@ -91,9 +84,9 @@ describe("stripPrefix", () => {
 			expect(stripPrefix("prefix__value", "prefix_", "_")).toBe("_value");
 		});
 
-		it("should work with regex patterns", () => {
-			expect(stripPrefix("api_v1_users", "^api_v\\d+_", "_")).toBe("_users");
-			expect(stripPrefix("v1.2.users", "^v\\d+\\.\\d+\\.", ".")).toBe(".users");
+		it("should work with glob patterns", () => {
+			expect(stripPrefix("api_v1_users", "api_v*_", "_")).toBe("_users");
+			expect(stripPrefix("Company.Models.User", "*.Models.", ".")).toBe(".User");
 		});
 	});
 });
@@ -136,39 +129,35 @@ describe("stripPathPrefix", () => {
 		});
 	});
 
-	describe("regex pattern matching", () => {
-		it("should detect and use regex with ^ anchor", () => {
-			expect(stripPathPrefix("/api/v1/users", "^/api/v\\d+")).toBe("/users");
-			expect(stripPathPrefix("/api/v2/posts", "^/api/v\\d+")).toBe("/posts");
-			expect(stripPathPrefix("/api/v10/comments", "^/api/v\\d+")).toBe("/comments");
+	describe("glob pattern matching", () => {
+		it("should detect and use glob with wildcard", () => {
+			expect(stripPathPrefix("/api/v1/users", "/api/v*")).toBe("/users");
+			expect(stripPathPrefix("/api/v2/posts", "/api/v*")).toBe("/posts");
+			expect(stripPathPrefix("/api/v10/comments", "/api/v*")).toBe("/comments");
 		});
 
-		it("should use regex with version patterns", () => {
-			expect(stripPathPrefix("/api/v1.0/users", "^/api/v\\d+\\.\\d+")).toBe("/users");
-			expect(stripPathPrefix("/api/v2.1/posts", "^/api/v\\d+\\.\\d+")).toBe("/posts");
+		it("should use glob with version patterns", () => {
+			expect(stripPathPrefix("/api/v1.0/users", "/api/v*.*")).toBe("/users");
+			expect(stripPathPrefix("/api/v2.1/posts", "/api/v*.*")).toBe("/posts");
 		});
 
-		it("should use regex with .* wildcard", () => {
-			expect(stripPathPrefix("/any/prefix/users", "^/any/.*?/")).toBe("/users");
+		it("should use glob with character class", () => {
+			expect(stripPathPrefix("/api/v1/users", "/api/v[0-9]")).toBe("/users");
+			expect(stripPathPrefix("/api/v2/posts", "/api/v[0-9]")).toBe("/posts");
 		});
 
-		it("should ensure result starts with slash after regex match", () => {
-			expect(stripPathPrefix("/api/v1/users", "^/api/v\\d+")).toBe("/users");
-			expect(stripPathPrefix("/apiv1users", "^/apiv\\d+")).toBe("/users");
+		it("should ensure result starts with slash after glob match", () => {
+			expect(stripPathPrefix("/api/v1/users", "/api/v*")).toBe("/users");
+			expect(stripPathPrefix("/api/version1/users", "/api/version*")).toBe("/users");
 		});
 
-		it("should handle RegExp objects directly", () => {
-			expect(stripPathPrefix("/api/v1/users", /^\/api\/v\d+/)).toBe("/users");
-			expect(stripPathPrefix("/api/v2.1/posts", /^\/api\/v\d+\.\d+/)).toBe("/posts");
+		it("should return original path when glob doesn't match", () => {
+			expect(stripPathPrefix("/users", "/api/v*")).toBe("/users");
+			expect(stripPathPrefix("/api/users", "/api/v*")).toBe("/api/users");
 		});
 
-		it("should return original path when regex doesn't match", () => {
-			expect(stripPathPrefix("/users", "^/api/v\\d+")).toBe("/users");
-			expect(stripPathPrefix("/api/users", "^/api/v\\d+")).toBe("/api/users");
-		});
-
-		it("should handle root path with regex", () => {
-			expect(stripPathPrefix("/api/v1", "^/api/v\\d+")).toBe("/");
+		it("should handle root path with glob", () => {
+			expect(stripPathPrefix("/api/v1", "/api/v*")).toBe("/");
 		});
 	});
 

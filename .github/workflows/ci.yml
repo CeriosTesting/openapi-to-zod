@@ -1,16 +1,100 @@
-name: Build CI
+name: CI
 
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
-permissions:
-  contents: write
-  id-token: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run check
+
+      - name: Check dependency versions
+        run: npm run check-versions
+
+  build:
+    name: Build Packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run compile
+
+      - name: Build packages
+        run: npm run build
+
   test:
-    uses: ./.github/workflows/test.yml
-  publish-npm:
-    if: github.ref == 'refs/heads/main'
-    needs: test
-    uses: ./.github/workflows/publish.yml
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test
+
+  validate:
+    name: Validate Package Exports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Validate openapi-to-zod exports
+        working-directory: packages/openapi-to-zod
+        run: npx @arethetypeswrong/cli --pack . --ignore-rules=no-resolution
+
+      - name: Validate openapi-to-zod-playwright exports
+        working-directory: packages/openapi-to-zod-playwright
+        run: npx @arethetypeswrong/cli --pack . --ignore-rules=no-resolution

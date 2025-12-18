@@ -19,7 +19,7 @@ export interface PropertyGeneratorContext {
 	includeDescriptions: boolean;
 	useDescribe: boolean;
 	namingOptions: NamingOptions;
-	stripSchemaPrefix?: string | RegExp;
+	stripSchemaPrefix?: string;
 }
 
 /**
@@ -376,9 +376,32 @@ export class PropertyGenerator {
 
 		// Handle enum
 		if (schema.enum) {
-			const enumValues = schema.enum.map(v => `"${v}"`).join(", ");
-			const zodEnum = `z.enum([${enumValues}])`;
-			return wrapNullable(zodEnum, nullable);
+			// Check if all values are booleans
+			const allBooleans = schema.enum.every(v => typeof v === "boolean");
+			if (allBooleans) {
+				const zodBoolean = "z.boolean()";
+				return wrapNullable(zodBoolean, nullable);
+			}
+
+			// Check if all values are strings
+			const allStrings = schema.enum.every(v => typeof v === "string");
+			if (allStrings) {
+				const enumValues = schema.enum.map(v => `"${v}"`).join(", ");
+				const zodEnum = `z.enum([${enumValues}])`;
+				return wrapNullable(zodEnum, nullable);
+			}
+
+			// For numeric or mixed enums, use z.union with z.literal
+			const literalValues = schema.enum
+				.map(v => {
+					if (typeof v === "string") {
+						return `z.literal("${v}")`;
+					}
+					return `z.literal(${v})`;
+				})
+				.join(", ");
+			const zodUnion = `z.union([${literalValues}])`;
+			return wrapNullable(zodUnion, nullable);
 		}
 
 		// Handle allOf
