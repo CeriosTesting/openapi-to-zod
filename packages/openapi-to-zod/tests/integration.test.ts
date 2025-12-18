@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
@@ -7,7 +7,6 @@ import { TestUtils } from "./utils/test-utils";
 
 describe("Integration Tests", () => {
 	const outputPath = TestUtils.getOutputPath("integration.ts");
-	const tempTestFile = TestUtils.getOutputPath("integration-test.ts");
 
 	describe("TypeScript Compilation", () => {
 		it("should generate TypeScript code that compiles without errors", () => {
@@ -47,65 +46,58 @@ describe("Integration Tests", () => {
 	});
 
 	describe("Runtime Validation", () => {
-		it("should generate schemas that can validate data", () => {
+		it("should generate schemas that can validate data", async () => {
+			const validationPath = TestUtils.getOutputPath("integration-validation.ts");
+
 			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("simple.yaml"),
-				output: outputPath,
+				output: validationPath,
 				mode: "normal",
 			};
 
 			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
-			// Create a test file that imports and uses the schema
-			const testCode = `
-${readFileSync(outputPath, "utf-8")}
+			// Dynamically import the generated schema
+			const module = await import(`file://${validationPath}`);
+			const { userSchema } = module;
 
-const validUser = {
-  id: '123e4567-e89b-12d3-a456-426614174000',
-  name: 'Test User',
-};
+			const validUser = {
+				id: "123e4567-e89b-12d3-a456-426614174000",
+				name: "Test User",
+			};
 
-const result = userSchema.safeParse(validUser);
-if (!result.success) {
-  throw new Error('Schema validation failed');
-}
-console.log('Validation passed');
-`;
-
-			writeFileSync(tempTestFile, testCode);
-
-			// Compile and run
-			execSync(`npx tsx ${tempTestFile}`, { stdio: "pipe" });
+			const result = userSchema.safeParse(validUser);
+			expect(result.success).toBe(true);
 		});
 
-		it("should reject invalid data", () => {
+		it("should reject invalid data", async () => {
+			const rejectionPath = TestUtils.getOutputPath("integration-rejection.ts");
+
 			const options: OpenApiGeneratorOptions = {
 				input: TestUtils.getFixturePath("simple.yaml"),
-				output: outputPath,
+				output: rejectionPath,
 				mode: "normal",
 			};
 
 			const generator = new OpenApiGenerator(options);
 			generator.generate();
 
-			const testCode = `
-${readFileSync(outputPath, "utf-8")}
+			// Dynamically import the generated schema
+			const module = await import(`file://${rejectionPath}`);
+			const { userSchema } = module;
 
-const invalidUser = {
-  id: 'not-a-uuid',
-  name: 'Test User',
-};
+			const invalidUser = {
+				id: "not-a-uuid",
+				name: "Test User",
+			};
 
-const result = userSchema.safeParse(invalidUser);
-if (result.success) {
-  throw new Error('Schema should have failed validation');
-}
-console.log('Validation correctly failed');
-`;
-
-			writeFileSync(tempTestFile, testCode);
-			execSync(`npx tsx ${tempTestFile}`, { stdio: "pipe" });
+			const result = userSchema.safeParse(invalidUser);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error.issues).toBeDefined();
+				expect(result.error.issues.length).toBeGreaterThan(0);
+			}
 		});
 	});
 

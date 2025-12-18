@@ -184,17 +184,27 @@ ${methods}
 	 * @param params - Query parameters object
 	 * @returns Serialized params compatible with Playwright
 	 */
-	private serializeParams(params: QueryParams | undefined): { [key: string]: string | number | boolean } | URLSearchParams | string | undefined {
-		if (!params || typeof params === 'string' || params instanceof URLSearchParams) {
+	private serializeParams(params: QueryParams | undefined): string | URLSearchParams | { [key: string]: string | number | boolean } | undefined {
+		if (!params) {
+			return undefined;
+		}
+
+		if (typeof params === 'string') {
 			return params;
 		}
 
+		if (params instanceof URLSearchParams) {
+			return params;
+		}
+
+		// At this point, params must be the object type
 		const serialized: { [key: string]: string | number | boolean } = {};
 		for (const [key, value] of Object.entries(params)) {
 			if (Array.isArray(value)) {
 				// Serialize arrays as comma-separated strings
 				serialized[key] = value.join(',');
 			} else {
+				// Value is already string | number | boolean
 				serialized[key] = value;
 			}
 		}
@@ -307,7 +317,7 @@ function generateClientMethod(endpoint: EndpointInfo, basePath?: string): string
 
 	return `${jsdoc}
 	async ${methodName}(${paramList}): Promise<APIResponse> {
-		const serializedOptions = options ? { ...options, params: this.serializeParams(options.params) } : options;
+		const serializedOptions = options ? { ...options, params: this.serializeParams(options.params) } : undefined;
 		return await this.request.${methodLower}(\`${urlTemplate}\`, serializedOptions);
 	}`;
 }

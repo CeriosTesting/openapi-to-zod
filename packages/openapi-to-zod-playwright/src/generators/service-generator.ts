@@ -1,5 +1,5 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
-import { stripPathPrefix, toCamelCase, toPascalCase } from "@cerios/openapi-to-zod/internal";
+import { stripPathPrefix, stripPrefix, toCamelCase, toPascalCase } from "@cerios/openapi-to-zod/internal";
 import type { PlaywrightOperationFilters } from "../types";
 import { shouldIgnoreHeader } from "../utils/header-filters";
 import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
@@ -109,6 +109,7 @@ function deduplicateSuffixes(suffixes: string[]): string[] {
  * @param operationFilters - Optional operation filters to apply
  * @param ignoreHeaders - Optional array of header patterns to ignore
  * @param stripPrefix - Optional path prefix to strip before processing
+ * @param stripSchemaPrefix - Optional schema name prefix to strip
  */
 export function generateServiceClass(
 	spec: OpenAPISpec,
@@ -118,7 +119,8 @@ export function generateServiceClass(
 	useOperationId: boolean,
 	operationFilters?: PlaywrightOperationFilters,
 	ignoreHeaders?: string[],
-	stripPrefix?: string
+	stripPrefix?: string,
+	stripSchemaPrefix?: string
 ): string {
 	const endpoints = extractEndpoints(spec, useOperationId, operationFilters, ignoreHeaders, stripPrefix);
 
@@ -127,7 +129,7 @@ export function generateServiceClass(
 	}
 
 	const methods = endpoints
-		.flatMap(endpoint => generateSuccessMethods(endpoint, schemaImports, ignoreHeaders))
+		.flatMap(endpoint => generateSuccessMethods(endpoint, schemaImports, ignoreHeaders, stripSchemaPrefix))
 		.join("\n\n");
 
 	return `
@@ -312,7 +314,8 @@ function extractEndpoints(
 function generateSuccessMethods(
 	endpoint: EndpointInfo,
 	schemaImports: Set<string>,
-	ignoreHeaders?: string[]
+	ignoreHeaders?: string[],
+	stripSchemaPrefix?: string
 ): string[] {
 	const { responses, requestBody } = endpoint;
 	const methods: string[] = [];
@@ -328,7 +331,7 @@ function generateSuccessMethods(
 	// If no request body, generate methods without request content-type suffix
 	if (requestContentTypes.length === 0) {
 		if (responses.length === 0) {
-			return [generateServiceMethod(endpoint, undefined, schemaImports, "", "", "", ignoreHeaders)];
+			return [generateServiceMethod(endpoint, undefined, schemaImports, "", "", "", ignoreHeaders, stripSchemaPrefix)];
 		}
 
 		// Group responses by status code
@@ -347,7 +350,16 @@ function generateSuccessMethods(
 
 			if (!hasMultipleContentTypes) {
 				methods.push(
-					generateServiceMethod(endpoint, responseGroup[0], schemaImports, statusSuffix, "", "", ignoreHeaders)
+					generateServiceMethod(
+						endpoint,
+						responseGroup[0],
+						schemaImports,
+						statusSuffix,
+						"",
+						"",
+						ignoreHeaders,
+						stripSchemaPrefix
+					)
 				);
 			} else {
 				const suffixes = responseGroup.map(r => extractContentTypeSuffix(r.contentType));
@@ -361,7 +373,8 @@ function generateSuccessMethods(
 							statusSuffix,
 							deduplicated[i],
 							"",
-							ignoreHeaders
+							ignoreHeaders,
+							stripSchemaPrefix
 						)
 					);
 				}
@@ -380,7 +393,18 @@ function generateSuccessMethods(
 		const requestSuffix = requestSuffixes[reqIdx];
 
 		if (responses.length === 0) {
-			methods.push(generateServiceMethod(endpoint, undefined, schemaImports, "", "", requestSuffix, ignoreHeaders));
+			methods.push(
+				generateServiceMethod(
+					endpoint,
+					undefined,
+					schemaImports,
+					"",
+					"",
+					requestSuffix,
+					ignoreHeaders,
+					stripSchemaPrefix
+				)
+			);
 			continue;
 		}
 
@@ -407,7 +431,8 @@ function generateSuccessMethods(
 						statusSuffix,
 						"",
 						requestSuffix,
-						ignoreHeaders
+						ignoreHeaders,
+						stripSchemaPrefix
 					)
 				);
 			} else {
@@ -422,7 +447,8 @@ function generateSuccessMethods(
 							statusSuffix,
 							deduplicated[i],
 							requestSuffix,
-							ignoreHeaders
+							ignoreHeaders,
+							stripSchemaPrefix
 						)
 					);
 				}
@@ -437,7 +463,10 @@ function generateSuccessMethods(
  * Generate Zod schema code for inline schemas (arrays, primitives)
  * Returns the schema code and type name
  */
-function generateInlineSchemaCode(inlineSchema: any): { schemaCode: string; typeName: string } | null {
+function generateInlineSchemaCode(
+	inlineSchema: any,
+	stripSchemaPrefix?: string
+): { schemaCode: string; typeName: string } | null {
 	if (!inlineSchema) return null;
 
 	// Handle primitives
@@ -455,9 +484,10 @@ function generateInlineSchemaCode(inlineSchema: any): { schemaCode: string; type
 	if (inlineSchema.type === "array" && inlineSchema.items?.$ref) {
 		const refParts = inlineSchema.items.$ref.split("/");
 		const itemSchemaName = refParts[refParts.length - 1];
-		// Convert schema name to valid TypeScript identifiers (handles dotted names)
-		const itemSchemaVarName = toCamelCase(itemSchemaName);
-		const itemTypeName = toPascalCase(itemSchemaName);
+		// Apply stripSchemaPrefix before converting to valid TypeScript identifiers
+		const strippedName = stripPrefix(itemSchemaName, stripSchemaPrefix);
+		const itemSchemaVarName = toCamelCase(strippedName);
+		const itemTypeName = toPascalCase(strippedName);
 		return {
 			schemaCode: `z.array(${itemSchemaVarName}Schema)`,
 			typeName: `${itemTypeName}[]`,
@@ -491,7 +521,8 @@ function generateServiceMethod(
 	statusSuffix: string,
 	responseContentTypeSuffix: string,
 	requestContentTypeSuffix: string,
-	ignoreHeaders?: string[]
+	ignoreHeaders?: string[],
+	stripSchemaPrefix?: string
 ): string {
 	const { path, method, methodName, pathParams, requestBody } = endpoint;
 
@@ -577,8 +608,9 @@ function generateServiceMethod(
 					requestBody.content[requestContentType]?.schema || requestBody.content["application/json"]?.schema;
 				if (schema?.$ref) {
 					const schemaName = schema.$ref.split("/").pop();
-					// Convert schema name to valid TypeScript type name (handles dotted names)
-					const typeName = toPascalCase(schemaName);
+					// Apply stripSchemaPrefix before converting to valid TypeScript type name
+					const strippedName = stripPrefix(schemaName, stripSchemaPrefix);
+					const typeName = toPascalCase(strippedName);
 					optionsProps.push(`data${optionalMarker}: ${typeName}`);
 					schemaImports.add(schemaName);
 				} else {
@@ -605,16 +637,13 @@ function generateServiceMethod(
 	// Determine return type
 	let returnType = "Promise<void>";
 	if (response?.hasBody && response.schemaName) {
-		// Convert schema name to valid TypeScript type name (handles dotted names)
-		// First remove Schema suffix if present, then convert to PascalCase
-		const baseSchemaName = response.schemaName.endsWith("Schema")
-			? response.schemaName.slice(0, -6)
-			: response.schemaName;
-		const typeName = toPascalCase(baseSchemaName);
+		// Apply stripSchemaPrefix before converting to valid TypeScript type name
+		const strippedName = stripPrefix(response.schemaName, stripSchemaPrefix);
+		const typeName = toPascalCase(strippedName);
 		returnType = `Promise<${typeName}>`;
 		schemaImports.add(response.schemaName);
 	} else if (response?.hasBody && response.inlineSchema) {
-		const inlineInfo = generateInlineSchemaCode(response.inlineSchema);
+		const inlineInfo = generateInlineSchemaCode(response.inlineSchema, stripSchemaPrefix);
 		if (inlineInfo) {
 			returnType = `Promise<${inlineInfo.typeName}>`;
 		} else {
@@ -651,8 +680,9 @@ function generateServiceMethod(
 
 	// Add response validation
 	if (response?.hasBody && response.schemaName) {
-		// Convert schema name to camelCase variable name (handles dotted names)
-		const schemaVar = `${toCamelCase(response.schemaName)}Schema`;
+		// Apply stripSchemaPrefix before converting to camelCase variable name
+		const strippedName = stripPrefix(response.schemaName, stripSchemaPrefix);
+		const schemaVar = `${toCamelCase(strippedName)}Schema`;
 		const isJson = response.contentType === "application/json";
 		const parseMethod = isJson ? "response.json()" : "response.text()";
 
@@ -660,7 +690,7 @@ function generateServiceMethod(
 		validationCode.push(`\t\tconst body = await ${parseMethod};`);
 		validationCode.push(`\t\treturn ${schemaVar}.parse(body);`);
 	} else if (response?.hasBody && response.inlineSchema) {
-		const inlineInfo = generateInlineSchemaCode(response.inlineSchema);
+		const inlineInfo = generateInlineSchemaCode(response.inlineSchema, stripSchemaPrefix);
 		if (inlineInfo) {
 			const isJson = response.contentType === "application/json";
 			const parseMethod = isJson ? "response.json()" : "response.text()";
