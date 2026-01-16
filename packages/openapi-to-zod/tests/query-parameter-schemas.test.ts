@@ -398,3 +398,258 @@ describe("Query Parameter Schema Generation with stripPathPrefix", () => {
 		expect(output).toContain("type GetSearchQueryParams = z.infer<typeof getSearchQueryParamsSchema>");
 	});
 });
+
+describe("Component Parameter $ref Resolution", () => {
+	const componentParamsFixture = resolve(__dirname, "fixtures/component-parameters.yaml");
+
+	it("should resolve $ref to component parameters for query params", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// Should generate schema for listItems which has both inline and $ref params
+		expect(output).toContain("ListItemsQueryParams");
+		expect(output).toContain("listItemsQueryParamsSchema");
+
+		// Should include the resolved parameter names from components.parameters
+		expect(output).toContain('"page[number]"');
+		expect(output).toContain('"page[size]"');
+		expect(output).toContain("sort");
+		expect(output).toContain("search");
+	});
+
+	it("should handle operations with only $ref parameters", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// getUsers has only $ref parameters (PageNumber, PageSize as query, ApiKey as header)
+		expect(output).toContain("GetUsersQueryParams");
+		expect(output).toContain("getUsersQueryParamsSchema");
+
+		// Should resolve the parameter names correctly
+		expect(output).toContain('"page[number]"');
+		expect(output).toContain('"page[size]"');
+	});
+
+	it("should apply constraints from component parameters", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// PageNumber has minimum: 1, PageSize has minimum: 1 and maximum: 100
+		expect(output).toContain(".gte(1)");
+		expect(output).toContain(".lte(100)");
+	});
+
+	it("should handle enum values from component parameters", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// SortOrder parameter has enum: [asc, desc]
+		expect(output).toContain('z.enum(["asc", "desc"])');
+	});
+
+	it("should include descriptions from component parameters when useDescribe is enabled", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+			useDescribe: true,
+			includeDescriptions: true,
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// Should include descriptions from component parameters
+		expect(output).toContain('.describe("The page number to retrieve for paginated results")');
+		expect(output).toContain('.describe("The number of items per page")');
+	});
+
+	it("should resolve header parameter $refs correctly", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// getUsers has ApiKey header param via $ref
+		expect(output).toContain("GetUsersHeaderParams");
+		expect(output).toContain("getUsersHeaderParamsSchema");
+		expect(output).toContain('"X-API-Key"');
+	});
+
+	it("should not generate query param schema when only header $refs exist", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// getNoParams has no parameters
+		expect(output).not.toContain("GetNoParamsQueryParams");
+	});
+
+	it("should handle mixed inline and $ref parameters", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: componentParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// getProducts has inline 'category' and 'filter[active]' plus $ref params
+		expect(output).toContain("GetProductsQueryParams");
+		expect(output).toContain("category");
+		expect(output).toContain('"filter[active]"');
+		expect(output).toContain('"page[number]"');
+		expect(output).toContain('"page[size]"');
+	});
+});
+
+describe("Path-Level Parameter Support", () => {
+	const pathLevelParamsFixture = resolve(__dirname, "fixtures/path-level-parameters.yaml");
+
+	it("should include path-level query parameters in operation schemas", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// listItems only has path-level params (PageNumber, PageSize)
+		expect(output).toContain("ListItemsQueryParams");
+		expect(output).toContain("listItemsQueryParamsSchema");
+		expect(output).toContain('"page[number]"');
+		expect(output).toContain('"page[size]"');
+	});
+
+	it("should merge path-level and operation-level query parameters", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// getOrgMembers has path-level params (PageNumber, PageSize) + operation-level (role)
+		expect(output).toContain("GetOrgMembersQueryParams");
+		expect(output).toContain('"page[number]"');
+		expect(output).toContain('"page[size]"');
+		expect(output).toContain("role");
+		expect(output).toContain('z.enum(["admin", "member", "viewer"])');
+	});
+
+	it("should include path-level header parameters in operation schemas", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// getUser has path-level header param (ApiVersion)
+		expect(output).toContain("GetUserHeaderParams");
+		expect(output).toContain("getUserHeaderParamsSchema");
+		expect(output).toContain('"X-API-Version"');
+	});
+
+	it("should merge operation-level params with path-level params from $ref", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// getUser has: path-level header (ApiVersion $ref) + operation-level query (include)
+		expect(output).toContain("GetUserQueryParams");
+		expect(output).toContain("include");
+		expect(output).toContain('z.enum(["profile", "settings", "preferences"])');
+	});
+
+	it("should generate schemas for operations with only path-level params", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// updateUser has no operation-level params but inherits path-level header (ApiVersion)
+		expect(output).toContain("UpdateUserHeaderParams");
+		expect(output).toContain('"X-API-Version"');
+	});
+
+	it("should handle nested $ref resolution in path-level parameters", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// Path-level params use $ref (ApiVersion, PageNumber, PageSize)
+		// Should resolve correctly
+		expect(output).toContain("z.number().int().gte(1)");
+		expect(output).toContain("z.number().int().gte(1).lte(100)");
+	});
+
+	it("should preserve constraints from path-level component parameter $refs", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// PageSize has minimum: 1 and maximum: 100
+		expect(output).toContain(".gte(1).lte(100)");
+	});
+
+	it("should include descriptions from path-level parameters when useDescribe is enabled", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: pathLevelParamsFixture,
+			mode: "normal",
+			useDescribe: true,
+			includeDescriptions: true,
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		// Path-level params have descriptions that should be included
+		expect(output).toContain('.describe("Page number for pagination")');
+		expect(output).toContain('.describe("Number of items per page")');
+	});
+});

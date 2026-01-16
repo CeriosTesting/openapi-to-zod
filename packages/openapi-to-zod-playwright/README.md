@@ -412,7 +412,7 @@ export default defineConfig({
         includeTags: ['public'], // Only include operations with 'public' tag
         includeStatusCodes: ['2xx', '4xx'], // Only generate for success and client errors
       },
-      useOperationId: true, // Use operationId from spec for method names
+      useOperationId: false, // Use path-based method names (default)
     }
   ],
   executionMode: 'parallel' // or 'serial'
@@ -458,7 +458,7 @@ export default defineConfig({
 | `stripPathPrefix` | `string` | Strip prefix from paths before generating method names using glob patterns (literal string or glob pattern) | `undefined` |
 | `ignoreHeaders` | `string[]` | Header patterns to ignore (supports glob patterns like `"X-*"`, `"*"`) | `undefined` |
 | `basePath` | `string` | Base path to prepend to all endpoints (e.g., `"/api/v1"`) | `undefined` |
-| `useOperationId` | `boolean` | Use operationId from spec for method names | `true` |
+| `useOperationId` | `boolean` | Use operationId from spec for method names | `false` |
 | `operationFilters` | `object` | Filter operations (see below) | `undefined` |
 
 #### Operation Filters
