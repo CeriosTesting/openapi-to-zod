@@ -1,6 +1,6 @@
 ---
-"@cerios/openapi-to-zod-playwright": patch
-"@cerios/openapi-to-zod": patch
+"@cerios/openapi-to-zod-playwright": minor
+"@cerios/openapi-to-zod": minor
 ---
 
 Changes default for useOperationId to false
