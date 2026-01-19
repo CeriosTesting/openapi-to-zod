@@ -5,7 +5,7 @@ import { TestUtils } from "./utils/test-utils";
 describe("useOperationId Option", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-	describe("useOperationId: true (default)", () => {
+	describe("useOperationId: true", () => {
 		it("should use operationId for method names when available", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,

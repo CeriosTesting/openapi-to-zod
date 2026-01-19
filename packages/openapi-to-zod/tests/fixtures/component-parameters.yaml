@@ -1,0 +1,135 @@
+openapi: 3.0.0
+info:
+  title: Component Parameters Test API
+  version: 1.0.0
+paths:
+  /items:
+    get:
+      operationId: listItems
+      summary: List items with pagination via component parameter refs
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search term
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/SortOrder'
+      responses:
+        '200':
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get users with only ref parameters
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/ApiKey'
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+  /products:
+    get:
+      operationId: getProducts
+      summary: Get products with mixed inline and ref parameters
+      parameters:
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+        - name: 'filter[active]'
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: object
+  /no-params:
+    get:
+      operationId: getNoParams
+      summary: Endpoint without parameters
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    ItemList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        total:
+          type: integer
+  parameters:
+    PageNumber:
+      name: 'page[number]'
+      in: query
+      description: The page number to retrieve for paginated results
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: 'page[size]'
+      in: query
+      description: The number of items per page
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    SortOrder:
+      name: sort
+      in: query
+      description: Sort order for results
+      required: false
+      schema:
+        type: string
+        enum: [asc, desc]
+    ApiKey:
+      name: X-API-Key
+      in: header
+      description: API key for authentication
+      required: true
+      schema:
+        type: string

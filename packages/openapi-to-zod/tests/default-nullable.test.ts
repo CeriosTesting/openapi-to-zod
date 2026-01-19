@@ -221,4 +221,256 @@ components:
 			}
 		});
 	});
+
+	describe("defaultNullable should NOT apply to schema references ($ref)", () => {
+		const refSpecPath = join(testDir, "ref-spec.yaml");
+
+		beforeAll(() => {
+			const refSpec = `
+openapi: 3.0.3
+info:
+  title: Ref Nullable Test API
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Status:
+      type: string
+      enum:
+        - active
+        - inactive
+    UserRole:
+      type: string
+      enum:
+        - admin
+        - user
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+    UserWithRefs:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        role:
+          $ref: '#/components/schemas/UserRole'
+        address:
+          $ref: '#/components/schemas/Address'
+        nullableStatus:
+          allOf:
+            - $ref: '#/components/schemas/Status'
+          nullable: true
+`;
+			writeFileSync(refSpecPath, refSpec.trim());
+		});
+
+		it("should not add .nullable() to $ref schemas when defaultNullable: true", () => {
+			const generator = new OpenApiGenerator({
+				input: refSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Schema references should NOT have .nullable() added by defaultNullable
+			// status: statusSchema (not statusSchema.nullable())
+			expect(output).toMatch(/status:\s*statusSchema(?!\.nullable)/);
+			// role: userRoleSchema (not userRoleSchema.nullable())
+			expect(output).toMatch(/role:\s*userRoleSchema(?!\.nullable)/);
+			// address: addressSchema (not addressSchema.nullable())
+			expect(output).toMatch(/address:\s*addressSchema(?!\.nullable)/);
+		});
+
+		it("should add .nullable() to explicitly nullable refs", () => {
+			const generator = new OpenApiGenerator({
+				input: refSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Explicitly nullable refs SHOULD have .nullable()
+			expect(output).toMatch(/nullableStatus:.*\.nullable\(\)/);
+		});
+
+		it("should still add .nullable() to primitive properties with defaultNullable: true", () => {
+			const generator = new OpenApiGenerator({
+				input: refSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Regular primitive properties should still get .nullable()
+			expect(output).toMatch(/name:\s*z\.string\(\)\.nullable\(\)/);
+		});
+	});
+
+	describe("defaultNullable should NOT apply to enum values", () => {
+		const enumSpecPath = join(testDir, "enum-spec.yaml");
+
+		beforeAll(() => {
+			const enumSpec = `
+openapi: 3.0.3
+info:
+  title: Enum Nullable Test API
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Color:
+      type: string
+      enum:
+        - red
+        - green
+        - blue
+    Container:
+      type: object
+      properties:
+        color:
+          type: string
+          enum:
+            - red
+            - green
+            - blue
+        name:
+          type: string
+        nullableColor:
+          type: string
+          enum:
+            - red
+            - green
+            - blue
+          nullable: true
+`;
+			writeFileSync(enumSpecPath, enumSpec.trim());
+		});
+
+		it("should not add .nullable() to inline enum properties when defaultNullable: true", () => {
+			const generator = new OpenApiGenerator({
+				input: enumSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Inline enum property should NOT be nullable (enums are discrete values)
+			// Match color: z.enum([...]) without .nullable() following
+			expect(output).toMatch(/color:\s*z\.enum\(\[.*?\]\)(?!\.nullable)/);
+		});
+
+		it("should add .nullable() to explicitly nullable enum properties", () => {
+			const generator = new OpenApiGenerator({
+				input: enumSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Explicitly nullable enum SHOULD have .nullable()
+			expect(output).toMatch(/nullableColor:\s*z\.enum\(\[.*?\]\)\.nullable\(\)/);
+		});
+
+		it("should still add .nullable() to regular string properties", () => {
+			const generator = new OpenApiGenerator({
+				input: enumSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Regular string property SHOULD be nullable with defaultNullable: true
+			expect(output).toMatch(/name:\s*z\.string\(\)\.nullable\(\)/);
+		});
+
+		it("should not add .nullable() to top-level enum schemas", () => {
+			const generator = new OpenApiGenerator({
+				input: enumSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Top-level enum schema should NOT be nullable
+			expect(output).not.toMatch(/export const colorSchema = z\.enum\(\[.*?\]\)\.nullable\(\);/);
+			expect(output).toMatch(/export const colorSchema = z\.enum\(\[.*?\]\);/);
+		});
+	});
+
+	describe("defaultNullable should NOT apply to const/literal values", () => {
+		const constSpecPath = join(testDir, "const-spec.yaml");
+
+		beforeAll(() => {
+			const constSpec = `
+openapi: 3.0.3
+info:
+  title: Const Nullable Test API
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    FixedType:
+      type: string
+      const: fixed_value
+    Container:
+      type: object
+      properties:
+        type:
+          type: string
+          const: container
+        name:
+          type: string
+        nullableType:
+          type: string
+          const: nullable_container
+          nullable: true
+`;
+			writeFileSync(constSpecPath, constSpec.trim());
+		});
+
+		it("should not add .nullable() to const properties when defaultNullable: true", () => {
+			const generator = new OpenApiGenerator({
+				input: constSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Const/literal values should NOT be nullable
+			expect(output).toMatch(/type:\s*z\.literal\("container"\)(?!\.nullable)/);
+		});
+
+		it("should add .nullable() to explicitly nullable const properties", () => {
+			const generator = new OpenApiGenerator({
+				input: constSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Explicitly nullable const SHOULD have .nullable()
+			expect(output).toMatch(/nullableType:\s*z\.literal\("nullable_container"\)\.nullable\(\)/);
+		});
+
+		it("should still add .nullable() to regular string properties", () => {
+			const generator = new OpenApiGenerator({
+				input: constSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Regular string property SHOULD be nullable
+			expect(output).toMatch(/name:\s*z\.string\(\)\.nullable\(\)/);
+		});
+
+		it("should not add .nullable() to top-level const schemas", () => {
+			const generator = new OpenApiGenerator({
+				input: constSpecPath,
+				defaultNullable: true,
+			});
+			const output = generator.generateString();
+
+			// Top-level const schema should NOT be nullable
+			expect(output).not.toMatch(/export const fixedTypeSchema = z\.literal\(.*?\)\.nullable\(\);/);
+		});
+	});
 });

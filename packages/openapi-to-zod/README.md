@@ -19,7 +19,7 @@ Transform OpenAPI YAML specifications into Zod v4 compliant schemas with full Ty
 - 📊 **Statistics**: Optional generation statistics in output files
 - ❗ **Better Errors**: Clear error messages with file paths and line numbers
 - 🎭 **Tuple Validation**: OpenAPI 3.1 `prefixItems` support with `.tuple()` and `.rest()`
-- 🔗 **Smart AllOf**: Uses `.merge()` for objects, `.and()` for primitives
+- 🔗 **Smart AllOf**: Uses `.extend()` for objects (Zod v4), `.and()` for primitives
 - 🎯 **Literal Types**: `const` keyword support with `z.literal()`
 - 🔢 **Exclusive Bounds**: `exclusiveMinimum`/`exclusiveMaximum` with `.gt()`/`.lt()`
 - 🎨 **Unique Arrays**: `uniqueItems` validation with Set-based checking
@@ -181,7 +181,8 @@ Examples:
 | `name` | `string` | Optional identifier for logging |
 | `input` | `string` | Input OpenAPI YAML file path (required) |
 | `output` | `string` | Output TypeScript file path (required) |
-| `mode` | `"strict"` \| `"normal"` \| `"loose"` | Validation mode |
+| `mode` | `"strict"` \| `"normal"` \| `"loose"` | Validation mode for top-level schemas (default: `"normal"`) |
+| `emptyObjectBehavior` | `"strict"` \| `"loose"` \| `"record"` | How to handle empty objects (default: `"loose"`) |
 | `includeDescriptions` | `boolean` | Include JSDoc comments |
 | `useDescribe` | `boolean` | Add `.describe()` calls |
 | `defaultNullable` | `boolean` | Treat properties as nullable by default when not explicitly specified (default: `false`) |
@@ -313,6 +314,43 @@ const userSchema = z.looseObject({
   name: z.string(),
 });
 ```
+
+## Empty Object Behavior
+
+When OpenAPI schemas define an object without any properties (e.g., `type: object` with no `properties`), the generator needs to decide how to represent it. The `emptyObjectBehavior` option controls this:
+
+### Loose (default)
+Uses `z.looseObject({})` which allows any additional properties:
+
+```typescript
+// OpenAPI: { type: object }
+const metadataSchema = z.looseObject({});
+
+// Accepts: {}, { foo: "bar" }, { any: "properties" }
+```
+
+### Strict
+Uses `z.strictObject({})` which rejects any properties:
+
+```typescript
+// OpenAPI: { type: object }
+const emptySchema = z.strictObject({});
+
+// Accepts: {}
+// Rejects: { foo: "bar" }
+```
+
+### Record
+Uses `z.record(z.string(), z.unknown())` which treats it as an arbitrary key-value map:
+
+```typescript
+// OpenAPI: { type: object }
+const mapSchema = z.record(z.string(), z.unknown());
+
+// Accepts: {}, { foo: "bar" }, { any: "properties" }
+```
+
+> **Note:** The `mode` option controls how top-level schema definitions are wrapped, while `emptyObjectBehavior` controls how nested empty objects (properties without defined structure) are generated. These are independent settings.
 
 ## Examples
 
@@ -642,55 +680,74 @@ export default defineConfig({
 });
 ```
 
+**Important:** `defaultNullable` only applies to **primitive property values** within objects. It does NOT apply to:
+
+- **Top-level schema definitions** - Schemas are not made nullable at the definition level
+- **Schema references (`$ref`)** - References preserve the nullability of the target schema; add explicit `nullable: true` if needed
+- **Enum values** - Enums define discrete values and are not nullable by default
+- **Const/literal values** - Literals are exact values and are not nullable by default
+
 **Behavior comparison:**
 
 | Schema Property | `defaultNullable: false` (default) | `defaultNullable: true` |
 |-----------------|-------------------------------------|-------------------------|
 | `nullable: true` | `.nullable()` | `.nullable()` |
 | `nullable: false` | No `.nullable()` | No `.nullable()` |
-| No `nullable` specified | No `.nullable()` | `.nullable()` |
+| No annotation (primitive) | No `.nullable()` | `.nullable()` |
+| No annotation (`$ref`) | No `.nullable()` | No `.nullable()` |
+| No annotation (enum) | No `.nullable()` | No `.nullable()` |
+| No annotation (const) | No `.nullable()` | No `.nullable()` |
 
 **Example:**
 
 ```yaml
-User:
-  type: object
-  properties:
-    id:
-      type: integer
-    name:
+components:
+  schemas:
+    Status:
       type: string
-    email:
-      type: string
-      nullable: true
-    phone:
-      type: string
-      nullable: false
+      enum: [active, inactive]
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        nullableStatus:
+          allOf:
+            - $ref: '#/components/schemas/Status'
+          nullable: true
 ```
 
 **With `defaultNullable: false` (default):**
 ```typescript
+export const statusSchema = z.enum(["active", "inactive"]);
+
 export const userSchema = z.object({
   id: z.number().int(),
-  name: z.string(),           // Not nullable (no annotation)
-  email: z.string().nullable(), // Explicitly nullable
-  phone: z.string(),           // Explicitly not nullable
+  name: z.string(),              // Not nullable (no annotation)
+  status: statusSchema,          // Not nullable ($ref)
+  nullableStatus: statusSchema.nullable(), // Explicitly nullable
 });
 ```
 
 **With `defaultNullable: true`:**
 ```typescript
+export const statusSchema = z.enum(["active", "inactive"]);
+
 export const userSchema = z.object({
-  id: z.number().int().nullable(),  // Nullable by default
-  name: z.string().nullable(),       // Nullable by default
-  email: z.string().nullable(),      // Explicitly nullable
-  phone: z.string(),                 // Explicitly NOT nullable (respected)
+  id: z.number().int().nullable(),  // Nullable (primitive)
+  name: z.string().nullable(),       // Nullable (primitive)
+  status: statusSchema,              // NOT nullable ($ref - must be explicit)
+  nullableStatus: statusSchema.nullable(), // Explicitly nullable
 });
 ```
 
 ### Schema Composition
 
-- `allOf` → `.merge()` for objects, `.and()` for primitives
+- `allOf` → `.extend()` for objects (Zod v4), `.and()` for primitives
 - `oneOf`, `anyOf` → `z.union()` or `z.discriminatedUnion()`
 - `$ref` → Proper schema references
 
@@ -1140,11 +1197,11 @@ export const flexibleMetadataSchema = z
 
 ### Schema Composition
 
-#### AllOf - Smart Merging
+#### AllOf - Smart Extending
 
-Uses `.merge()` for objects, `.and()` for primitives:
+Uses `.extend()` for objects (Zod v4 compliant - `.merge()` is deprecated), `.and()` for primitives:
 
-**Object Merging:**
+**Object Extending:**
 ```yaml
 User:
   allOf:
@@ -1161,10 +1218,10 @@ User:
 **Generated:**
 ```typescript
 export const userSchema = baseEntitySchema
-  .merge(timestampedSchema)
-  .merge(z.object({
+  .extend(timestampedSchema.shape)
+  .extend(z.object({
     username: z.string()
-  }));
+  }).shape);
 ```
 
 #### OneOf / AnyOf
@@ -1286,7 +1343,7 @@ export const statusCodeSchema = z.enum(["200", "201", "400", "404", "500"]);
 | const | ✅ | ✅ | `z.literal()` |
 | nullable (property) | ✅ | ✅ | `.nullable()` |
 | nullable (type array) | ❌ | ✅ | `.nullable()` |
-| allOf (objects) | ✅ | ✅ | `.merge()` |
+| allOf (objects) | ✅ | ✅ | `.extend()` |
 | allOf (primitives) | ✅ | ✅ | `.and()` |
 | oneOf/anyOf | ✅ | ✅ | `z.union()` |
 | discriminators | ✅ | ✅ | `z.discriminatedUnion()` |

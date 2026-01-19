@@ -36,6 +36,16 @@ export {
 } from "./utils/operation-filters";
 // Pattern matching utilities
 export { stripPathPrefix, stripPrefix } from "./utils/pattern-utils";
+
+// Ref resolution utilities
+export {
+	mergeParameters,
+	resolveParameterRef,
+	resolveRef,
+	resolveRequestBodyRef,
+	resolveResponseRef,
+} from "./utils/ref-resolver";
+
 export { escapeJSDoc } from "./utils/string-utils";
 // TypeScript loading utilities
 export { createTypeScriptLoader } from "./utils/typescript-loader";

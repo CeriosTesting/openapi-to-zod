@@ -173,7 +173,7 @@ export interface OpenApiPlaywrightGeneratorOptions
 	 * When false: Always generates method names from HTTP method + path
 	 * @example true: "getUserById" (from operationId)
 	 * @example false: "getUsersByUserId" (generated from GET /users/{userId})
-	 * @default true
+	 * @default false
 	 */
 	useOperationId?: boolean;
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
 import { TestUtils } from "./utils/test-utils";
@@ -19,17 +19,18 @@ describe("Schema Composition", () => {
 			return generator.generateString();
 		}
 
-		it("should use .merge() for object schemas", () => {
+		it("should use .extend() for object schemas (Zod v4)", () => {
 			const output = generateOutput();
 
-			expect(output).toContain(".merge(");
+			expect(output).toContain(".extend(");
+			expect(output).not.toContain(".merge(");
 			expect(output).toContain("userSchema");
 		});
 
-		it("should chain multiple .merge() calls for multiple allOf schemas", () => {
+		it("should chain multiple .extend() calls for multiple allOf schemas", () => {
 			const output = generateOutput();
 
-			const userSchemaMatch = output.match(/userSchema = .*\.merge\(.*\.merge\(/s);
+			const userSchemaMatch = output.match(/userSchema = .*\.extend\(.*\.extend\(/s);
 			expect(userSchemaMatch).toBeTruthy();
 		});
 
@@ -38,22 +39,22 @@ describe("Schema Composition", () => {
 
 			expect(output).toContain("baseEntitySchema");
 			expect(output).toContain("timestampedSchema");
-			expect(output).toContain(".merge(");
+			expect(output).toContain(".extend(");
 		});
 
 		it("should handle allOf with only inline objects (no refs)", () => {
 			const output = generateOutput();
 
 			expect(output).toContain("extendedMetadataSchema");
-			expect(output).toContain(".merge(");
+			expect(output).toContain(".extend(");
 		});
 
 		it("should handle allOf with 4+ schemas", () => {
 			const output = generateOutput();
 
 			expect(output).toContain("fullyAuditedEntitySchema");
-			const mergeCount = (output.match(/fullyAuditedEntitySchema.*?;/s)?.[0].match(/\.merge\(/g) || []).length;
-			expect(mergeCount).toBeGreaterThanOrEqual(3);
+			const extendCount = (output.match(/fullyAuditedEntitySchema.*?;/s)?.[0].match(/\.extend\(/g) || []).length;
+			expect(extendCount).toBeGreaterThanOrEqual(3);
 		});
 
 		it("should handle nullable allOf", () => {
@@ -67,7 +68,7 @@ describe("Schema Composition", () => {
 			const output = generateOutput();
 
 			expect(output).toContain("adminUserSchema");
-			expect(output).toContain("userSchema.merge(");
+			expect(output).toContain("userSchema.extend(");
 		});
 
 		it("should use .and() for non-object allOf", () => {
@@ -131,6 +132,71 @@ describe("Schema Composition", () => {
 			if (output.includes("z.union")) {
 				expect(output).toContain("z.union([");
 			}
+		});
+
+		it("should simplify single-item oneOf to direct schema reference", () => {
+			const output = generateFromComposition();
+
+			// SingleOneOf should NOT use z.union, just reference userSchema directly
+			expect(output).toContain("singleOneOfSchema");
+			expect(output).toMatch(/singleOneOfSchema\s*=\s*userSchema/);
+			// Should NOT contain z.union for single item
+			expect(output).not.toMatch(/singleOneOfSchema\s*=\s*z\.union/);
+		});
+
+		it("should simplify single-item anyOf to direct schema", () => {
+			const output = generateFromComposition();
+
+			// SingleAnyOf should be direct z.string() not z.union([z.string()])
+			expect(output).toContain("singleAnyOfSchema");
+			expect(output).toMatch(/singleAnyOfSchema\s*=\s*z\.string\(\)/);
+			expect(output).not.toMatch(/singleAnyOfSchema\s*=\s*z\.union/);
+		});
+
+		it("should simplify single-item oneOf with nullable", () => {
+			const output = generateFromComposition();
+
+			// NullableSingleOneOf should be userSchema.nullable() not z.union([...]).nullable()
+			expect(output).toContain("nullableSingleOneOfSchema");
+			expect(output).toMatch(/nullableSingleOneOfSchema\s*=\s*userSchema\.nullable\(\)/);
+			expect(output).not.toMatch(/nullableSingleOneOfSchema\s*=\s*z\.union/);
+		});
+
+		it("should simplify single-item oneOf with inline object", () => {
+			const output = generateFromComposition();
+
+			// SingleOneOfInline should be z.object() not z.union([z.object()])
+			expect(output).toContain("singleOneOfInlineSchema");
+			expect(output).toMatch(/singleOneOfInlineSchema\s*=\s*z\.object\(/);
+			expect(output).not.toMatch(/singleOneOfInlineSchema\s*=\s*z\.union/);
+		});
+
+		it("should handle empty oneOf with warning and z.never()", () => {
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+			const output = generateFromComposition();
+
+			// EmptyOneOf should produce z.never() with description
+			expect(output).toContain("emptyOneOfSchema");
+			expect(output).toMatch(/emptyOneOfSchema\s*=\s*z\.never\(\)\.describe\(/);
+			expect(output).toContain("Empty oneOf/anyOf");
+
+			// Should have logged a warning
+			expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Empty oneOf/anyOf array encountered"));
+
+			warnSpy.mockRestore();
+		});
+
+		it("should handle empty anyOf with warning and z.never()", () => {
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+			const output = generateFromComposition();
+
+			// EmptyAnyOf should produce z.never() with description
+			expect(output).toContain("emptyAnyOfSchema");
+			expect(output).toMatch(/emptyAnyOfSchema\s*=\s*z\.never\(\)\.describe\(/);
+
+			warnSpy.mockRestore();
 		});
 	});
 
@@ -221,7 +287,7 @@ describe("Schema Composition", () => {
 			const output = generateFromComposition();
 
 			expect(output).toContain("z.tuple([");
-			expect(output).toContain(".merge(");
+			expect(output).toContain(".extend(");
 		});
 
 		it("should maintain backward compatibility", () => {

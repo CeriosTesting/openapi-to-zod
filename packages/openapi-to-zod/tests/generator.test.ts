@@ -214,8 +214,8 @@ describe("OpenApiGenerator", () => {
 		it("should handle allOf composition", () => {
 			const output = generateOutput();
 
-			// Object schemas should use .merge() for better type inference
-			expect(output).toContain(".merge(");
+			// Object schemas should use .extend() (Zod v4 - .merge() is deprecated)
+			expect(output).toContain(".extend(");
 		});
 
 		it("should handle arrays with item types", () => {

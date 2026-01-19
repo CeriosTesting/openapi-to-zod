@@ -299,6 +299,105 @@ describe("Default Nullable Option", () => {
 		});
 	});
 
+	describe("defaultNullable should NOT apply to schema references ($ref)", () => {
+		it("should not make referenced enum schemas nullable with defaultNullable: true", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				defaultNullable: true,
+			});
+
+			const output = generator.generateSchemasString();
+
+			// Schema references should NOT have .nullable() appended just because of defaultNullable
+			// Top-level enum schema exports should NOT end with .nullable()
+			expect(output).not.toMatch(/export const \w+Schema = z\.enum\(\[[\s\S]*?\]\)\.nullable\(\);/);
+		});
+
+		it("should not make $ref properties nullable with defaultNullable: true", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				defaultNullable: true,
+			});
+
+			const output = generator.generateSchemasString();
+
+			// When a property references another schema via $ref, it should NOT
+			// automatically get .nullable() from defaultNullable
+			// Pattern like: status: statusSchema.nullable() should NOT appear
+			// unless explicitly marked nullable in the spec
+
+			// Check that referenced schemas are not made nullable by default
+			// The pattern "someSchema.nullable()" at property level indicates a bug
+			// if it comes from defaultNullable rather than explicit annotation
+			expect(output).not.toMatch(/status:\s*statusSchema\.nullable\(\)/);
+		});
+
+		it("should still make primitive properties nullable with defaultNullable: true", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				defaultNullable: true,
+			});
+
+			const output = generator.generateSchemasString();
+
+			// Regular string/number properties inside objects SHOULD be nullable
+			// This confirms defaultNullable is working for the right cases
+			expect(output).toMatch(/z\.string\(\)\.nullable\(\)/);
+		});
+	});
+
+	describe("defaultNullable should NOT apply to enum values", () => {
+		it("should not make top-level enum schemas nullable with defaultNullable: true", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				defaultNullable: true,
+			});
+
+			const output = generator.generateSchemasString();
+
+			// Top-level enum schema exports should NOT end with .nullable()
+			// Pattern: export const xxxEnumSchema = z.enum([...]).nullable(); should NOT exist
+			expect(output).not.toMatch(/export const \w+Schema = z\.enum\(\[[\s\S]*?\]\)\.nullable\(\);/);
+		});
+
+		it("should not make inline enum properties nullable with defaultNullable: true", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				defaultNullable: true,
+			});
+
+			const output = generator.generateSchemasString();
+
+			// Inline enum properties (z.enum([...])) should NOT have .nullable() from defaultNullable
+			// They should only have .nullable() if explicitly marked
+			// Match pattern: z.enum([...]).nullable() which would indicate the bug
+			const inlineEnumNullableMatches = output.match(/:\s*z\.enum\(\[[\s\S]*?\]\)\.nullable\(\)/g) || [];
+
+			// If there are any inline enum nullable matches, they should be from explicit annotations
+			// In this test fixture, there shouldn't be any inline enum with defaultNullable applied
+			// Check by ensuring the count matches what we expect from explicit annotations only
+			expect(inlineEnumNullableMatches.length).toBeLessThanOrEqual(1); // At most 1 from explicit annotation
+		});
+	});
+
+	describe("defaultNullable should NOT apply to const/literal values", () => {
+		it("should not make const/literal properties nullable with defaultNullable: true", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: fixtureFile,
+				defaultNullable: true,
+			});
+
+			const output = generator.generateSchemasString();
+
+			// Const/literal values (z.literal(...)) should NOT have .nullable() from defaultNullable
+			// Pattern: z.literal(...).nullable() should NOT appear unless explicitly marked
+			const literalNullableMatches = output.match(/z\.literal\([^)]+\)\.nullable\(\)/g) || [];
+
+			// If there are any literal nullable matches, they should be from explicit annotations only
+			expect(literalNullableMatches.length).toBe(0);
+		});
+	});
+
 	describe("top-level schemas should NOT be affected by defaultNullable", () => {
 		it("should NOT add .nullable() to top-level object schema definitions with defaultNullable: true", () => {
 			const generator = new OpenApiPlaywrightGenerator({

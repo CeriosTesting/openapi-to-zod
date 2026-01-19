@@ -248,3 +248,34 @@ components:
           type: string
         routingNumber:
           type: string
+
+    # Single-item oneOf/anyOf simplification tests
+    SingleOneOf:
+      oneOf:
+        - $ref: '#/components/schemas/User'
+
+    SingleAnyOf:
+      anyOf:
+        - type: string
+          minLength: 1
+
+    NullableSingleOneOf:
+      oneOf:
+        - $ref: '#/components/schemas/User'
+      nullable: true
+
+    SingleOneOfInline:
+      oneOf:
+        - type: object
+          properties:
+            name:
+              type: string
+            value:
+              type: integer
+
+    # Empty oneOf/anyOf (malformed spec - should warn and produce z.never())
+    EmptyOneOf:
+      oneOf: []
+
+    EmptyAnyOf:
+      anyOf: []

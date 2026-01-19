@@ -1,0 +1,177 @@
+openapi: 3.1.0
+info:
+  title: Edge Case Improvements Test
+  version: 1.0.0
+  description: Tests for emptyObjectBehavior, allOf conflicts, and optional discriminators
+components:
+  schemas:
+    # === Empty Object Tests ===
+
+    # Basic empty object for emptyObjectBehavior testing
+    EmptySchema:
+      type: object
+      description: Basic empty object schema
+
+    # Empty nested object
+    ContainerWithEmpty:
+      type: object
+      properties:
+        data:
+          type: object
+          description: Nested empty object
+        name:
+          type: string
+
+    # === allOf Conflicting Properties Tests ===
+
+    # Base schema with name property
+    BaseWithName:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        id:
+          type: integer
+      required:
+        - name
+        - id
+
+    # Another schema with same name property but different definition
+    ExtensionWithDifferentName:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 5
+        extra:
+          type: string
+      required:
+        - name
+
+    # Schema combining conflicting properties via allOf
+    ConflictingAllOf:
+      allOf:
+        - $ref: '#/components/schemas/BaseWithName'
+        - $ref: '#/components/schemas/ExtensionWithDifferentName'
+
+    # No conflicts (same property, same definition)
+    NonConflictingAllOf:
+      allOf:
+        - type: object
+          properties:
+            status:
+              type: string
+        - type: object
+          properties:
+            data:
+              type: object
+
+    # Inline conflicting properties
+    InlineConflictingAllOf:
+      allOf:
+        - type: object
+          properties:
+            count:
+              type: integer
+              minimum: 0
+        - type: object
+          properties:
+            count:
+              type: string
+            total:
+              type: number
+
+    # === Optional Discriminator Tests ===
+
+    # Schema where discriminator property is optional
+    OptionalDiscriminatorVariant1:
+      type: object
+      properties:
+        type:
+          type: string
+          const: variant1
+        value1:
+          type: string
+      required:
+        - value1
+        # Note: 'type' is NOT required
+
+    OptionalDiscriminatorVariant2:
+      type: object
+      properties:
+        type:
+          type: string
+          const: variant2
+        value2:
+          type: number
+      required:
+        - value2
+        # Note: 'type' is NOT required
+
+    # Union with optional discriminator - should fallback to z.union()
+    OptionalDiscriminatorUnion:
+      oneOf:
+        - $ref: '#/components/schemas/OptionalDiscriminatorVariant1'
+        - $ref: '#/components/schemas/OptionalDiscriminatorVariant2'
+      discriminator:
+        propertyName: type
+
+    # Required discriminator variants (for comparison)
+    RequiredDiscriminatorVariant1:
+      type: object
+      properties:
+        kind:
+          type: string
+          const: kindA
+        dataA:
+          type: string
+      required:
+        - kind
+        - dataA
+
+    RequiredDiscriminatorVariant2:
+      type: object
+      properties:
+        kind:
+          type: string
+          const: kindB
+        dataB:
+          type: number
+      required:
+        - kind
+        - dataB
+
+    # Union with required discriminator - should use z.discriminatedUnion()
+    RequiredDiscriminatorUnion:
+      oneOf:
+        - $ref: '#/components/schemas/RequiredDiscriminatorVariant1'
+        - $ref: '#/components/schemas/RequiredDiscriminatorVariant2'
+      discriminator:
+        propertyName: kind
+
+    # Mixed: one required, one optional
+    MixedDiscriminatorUnion:
+      oneOf:
+        - $ref: '#/components/schemas/RequiredDiscriminatorVariant1'
+        - $ref: '#/components/schemas/OptionalDiscriminatorVariant1'
+      discriminator:
+        propertyName: type
+
+    # === Combined edge case ===
+
+    # Schema with all challenges: empty nested object + allOf
+    ComplexEdgeCase:
+      allOf:
+        - type: object
+          properties:
+            metadata:
+              type: object
+              description: Empty metadata object
+        - type: object
+          properties:
+            config:
+              type: object
+              properties:
+                enabled:
+                  type: boolean

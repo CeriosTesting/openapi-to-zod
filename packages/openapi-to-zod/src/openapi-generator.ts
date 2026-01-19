@@ -16,6 +16,7 @@ import {
 	validateFilters,
 } from "./utils/operation-filters";
 import { stripPathPrefix, stripPrefix } from "./utils/pattern-utils";
+import { mergeParameters } from "./utils/ref-resolver";
 import { configureDateTimeFormat, configurePatternCache } from "./validators/string-validator";
 
 type SchemaContext = "request" | "response" | "both";
@@ -46,6 +47,7 @@ export class OpenApiGenerator {
 			includeDescriptions: options.includeDescriptions ?? true,
 			useDescribe: options.useDescribe ?? false,
 			defaultNullable: options.defaultNullable ?? false,
+			emptyObjectBehavior: options.emptyObjectBehavior ?? "loose",
 			schemaType: options.schemaType || "all",
 			prefix: options.prefix,
 			suffix: options.suffix,
@@ -148,6 +150,7 @@ export class OpenApiGenerator {
 			includeDescriptions: this.requestOptions.includeDescriptions,
 			useDescribe: this.requestOptions.useDescribe,
 			defaultNullable: this.options.defaultNullable ?? false,
+			emptyObjectBehavior: this.options.emptyObjectBehavior ?? "loose",
 			namingOptions: {
 				prefix: this.options.prefix,
 				suffix: this.options.suffix,
@@ -647,6 +650,7 @@ export class OpenApiGenerator {
 			includeDescriptions: resolvedOptions.includeDescriptions,
 			useDescribe: resolvedOptions.useDescribe,
 			defaultNullable: this.options.defaultNullable ?? false,
+			emptyObjectBehavior: this.options.emptyObjectBehavior ?? "loose",
 			namingOptions: {
 				prefix: this.options.prefix,
 				suffix: this.options.suffix,
@@ -702,13 +706,11 @@ export class OpenApiGenerator {
 					continue;
 				}
 
-				// Skip operations without parameters
-				if (!operation.parameters || !Array.isArray(operation.parameters)) {
-					continue;
-				}
+				// Merge path-level and operation-level parameters, resolving $refs
+				const allParams = mergeParameters(pathItem.parameters, operation.parameters, this.spec);
 
 				// Filter for query parameters only
-				const queryParams = operation.parameters.filter(
+				const queryParams = allParams.filter(
 					(param: any) => param && typeof param === "object" && param.in === "query"
 				);
 
@@ -906,13 +908,11 @@ export class OpenApiGenerator {
 					continue;
 				}
 
-				// Skip operations without parameters
-				if (!operation.parameters || !Array.isArray(operation.parameters)) {
-					continue;
-				}
+				// Merge path-level and operation-level parameters, resolving $refs
+				const allParams = mergeParameters(pathItem.parameters, operation.parameters, this.spec);
 
 				// Filter for header parameters only, excluding ignored ones
-				const headerParams = operation.parameters.filter(
+				const headerParams = allParams.filter(
 					(param: any) =>
 						param && typeof param === "object" && param.in === "header" && !this.shouldIgnoreHeader(param.name)
 				);
@@ -1049,14 +1049,29 @@ export class OpenApiGenerator {
 		const type = schema.type;
 
 		if (type === "string") {
+			// Use Zod v4 top-level format validators for known formats
+			const formatMap: Record<string, string> = {
+				email: "z.email()",
+				uri: "z.url()",
+				url: "z.url()",
+				uuid: "z.uuid()",
+			};
+
+			// Check if format has a dedicated Zod v4 validator
+			if (schema.format && formatMap[schema.format]) {
+				let zodType = formatMap[schema.format];
+				// Add string validations (these still work on format types)
+				if (schema.minLength !== undefined) zodType = `${zodType}.min(${schema.minLength})`;
+				if (schema.maxLength !== undefined) zodType = `${zodType}.max(${schema.maxLength})`;
+				if (schema.pattern) zodType = `${zodType}.regex(/${schema.pattern}/)`;
+				return zodType;
+			}
+
+			// Fallback to z.string() for unknown formats or no format
 			let zodType = "z.string()";
-			// Add string validations
 			if (schema.minLength !== undefined) zodType = `${zodType}.min(${schema.minLength})`;
 			if (schema.maxLength !== undefined) zodType = `${zodType}.max(${schema.maxLength})`;
 			if (schema.pattern) zodType = `${zodType}.regex(/${schema.pattern}/)`;
-			if (schema.format === "email") zodType = `${zodType}.email()`;
-			if (schema.format === "uri" || schema.format === "url") zodType = `${zodType}.url()`;
-			if (schema.format === "uuid") zodType = `${zodType}.uuid()`;
 			return zodType;
 		}
 
@@ -1088,12 +1103,6 @@ export class OpenApiGenerator {
 		// Fallback to z.unknown() for unhandled types
 		return "z.unknown()";
 	}
-
-	// REMOVED: generateNativeEnum method - no longer needed as we only generate Zod schemas
-	// REMOVED: toEnumKey method - was only used by generateNativeEnum
-	// REMOVED: addConstraintsToJSDoc method - was only used for native TypeScript types
-	// REMOVED: generateNativeTypeDefinition method - was only used for native TypeScript types
-	// REMOVED: generateObjectType method - was only used for native TypeScript types
 
 	/**
 	 * Topological sort for schema dependencies

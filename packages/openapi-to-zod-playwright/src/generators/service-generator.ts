@@ -1,5 +1,13 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
-import { stripPathPrefix, stripPrefix, toCamelCase, toPascalCase } from "@cerios/openapi-to-zod/internal";
+import {
+	mergeParameters,
+	resolveRequestBodyRef,
+	resolveResponseRef,
+	stripPathPrefix,
+	stripPrefix,
+	toCamelCase,
+	toPascalCase,
+} from "@cerios/openapi-to-zod/internal";
 import type { PlaywrightOperationFilters } from "../types";
 import { selectContentType } from "../utils/content-type-selector";
 import { shouldIgnoreHeader } from "../utils/header-filters";
@@ -141,8 +149,12 @@ function extractEndpoints(
 			const responses: ResponseInfo[] = [];
 
 			if (operation.responses) {
-				for (const [statusCode, responseObj] of Object.entries(operation.responses)) {
-					if (typeof responseObj !== "object" || !responseObj) continue;
+				for (const [statusCode, rawResponseObj] of Object.entries(operation.responses)) {
+					if (typeof rawResponseObj !== "object" || !rawResponseObj) continue;
+
+					// Resolve $ref if present (e.g., $ref: '#/components/responses/SuccessResponse')
+					const responseObj = resolveResponseRef(rawResponseObj, spec);
+					if (!responseObj) continue;
 
 					const status = Number.parseInt(statusCode, 10);
 					const isSuccess = status >= 200 && status < 300;
@@ -207,59 +219,56 @@ function extractEndpoints(
 				}
 			}
 
-			// Check if operation has query parameters
+			// Check if operation has query parameters (merge path-level and operation-level, resolve $refs)
 			let queryParamSchemaName: string | undefined;
-			if (operation.parameters && Array.isArray(operation.parameters)) {
-				const hasQueryParams = operation.parameters.some(
-					(param: any) => param && typeof param === "object" && param.in === "query"
-				);
-				if (hasQueryParams) {
-					// Generate schema name matching the base generator pattern
-					// The base generator uses operationId if present, path+method fallback otherwise
-					// We must use the same logic to reference the correct schema
-					let pascalOperationId: string;
-					if (operation.operationId) {
-						// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
-						pascalOperationId = operation.operationId.includes("-")
-							? toPascalCase(operation.operationId)
-							: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
-					} else {
-						// Fallback: generate name from path + method (matches base generator's generateMethodNameFromPath)
-						const methodName = generateMethodName(method, path);
-						pascalOperationId = methodName.charAt(0).toUpperCase() + methodName.slice(1);
-					}
-					queryParamSchemaName = `${pascalOperationId}QueryParams`;
+			const allParams = mergeParameters(pathItem.parameters, operation.parameters, spec);
+			const hasQueryParams = allParams.some((param: any) => param && typeof param === "object" && param.in === "query");
+			if (hasQueryParams) {
+				// Generate schema name matching the base generator pattern
+				// The base generator uses operationId if present, path+method fallback otherwise
+				// We must use the same logic to reference the correct schema
+				let pascalOperationId: string;
+				if (operation.operationId) {
+					// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
+					pascalOperationId = operation.operationId.includes("-")
+						? toPascalCase(operation.operationId)
+						: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
+				} else {
+					// Fallback: generate name from path + method (matches base generator's generateMethodNameFromPath)
+					const methodName = generateMethodName(method, path);
+					pascalOperationId = methodName.charAt(0).toUpperCase() + methodName.slice(1);
 				}
+				queryParamSchemaName = `${pascalOperationId}QueryParams`;
 			}
 
 			// Check if operation has header parameters (excluding ignored ones)
 			let headerParamSchemaName: string | undefined;
-			if (operation.parameters && Array.isArray(operation.parameters)) {
-				const hasHeaderParams = operation.parameters.some(
-					(param: any) =>
-						param &&
-						typeof param === "object" &&
-						param.in === "header" &&
-						!shouldIgnoreHeader(param.name, ignoreHeaders)
-				);
-				if (hasHeaderParams) {
-					// Generate schema name matching the base generator pattern
-					// The base generator uses operationId if present, path+method fallback otherwise
-					// We must use the same logic to reference the correct schema
-					let pascalOperationId: string;
-					if (operation.operationId) {
-						// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
-						pascalOperationId = operation.operationId.includes("-")
-							? toPascalCase(operation.operationId)
-							: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
-					} else {
-						// Fallback: generate name from path + method (matches base generator's generateMethodNameFromPath)
-						const methodName = generateMethodName(method, path);
-						pascalOperationId = methodName.charAt(0).toUpperCase() + methodName.slice(1);
-					}
-					headerParamSchemaName = `${pascalOperationId}HeaderParams`;
+			const hasHeaderParams = allParams.some(
+				(param: any) =>
+					param && typeof param === "object" && param.in === "header" && !shouldIgnoreHeader(param.name, ignoreHeaders)
+			);
+			if (hasHeaderParams) {
+				// Generate schema name matching the base generator pattern
+				// The base generator uses operationId if present, path+method fallback otherwise
+				// We must use the same logic to reference the correct schema
+				let pascalOperationId: string;
+				if (operation.operationId) {
+					// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
+					pascalOperationId = operation.operationId.includes("-")
+						? toPascalCase(operation.operationId)
+						: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
+				} else {
+					// Fallback: generate name from path + method (matches base generator's generateMethodNameFromPath)
+					const methodName = generateMethodName(method, path);
+					pascalOperationId = methodName.charAt(0).toUpperCase() + methodName.slice(1);
 				}
+				headerParamSchemaName = `${pascalOperationId}HeaderParams`;
 			}
+
+			// Resolve requestBody $ref if present (e.g., $ref: '#/components/requestBodies/UserBody')
+			const resolvedRequestBody = operation.requestBody
+				? resolveRequestBodyRef(operation.requestBody, spec)
+				: undefined;
 
 			endpoints.push({
 				path,
@@ -267,7 +276,7 @@ function extractEndpoints(
 				methodName,
 				pathParams,
 				parameters: operation.parameters,
-				requestBody: operation.requestBody,
+				requestBody: resolvedRequestBody,
 				responses,
 				queryParamSchemaName,
 				headerParamSchemaName,

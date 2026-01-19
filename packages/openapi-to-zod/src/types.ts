@@ -34,6 +34,20 @@ export interface CommonSchemaOptions {
 	 * @default false
 	 */
 	defaultNullable?: boolean;
+
+	/**
+	 * Behavior for empty object schemas (objects with no properties defined)
+	 *
+	 * - 'strict': Uses z.strictObject({}) - no additional properties allowed
+	 * - 'loose': Uses z.looseObject({}) - explicitly allows additional properties (Zod v4)
+	 * - 'record': Uses z.record(z.string(), z.unknown()) - treat as arbitrary key-value map
+	 *
+	 * Note: This option controls nested/property-level empty objects.
+	 * The top-level `mode` option controls how schema definitions are wrapped.
+	 *
+	 * @default 'loose'
+	 */
+	emptyObjectBehavior?: "strict" | "loose" | "record";
 }
 
 /**
@@ -95,6 +109,20 @@ export interface OpenApiGeneratorOptions {
 	 * @default false
 	 */
 	defaultNullable?: boolean;
+
+	/**
+	 * Behavior for empty object schemas (objects with no properties defined)
+	 *
+	 * - 'strict': Uses z.strictObject({}) - no additional properties allowed
+	 * - 'loose': Uses z.looseObject({}) - explicitly allows additional properties (Zod v4)
+	 * - 'record': Uses z.record(z.string(), z.unknown()) - treat as arbitrary key-value map
+	 *
+	 * Note: This option controls nested/property-level empty objects.
+	 * The top-level `mode` option controls how schema definitions are wrapped.
+	 *
+	 * @default 'loose'
+	 */
+	emptyObjectBehavior?: "strict" | "loose" | "record";
 
 	/**
 	 * Schema filtering mode
@@ -406,8 +434,49 @@ export interface OpenAPISchema {
 export interface OpenAPISpec {
 	components?: {
 		schemas?: Record<string, OpenAPISchema>;
+		parameters?: Record<string, OpenAPIParameter>;
+		requestBodies?: Record<string, OpenAPIRequestBody>;
+		responses?: Record<string, OpenAPIResponse>;
 	};
 	paths?: Record<string, any>;
+}
+
+/**
+ * OpenAPI parameter definition for component parameters
+ */
+export interface OpenAPIParameter {
+	name: string;
+	in: "query" | "header" | "path" | "cookie";
+	description?: string;
+	required?: boolean;
+	schema?: OpenAPISchema;
+	deprecated?: boolean;
+	allowEmptyValue?: boolean;
+	style?: string;
+	explode?: boolean;
+	allowReserved?: boolean;
+	example?: any;
+	examples?: Record<string, any>;
+}
+
+/**
+ * OpenAPI request body definition for component request bodies
+ */
+export interface OpenAPIRequestBody {
+	description?: string;
+	content?: Record<string, { schema?: OpenAPISchema }>;
+	required?: boolean;
+	$ref?: string;
+}
+
+/**
+ * OpenAPI response definition for component responses
+ */
+export interface OpenAPIResponse {
+	description?: string;
+	content?: Record<string, { schema?: OpenAPISchema }>;
+	headers?: Record<string, { schema?: OpenAPISchema; description?: string }>;
+	$ref?: string;
 }
 
 /**
