@@ -3,6 +3,12 @@ import { wrapNullable } from "../utils/string-utils";
 
 export interface CompositionValidatorContext {
 	generatePropertySchema: (schema: OpenAPISchema, currentSchema?: string, isTopLevel?: boolean) => string;
+	/**
+	 * Generate inline object shape for use with .extend()
+	 * Returns just the shape object literal: { prop1: z.string(), prop2: z.number() }
+	 * This avoids the .nullable().shape bug when inline objects have nullable: true
+	 */
+	generateInlineObjectShape?: (schema: OpenAPISchema, currentSchema?: string) => string;
 	resolveDiscriminatorMapping?: (mapping: Record<string, string>, schemas: OpenAPISchema[]) => OpenAPISchema[];
 	resolveSchemaRef?: (ref: string) => OpenAPISchema | undefined;
 }
@@ -199,6 +205,17 @@ function detectConflictingProperties(schemas: OpenAPISchema[], context: Composit
 
 /**
  * Generate allOf validation
+ *
+ * Key fix: For inline objects in allOf, we generate the shape directly as an object literal
+ * (e.g., { prop: z.string() }) instead of using z.object({...}).shape.
+ * This avoids the invalid .nullable().shape pattern that occurs when inline objects
+ * have nullable: true set.
+ *
+ * According to Zod docs (https://zod.dev/api?id=extend):
+ * - .extend() accepts an object of shape definitions OR another schema's .shape
+ * - For $refs: use baseSchema.extend(otherSchema.shape)
+ * - For inline objects: use baseSchema.extend({ prop: z.string() })
+ * - .nullable() must be applied AFTER all .extend() calls
  */
 export function generateAllOf(
 	schemas: OpenAPISchema[],
@@ -224,18 +241,38 @@ export function generateAllOf(
 	// Check if all schemas are objects (for .extend() support)
 	const allObjects = schemas.every(s => s.type === "object" || s.properties || s.$ref || s.allOf);
 
-	const schemaStrings = schemas.map(s => context.generatePropertySchema(s, currentSchema, false));
-
 	let result: string;
 	if (allObjects) {
 		// Use .extend() for object schemas (Zod v4 compliant - .merge() is deprecated)
-		let merged = schemaStrings[0];
-		for (let i = 1; i < schemaStrings.length; i++) {
-			merged = `${merged}.extend(${schemaStrings[i]}.shape)`;
+		// First schema is the base - generate it normally
+		let merged = context.generatePropertySchema(schemas[0], currentSchema, false);
+
+		// For subsequent schemas, determine how to extend
+		for (let i = 1; i < schemas.length; i++) {
+			const schema = schemas[i];
+
+			if (schema.$ref) {
+				// For $ref schemas, use .extend(refSchema.shape)
+				// The ref generates a schema variable name like "userSchema"
+				const refSchema = context.generatePropertySchema(schema, currentSchema, false);
+				merged = `${merged}.extend(${refSchema}.shape)`;
+			} else if (context.generateInlineObjectShape && (schema.properties || schema.type === "object")) {
+				// For inline objects, generate shape directly as object literal
+				// This avoids the .nullable().shape bug - we pass { prop: z.string() }
+				// directly to .extend() instead of z.object({...}).nullable().shape
+				const inlineShape = context.generateInlineObjectShape(schema, currentSchema);
+				merged = `${merged}.extend(${inlineShape})`;
+			} else {
+				// Fallback for schemas without properties (e.g., just has allOf)
+				// Generate full schema and use .shape
+				const schemaString = context.generatePropertySchema(schema, currentSchema, false);
+				merged = `${merged}.extend(${schemaString}.shape)`;
+			}
 		}
 		result = merged;
 	} else {
 		// Use .and() for non-object schemas (intersection)
+		const schemaStrings = schemas.map(s => context.generatePropertySchema(s, currentSchema, false));
 		let merged = schemaStrings[0];
 		for (let i = 1; i < schemaStrings.length; i++) {
 			merged = `${merged}.and(${schemaStrings[i]})`;
@@ -248,5 +285,7 @@ export function generateAllOf(
 		result = `${result}.describe("${conflictDescription}")`;
 	}
 
+	// Apply nullable at the END, after all .extend() calls
+	// This is critical - .nullable() must come after .extend(), not before
 	return wrapNullable(result, isNullable);
 }

@@ -8,27 +8,14 @@
 		"access": "public",
 		"provenance": true
 	},
-	"keywords": [
-		"zod",
-		"openapi",
-		"validation",
-		"typescript",
-		"schema",
-		"generator",
-		"api",
-		"yaml",
-		"codegen",
-		"cerios"
-	],
+	"keywords": ["zod", "openapi", "validation", "typescript", "schema", "generator", "api", "yaml", "codegen", "cerios"],
 	"bin": {
 		"openapi-to-zod": "./dist/cli.js"
 	},
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"type": "commonjs",
 	"sideEffects": false,
 	"exports": {

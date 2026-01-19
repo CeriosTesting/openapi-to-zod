@@ -445,6 +445,7 @@ export class PropertyGenerator {
 				nullable,
 				{
 					generatePropertySchema: this.generatePropertySchema.bind(this),
+					generateInlineObjectShape: this.generateInlineObjectShape.bind(this),
 					resolveSchemaRef: this.resolveSchemaRef.bind(this),
 				},
 				currentSchema
@@ -590,7 +591,6 @@ export class PropertyGenerator {
 						case "loose":
 							validation = "z.looseObject({})";
 							break;
-						case "record":
 						default:
 							validation = "z.record(z.string(), z.unknown())";
 							break;
@@ -612,5 +612,52 @@ export class PropertyGenerator {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Generate inline object shape for use with .extend()
+	 * Returns just the shape object literal: { prop1: z.string(), prop2: z.number() }
+	 *
+	 * This method is specifically for allOf compositions where we need to pass
+	 * the shape directly to .extend() instead of using z.object({...}).shape.
+	 * This avoids the .nullable().shape bug when inline objects have nullable: true.
+	 *
+	 * According to Zod docs (https://zod.dev/api?id=extend):
+	 * - .extend() accepts an object of shape definitions
+	 * - e.g., baseSchema.extend({ prop: z.string() })
+	 */
+	generateInlineObjectShape(schema: OpenAPISchema, currentSchema?: string): string {
+		const required = new Set(schema.required || []);
+		const properties: string[] = [];
+
+		if (schema.properties) {
+			for (const [propName, propSchema] of Object.entries(schema.properties)) {
+				// Skip properties based on readOnly/writeOnly
+				if (!this.shouldIncludeProperty(propSchema)) {
+					continue;
+				}
+
+				const isRequired = required.has(propName);
+				const zodSchema = this.generatePropertySchema(propSchema, currentSchema);
+
+				// Quote property name if it contains special characters
+				const validIdentifier = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+				const quotedPropName = validIdentifier.test(propName) ? propName : `"${propName}"`;
+
+				let propertyDef = `${quotedPropName}: ${zodSchema}`;
+				if (!isRequired) {
+					propertyDef += ".optional()";
+				}
+
+				properties.push(propertyDef);
+			}
+		}
+
+		// Return the shape as an object literal
+		if (properties.length === 0) {
+			return "{}";
+		}
+
+		return `{\n${properties.map(p => `\t${p}`).join(",\n")}\n}`;
 	}
 }

@@ -84,9 +84,9 @@ describe("Edge Case Improvements", () => {
 			generateOutput();
 
 			// Should have warned about conflicting 'name' property
-			const warnCalls = consoleWarnSpy.mock.calls.map(call => call[0]);
+			const warnCalls = consoleWarnSpy.mock.calls.map((call: unknown[]) => call[0]);
 			const conflictWarning = warnCalls.find(
-				msg => typeof msg === "string" && msg.includes("allOf composition conflict") && msg.includes("name")
+				(msg: unknown) => typeof msg === "string" && msg.includes("allOf composition conflict") && msg.includes("name")
 			);
 			expect(conflictWarning).toBeDefined();
 		});
@@ -104,10 +104,10 @@ describe("Edge Case Improvements", () => {
 
 			generateOutput();
 
-			const warnCalls = consoleWarnSpy.mock.calls.map(call => call[0]);
+			const warnCalls = consoleWarnSpy.mock.calls.map((call: unknown[]) => call[0]);
 			// NonConflictingAllOf has different properties, no conflict
 			const statusConflict = warnCalls.find(
-				msg => typeof msg === "string" && msg.includes("conflict") && msg.includes("status")
+				(msg: unknown) => typeof msg === "string" && msg.includes("conflict") && msg.includes("status")
 			);
 			expect(statusConflict).toBeUndefined();
 		});
@@ -115,10 +115,10 @@ describe("Edge Case Improvements", () => {
 		it("should detect inline schema conflicts", () => {
 			generateOutput();
 
-			const warnCalls = consoleWarnSpy.mock.calls.map(call => call[0]);
+			const warnCalls = consoleWarnSpy.mock.calls.map((call: unknown[]) => call[0]);
 			// InlineConflictingAllOf has 'count' defined as integer and string
 			const countConflict = warnCalls.find(
-				msg => typeof msg === "string" && msg.includes("allOf composition conflict") && msg.includes("count")
+				(msg: unknown) => typeof msg === "string" && msg.includes("allOf composition conflict") && msg.includes("count")
 			);
 			expect(countConflict).toBeDefined();
 		});
@@ -148,9 +148,9 @@ describe("Edge Case Improvements", () => {
 		it("should warn when falling back from discriminatedUnion", () => {
 			generateOutput();
 
-			const warnCalls = consoleWarnSpy.mock.calls.map(call => call[0]);
+			const warnCalls = consoleWarnSpy.mock.calls.map((call: unknown[]) => call[0]);
 			const fallbackWarning = warnCalls.find(
-				msg =>
+				(msg: unknown) =>
 					typeof msg === "string" &&
 					msg.includes("Discriminator") &&
 					msg.includes("is not required") &&
@@ -179,10 +179,11 @@ describe("Edge Case Improvements", () => {
 
 			generateOutput();
 
-			const warnCalls = consoleWarnSpy.mock.calls.map(call => call[0]);
+			const warnCalls = consoleWarnSpy.mock.calls.map((call: unknown[]) => call[0]);
 			// Should not warn about 'kind' discriminator since it's required
 			const kindWarning = warnCalls.find(
-				msg => typeof msg === "string" && msg.includes('Discriminator "kind"') && msg.includes("not required")
+				(msg: unknown) =>
+					typeof msg === "string" && msg.includes('Discriminator "kind"') && msg.includes("not required")
 			);
 			expect(kindWarning).toBeUndefined();
 		});
