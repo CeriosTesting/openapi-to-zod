@@ -1,6 +1,6 @@
 # @cerios/openapi-to-zod-playwright
 
-## 2.0.0
+## 1.3.0
 
 ### Minor Changes
 
