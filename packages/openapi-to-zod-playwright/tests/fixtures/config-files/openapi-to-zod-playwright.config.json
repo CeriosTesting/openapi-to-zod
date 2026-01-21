@@ -10,7 +10,8 @@
 		{
 			"name": "simple-api",
 			"input": "tests/fixtures/simple.yaml",
-			"output": "tests/output/simple-from-config.ts"
+			"output": "tests/output/simple-from-config.ts",
+			"outputClient": "tests/output/simple-client.ts"
 		},
 		{
 			"name": "complex-api",

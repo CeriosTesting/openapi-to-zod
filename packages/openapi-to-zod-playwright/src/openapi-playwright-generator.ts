@@ -57,30 +57,10 @@ export class OpenApiPlaywrightGenerator implements Generator {
 	/**
 	 * Generate output files with mandatory file splitting
 	 * - Main file: Always contains schemas and types
-	 * - Client file: Optional, generated when outputClient is specified
-	 * - Service file: Optional, generated when outputService is specified (requires outputClient)
+	 * - Client file: Always generated (outputClient is required)
+	 * - Service file: Optional, generated when outputService is specified
 	 */
 	generate(): void {
-		if (!this.options.output) {
-			throw new FileOperationError(
-				"Output path is required when calling generate(). " +
-					"Either provide an 'output' option or use generateString() to get the result as a string.",
-				""
-			);
-		}
-
-		// Validation: service requires client
-		if (this.options.outputService && !this.options.outputClient) {
-			throw new ConfigurationError(
-				"Service generation requires client. Service class depends on client class for API calls. " +
-					"Please specify outputClient path when using outputService.",
-				{
-					outputService: this.options.outputService,
-					outputClient: undefined,
-				}
-			);
-		}
-
 		try {
 			const { output, outputClient, outputService } = this.options;
 
@@ -193,7 +173,12 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			this.options.ignoreHeaders,
 			this.options.stripPathPrefix,
 			this.options.stripSchemaPrefix,
-			this.options.preferredContentTypes
+			this.options.preferredContentTypes,
+			this.options.prefix,
+			this.options.suffix,
+			this.options.fallbackContentTypeParsing,
+			this.options.validateServiceRequest ?? false,
+			this.options.zodErrorFormat ?? "standard"
 		);
 	}
 
@@ -374,9 +359,9 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			}
 		}
 
-		// Only import z from zod if it's actually used for inline schemas
-		// Check for actual Zod method calls like z.string(), z.array(), z.number(), etc.
-		const zodUsagePattern = /\bz\.(string|number|boolean|array|object|parse)\(/;
+		// Only import z from zod if it's actually used for inline schemas or error formatting
+		// Check for actual Zod method calls like z.string(), z.array(), z.number(), z.prettifyError(), etc.
+		const zodUsagePattern = /\bz\.(string|number|boolean|array|object|parse|prettifyError|ZodType)\(/;
 		if (zodUsagePattern.test(serviceString)) {
 			output.push(`import { z } from "zod";`);
 		}

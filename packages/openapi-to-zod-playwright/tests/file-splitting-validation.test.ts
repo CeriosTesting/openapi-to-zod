@@ -1,60 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { ConfigurationError } from "../src/errors";
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
 
 describe("File Splitting Validation", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 	const outputPath = TestUtils.getOutputPath("schemas.ts");
-
-	describe("Service requires client validation", () => {
-		it("should throw error when outputService is specified without outputClient", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				output: outputPath,
-				outputService: TestUtils.getOutputPath("service.ts"),
-				// No outputClient
-			});
-
-			expect(() => generator.generate()).toThrow(ConfigurationError);
-			expect(() => generator.generate()).toThrow(
-				/Service generation requires client.*Please specify outputClient path/
-			);
-		});
-
-		it("should include helpful context in error message", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				output: outputPath,
-				outputService: TestUtils.getOutputPath("service.ts"),
-			});
-
-			try {
-				generator.generate();
-				expect.fail("Should have thrown ConfigurationError");
-			} catch (error) {
-				expect(error).toBeInstanceOf(ConfigurationError);
-				expect((error as ConfigurationError).message).toContain("Service class depends on client class");
-			}
-		});
-	});
+	const clientPath = TestUtils.getOutputPath("client.ts");
 
 	describe("Valid configurations", () => {
-		it("should accept schemas only (no client, no service)", () => {
-			const generator = new OpenApiPlaywrightGenerator({
-				input: fixtureFile,
-				output: outputPath,
-				// No outputClient, no outputService
-			});
-
-			expect(() => generator.generate()).not.toThrow();
-		});
-
 		it("should accept schemas + client (no service)", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: outputPath,
-				outputClient: TestUtils.getOutputPath("client.ts"),
+				outputClient: clientPath,
 				// No outputService
 			});
 
@@ -65,7 +23,7 @@ describe("File Splitting Validation", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: outputPath,
-				outputClient: TestUtils.getOutputPath("client.ts"),
+				outputClient: clientPath,
 				outputService: TestUtils.getOutputPath("service.ts"),
 			});
 
@@ -77,6 +35,8 @@ describe("File Splitting Validation", () => {
 		it("should return only schemas and types (no client, no service)", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: outputPath,
+				outputClient: clientPath,
 			});
 
 			const output = generator.generateSchemasString();
@@ -96,6 +56,8 @@ describe("File Splitting Validation", () => {
 		it("should not include Playwright imports in schemas-only output", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: outputPath,
+				outputClient: clientPath,
 			});
 
 			const output = generator.generateSchemasString();

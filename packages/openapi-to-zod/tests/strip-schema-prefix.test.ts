@@ -9,6 +9,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should strip literal string prefix from schema names", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 			});
 
@@ -37,6 +38,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should not strip schemas that don't match the prefix", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 			});
 
@@ -50,6 +52,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should work with prefix and suffix options", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 				prefix: "api",
 				suffix: "dto",
@@ -75,6 +78,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should strip using glob pattern with wildcard", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "*.Models.",
 			});
 
@@ -91,6 +95,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should strip exact namespace prefix", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 			});
 
@@ -108,6 +113,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should handle glob pattern that matches multiple prefixes", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "*.{Models,V1}.",
 			});
 
@@ -126,6 +132,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should handle empty stripSchemaPrefix", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "",
 			});
 
@@ -139,6 +146,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should handle undefined stripSchemaPrefix", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: undefined,
 			});
 
@@ -152,6 +160,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should handle prefix that matches no schemas", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "NonExistent.Prefix.",
 			});
 
@@ -168,6 +177,7 @@ describe("stripSchemaPrefix option", () => {
 			// which trigger a separate bug in topological sort
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 			});
 
@@ -184,6 +194,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should work with request schemaType", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 				schemaType: "request",
 			});
@@ -198,6 +209,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should work with response schemaType", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 				schemaType: "response",
 			});
@@ -213,6 +225,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should work with strict mode", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 				mode: "strict",
 			});
@@ -226,6 +239,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should work with loose mode", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 				mode: "loose",
 			});
@@ -241,6 +255,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should generate string output with stripped schema names", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 			});
 
@@ -255,6 +270,7 @@ describe("stripSchemaPrefix option", () => {
 		it("should generate with custom naming options", async () => {
 			const generator = new OpenApiGenerator({
 				input: fixtureFile,
+				output: "output.ts",
 				stripSchemaPrefix: "Company.Models.",
 				prefix: "api",
 			});

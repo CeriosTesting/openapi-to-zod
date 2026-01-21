@@ -8,6 +8,8 @@ describe("Schema Statistics", () => {
 	it("should NOT include statistics in schema file when showStats is false", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			showStats: false,
 		});
 
@@ -22,6 +24,8 @@ describe("Schema Statistics", () => {
 	it("should include statistics in schema file when showStats is true", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			showStats: true,
 		});
 

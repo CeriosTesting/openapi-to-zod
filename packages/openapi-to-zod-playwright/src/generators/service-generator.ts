@@ -1,5 +1,7 @@
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import {
+	type FallbackContentTypeParsing,
+	getResponseParseMethod,
 	mergeParameters,
 	resolveRequestBodyRef,
 	resolveResponseRef,
@@ -8,7 +10,7 @@ import {
 	toCamelCase,
 	toPascalCase,
 } from "@cerios/openapi-to-zod/internal";
-import type { PlaywrightOperationFilters } from "../types";
+import type { PlaywrightOperationFilters, ZodErrorFormat } from "../types";
 import { selectContentType } from "../utils/content-type-selector";
 import { shouldIgnoreHeader } from "../utils/header-filters";
 import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
@@ -60,6 +62,11 @@ function stripContentTypeParams(contentType: string): string {
  * @param stripPrefix - Optional path prefix to strip before processing
  * @param stripSchemaPrefix - Optional schema name prefix to strip
  * @param preferredContentTypes - Optional array of preferred content types for response handling
+ * @param prefix - Optional prefix for schema names
+ * @param suffix - Optional suffix for schema names
+ * @param fallbackContentTypeParsing - Fallback parsing method for unknown content types
+ * @param validateServiceRequest - Whether to validate request inputs with Zod schemas
+ * @param zodErrorFormat - Error formatting style for validation errors
  */
 export function generateServiceClass(
 	spec: OpenAPISpec,
@@ -71,7 +78,12 @@ export function generateServiceClass(
 	ignoreHeaders?: string[],
 	stripPrefix?: string,
 	stripSchemaPrefix?: string,
-	preferredContentTypes?: string[]
+	preferredContentTypes?: string[],
+	prefix?: string,
+	suffix?: string,
+	fallbackContentTypeParsing?: FallbackContentTypeParsing,
+	validateServiceRequest?: boolean,
+	zodErrorFormat: ZodErrorFormat = "standard"
 ): string {
 	const endpoints = extractEndpoints(
 		spec,
@@ -87,8 +99,23 @@ export function generateServiceClass(
 	}
 
 	const methods = endpoints
-		.flatMap(endpoint => generateSuccessMethods(endpoint, schemaImports, ignoreHeaders, stripSchemaPrefix))
+		.flatMap(endpoint =>
+			generateSuccessMethods(
+				endpoint,
+				schemaImports,
+				ignoreHeaders,
+				stripSchemaPrefix,
+				prefix,
+				suffix,
+				fallbackContentTypeParsing,
+				validateServiceRequest,
+				zodErrorFormat
+			)
+		)
 		.join("\n\n");
+
+	// Generate helper functions based on error format
+	const helperFunctions = generateZodErrorHelpers(zodErrorFormat);
 
 	return `
 /**
@@ -100,8 +127,69 @@ export class ${className} {
 	constructor(private readonly _client: ${clientClassName}) {}
 
 ${methods}
+${helperFunctions}
+}`;
 }
-`;
+
+/**
+ * Generate helper methods for Zod error formatting
+ * These are added as private methods inside the service class
+ */
+function generateZodErrorHelpers(format: ZodErrorFormat): string {
+	if (format === "prettify") {
+		return `
+	/**
+	 * Parse data with Zod schema asynchronously and throw prettified error on failure
+	 */
+	private async parseWithPrettifyError<T>(schema: z.ZodType<T>, data: unknown): Promise<T> {
+		const result = await schema.safeParseAsync(data);
+		if (!result.success) {
+			throw Object.assign(new Error(z.prettifyError(result.error)), { cause: result.error });
+		}
+		return result.data;
+	}`;
+	}
+
+	if (format === "prettifyWithValues") {
+		return `
+	/**
+	 * Format Zod error path for display
+	 */
+	private formatZodErrorPath(path: PropertyKey[]): string {
+		return path
+			.map(segment => (typeof segment.valueOf() === "number" ? \`[\${segment.toString()}]\` : \`.\${segment.toString()}\`))
+			.join("")
+			.replace(/^\\./, "");
+	}
+
+	/**
+	 * Format Zod error with actual received values for debugging
+	 */
+	private formatZodErrorWithValues(error: z.ZodError, input: unknown): string {
+		return error.issues
+			.map(issue => {
+				const value = issue.path.reduce<unknown>(
+					(acc, key) => (acc && typeof acc === "object" ? (acc as Record<string, unknown>)[key as string] : undefined),
+					input
+				);
+				return \`✖ \${issue.message} (received: \${JSON.stringify(value)})\\n  → at \${this.formatZodErrorPath(issue.path)}\`;
+			})
+			.join("\\n");
+	}
+
+	/**
+	 * Parse data with Zod schema asynchronously and throw error with values on failure
+	 */
+	private async parseWithPrettifyErrorWithValues<T>(schema: z.ZodType<T>, data: unknown): Promise<T> {
+		const result = await schema.safeParseAsync(data);
+		if (!result.success) {
+			throw Object.assign(new Error(this.formatZodErrorWithValues(result.error, data)), { cause: result.error });
+		}
+		return result.data;
+	}`;
+	}
+
+	return "";
 }
 
 /**
@@ -298,14 +386,33 @@ function generateSuccessMethods(
 	endpoint: EndpointInfo,
 	schemaImports: Set<string>,
 	ignoreHeaders?: string[],
-	stripSchemaPrefix?: string
+	stripSchemaPrefix?: string,
+	prefix?: string,
+	suffix?: string,
+	fallbackContentTypeParsing?: FallbackContentTypeParsing,
+	validateServiceRequest?: boolean,
+	zodErrorFormat: ZodErrorFormat = "standard"
 ): string[] {
 	const { responses } = endpoint;
 	const methods: string[] = [];
 
 	// No responses defined - generate single method
 	if (responses.length === 0) {
-		return [generateServiceMethod(endpoint, undefined, schemaImports, "", ignoreHeaders, stripSchemaPrefix)];
+		return [
+			generateServiceMethod(
+				endpoint,
+				undefined,
+				schemaImports,
+				"",
+				ignoreHeaders,
+				stripSchemaPrefix,
+				prefix,
+				suffix,
+				fallbackContentTypeParsing,
+				validateServiceRequest,
+				zodErrorFormat
+			),
+		];
 	}
 
 	// Group responses by status code
@@ -322,7 +429,19 @@ function generateSuccessMethods(
 	for (const [statusCode, response] of statusGroups) {
 		const statusSuffix = hasMultipleStatuses ? statusCode : "";
 		methods.push(
-			generateServiceMethod(endpoint, response, schemaImports, statusSuffix, ignoreHeaders, stripSchemaPrefix)
+			generateServiceMethod(
+				endpoint,
+				response,
+				schemaImports,
+				statusSuffix,
+				ignoreHeaders,
+				stripSchemaPrefix,
+				prefix,
+				suffix,
+				fallbackContentTypeParsing,
+				validateServiceRequest,
+				zodErrorFormat
+			)
 		);
 	}
 
@@ -335,7 +454,9 @@ function generateSuccessMethods(
  */
 function generateInlineSchemaCode(
 	inlineSchema: any,
-	stripSchemaPrefix?: string
+	stripSchemaPrefix?: string,
+	prefix?: string,
+	suffix?: string
 ): { schemaCode: string; typeName: string } | null {
 	if (!inlineSchema) return null;
 
@@ -356,7 +477,8 @@ function generateInlineSchemaCode(
 		const itemSchemaName = refParts[refParts.length - 1];
 		// Apply stripSchemaPrefix before converting to valid TypeScript identifiers
 		const strippedName = stripPrefix(itemSchemaName, stripSchemaPrefix);
-		const itemSchemaVarName = toCamelCase(strippedName);
+		// Apply prefix/suffix to match the generated schema names
+		const itemSchemaVarName = toCamelCase(strippedName, { prefix, suffix });
 		const itemTypeName = toPascalCase(strippedName);
 		return {
 			schemaCode: `z.array(${itemSchemaVarName}Schema)`,
@@ -382,6 +504,20 @@ function generateInlineSchemaCode(
 }
 
 /**
+ * Generate the parse call based on error format
+ */
+function generateParseCall(schemaVar: string, dataVar: string, format: ZodErrorFormat): string {
+	if (format === "standard") {
+		return `await ${schemaVar}.parseAsync(${dataVar})`;
+	} else if (format === "prettify") {
+		return `await this.parseWithPrettifyError(${schemaVar}, ${dataVar})`;
+	} else {
+		// prettifyWithValues
+		return `await this.parseWithPrettifyErrorWithValues(${schemaVar}, ${dataVar})`;
+	}
+}
+
+/**
  * Generates a single service method
  */
 function generateServiceMethod(
@@ -390,7 +526,12 @@ function generateServiceMethod(
 	schemaImports: Set<string>,
 	statusSuffix: string,
 	ignoreHeaders?: string[],
-	stripSchemaPrefix?: string
+	stripSchemaPrefix?: string,
+	prefix?: string,
+	suffix?: string,
+	fallbackContentTypeParsing?: FallbackContentTypeParsing,
+	validateServiceRequest?: boolean,
+	zodErrorFormat: ZodErrorFormat = "standard"
 ): string {
 	const { path, method, methodName, pathParams, requestBody } = endpoint;
 
@@ -527,8 +668,58 @@ function generateServiceMethod(
 				? "options"
 				: "";
 
-	// Build validation code (for response only, not query params)
+	// Build validation code
 	const validationCode: string[] = [];
+
+	// Add request validation if enabled
+	if (validateServiceRequest) {
+		// Validate query parameters
+		if (hasQueryParams && endpoint.queryParamSchemaName) {
+			const strippedQueryName = stripPrefix(endpoint.queryParamSchemaName, stripSchemaPrefix);
+			const querySchemaVar = `${toCamelCase(strippedQueryName, { prefix, suffix })}Schema`;
+			schemaImports.add(`${endpoint.queryParamSchemaName}Schema`);
+			validationCode.push(`\t\t// Validate query parameters`);
+			validationCode.push(`\t\tif (options?.params) {`);
+			validationCode.push(`\t\t\t${generateParseCall(querySchemaVar, "options.params", zodErrorFormat)};`);
+			validationCode.push(`\t\t}`);
+			validationCode.push("");
+		}
+
+		// Validate header parameters
+		if (hasHeaderParams && endpoint.headerParamSchemaName) {
+			const strippedHeaderName = stripPrefix(endpoint.headerParamSchemaName, stripSchemaPrefix);
+			const headerSchemaVar = `${toCamelCase(strippedHeaderName, { prefix, suffix })}Schema`;
+			schemaImports.add(`${endpoint.headerParamSchemaName}Schema`);
+			validationCode.push(`\t\t// Validate header parameters`);
+			validationCode.push(`\t\tif (options?.headers) {`);
+			validationCode.push(`\t\t\t${generateParseCall(headerSchemaVar, "options.headers", zodErrorFormat)};`);
+			validationCode.push(`\t\t}`);
+			validationCode.push("");
+		}
+
+		// Validate request body (only for application/json with a schema ref)
+		if (hasRequestBody && requestContentType === "application/json") {
+			const schema = requestBody.content[requestContentType]?.schema || requestBody.content["application/json"]?.schema;
+			if (schema?.$ref) {
+				const schemaName = schema.$ref.split("/").pop();
+				const strippedBodyName = stripPrefix(schemaName, stripSchemaPrefix);
+				const bodySchemaVar = `${toCamelCase(strippedBodyName, { prefix, suffix })}Schema`;
+				schemaImports.add(`${schemaName}Schema`);
+				const isRequired = requestBody.required === true;
+				if (isRequired) {
+					validationCode.push(`\t\t// Validate request body`);
+					validationCode.push(`\t\t${generateParseCall(bodySchemaVar, "options.data", zodErrorFormat)};`);
+					validationCode.push("");
+				} else {
+					validationCode.push(`\t\t// Validate request body`);
+					validationCode.push(`\t\tif (options?.data !== undefined) {`);
+					validationCode.push(`\t\t\t${generateParseCall(bodySchemaVar, "options.data", zodErrorFormat)};`);
+					validationCode.push(`\t\t}`);
+					validationCode.push("");
+				}
+			}
+		}
+	}
 
 	// Add client call
 	validationCode.push(`\t\tconst response = await this._client.${clientMethod}(${clientArgs});`);
@@ -543,33 +734,91 @@ function generateServiceMethod(
 	if (response?.hasBody && response.schemaName) {
 		// Apply stripSchemaPrefix before converting to camelCase variable name
 		const strippedName = stripPrefix(response.schemaName, stripSchemaPrefix);
-		const schemaVar = `${toCamelCase(strippedName)}Schema`;
-		const isJson = response.contentType === "application/json";
-		const parseMethod = isJson ? "response.json()" : "response.text()";
+		// Apply prefix/suffix to match the generated schema names
+		const schemaVar = `${toCamelCase(strippedName, { prefix, suffix })}Schema`;
+
+		// Determine parse method based on content type
+		const parseResult = getResponseParseMethod(response.contentType, fallbackContentTypeParsing);
+		if (parseResult.isUnknown) {
+			console.warn(
+				`[openapi-to-zod-playwright] Unknown content type "${response.contentType}" for ${endpoint.method} ${endpoint.path}, using fallback "${parseResult.method}"`
+			);
+		}
+
+		let parseMethod: string;
+		if (parseResult.method === "json") {
+			parseMethod = "response.json()";
+		} else if (parseResult.method === "text") {
+			parseMethod = "response.text()";
+		} else {
+			parseMethod = "response.body()";
+		}
 
 		validationCode.push(`\t\t// Parse and validate response body`);
 		validationCode.push(`\t\tconst body = await ${parseMethod};`);
-		validationCode.push(`\t\treturn ${schemaVar}.parse(body);`);
+		validationCode.push(`\t\treturn ${generateParseCall(schemaVar, "body", zodErrorFormat)};`);
 	} else if (response?.hasBody && response.inlineSchema) {
-		const inlineInfo = generateInlineSchemaCode(response.inlineSchema, stripSchemaPrefix);
+		const inlineInfo = generateInlineSchemaCode(response.inlineSchema, stripSchemaPrefix, prefix, suffix);
 		if (inlineInfo) {
-			const isJson = response.contentType === "application/json";
-			const parseMethod = isJson ? "response.json()" : "response.text()";
+			// Determine parse method based on content type
+			const parseResult = getResponseParseMethod(response.contentType, fallbackContentTypeParsing);
+			if (parseResult.isUnknown) {
+				console.warn(
+					`[openapi-to-zod-playwright] Unknown content type "${response.contentType}" for ${endpoint.method} ${endpoint.path}, using fallback "${parseResult.method}"`
+				);
+			}
+
+			let parseMethod: string;
+			if (parseResult.method === "json") {
+				parseMethod = "response.json()";
+			} else if (parseResult.method === "text") {
+				parseMethod = "response.text()";
+			} else {
+				parseMethod = "response.body()";
+			}
 
 			validationCode.push(`\t\t// Parse and validate response body (inline schema)`);
 			validationCode.push(`\t\tconst body = await ${parseMethod};`);
-			validationCode.push(`\t\treturn ${inlineInfo.schemaCode}.parse(body);`);
+			validationCode.push(`\t\treturn ${generateParseCall(inlineInfo.schemaCode, "body", zodErrorFormat)};`);
 		} else {
-			const isJson = response.contentType === "application/json";
-			const parseMethod = isJson ? "response.json()" : "response.text()";
+			// Determine parse method based on content type
+			const parseResult = getResponseParseMethod(response.contentType, fallbackContentTypeParsing);
+			if (parseResult.isUnknown) {
+				console.warn(
+					`[openapi-to-zod-playwright] Unknown content type "${response.contentType}" for ${endpoint.method} ${endpoint.path}, using fallback "${parseResult.method}"`
+				);
+			}
+
+			let parseMethod: string;
+			if (parseResult.method === "json") {
+				parseMethod = "response.json()";
+			} else if (parseResult.method === "text") {
+				parseMethod = "response.text()";
+			} else {
+				parseMethod = "response.body()";
+			}
 
 			validationCode.push(`\t\t// Parse response body (inline schema type not yet supported for validation)`);
 			validationCode.push(`\t\tconst body = await ${parseMethod};`);
 			validationCode.push(`\t\treturn body;`);
 		}
 	} else if (response?.hasBody && !response.schemaName) {
-		const isJson = response.contentType === "application/json";
-		const parseMethod = isJson ? "response.json()" : "response.text()";
+		// Determine parse method based on content type
+		const parseResult = getResponseParseMethod(response.contentType, fallbackContentTypeParsing);
+		if (parseResult.isUnknown) {
+			console.warn(
+				`[openapi-to-zod-playwright] Unknown content type "${response.contentType}" for ${endpoint.method} ${endpoint.path}, using fallback "${parseResult.method}"`
+			);
+		}
+
+		let parseMethod: string;
+		if (parseResult.method === "json") {
+			parseMethod = "response.json()";
+		} else if (parseResult.method === "text") {
+			parseMethod = "response.text()";
+		} else {
+			parseMethod = "response.body()";
+		}
 
 		validationCode.push(`\t\t// Parse response body (no schema validation available)`);
 		validationCode.push(`\t\tconst body = await ${parseMethod};`);

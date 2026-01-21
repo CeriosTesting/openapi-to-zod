@@ -44,6 +44,8 @@ export const TestUtils = {
 	generateClient(fixtureName: string, options?: Partial<OpenApiPlaywrightGeneratorOptions>): string {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: this.getFixturePath(fixtureName),
+			output: "output.ts",
+			outputClient: "client.ts",
 			...options,
 		});
 		return generator.generateSchemasString();

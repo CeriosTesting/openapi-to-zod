@@ -51,6 +51,7 @@ export const TestUtils = {
 	generateFromFixture(fixtureName: string, options?: Partial<OpenApiGeneratorOptions>): string {
 		const generator = new OpenApiGenerator({
 			input: this.getFixturePath(fixtureName),
+			output: "output.ts", // Default dummy path for tests using generateString()
 			...options,
 		});
 		return generator.generateString();

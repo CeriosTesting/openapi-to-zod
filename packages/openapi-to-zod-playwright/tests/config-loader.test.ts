@@ -56,8 +56,8 @@ describe("Config Loading - Playwright", () => {
 		it("should accept useOperationId option in config", async () => {
 			const config: PlaywrightConfigFile = {
 				specs: [
-					{ input: "api.yaml", output: "api.ts", useOperationId: true },
-					{ input: "api2.yaml", output: "api2.ts", useOperationId: false },
+					{ input: "api.yaml", output: "api.ts", outputClient: "client.ts", useOperationId: true },
+					{ input: "api2.yaml", output: "api2.ts", outputClient: "client2.ts", useOperationId: false },
 				],
 			};
 
@@ -78,8 +78,8 @@ describe("Config Loading - Playwright", () => {
 					validateServiceRequest: false,
 				},
 				specs: [
-					{ input: "api.yaml", output: "api.ts" },
-					{ input: "api2.yaml", output: "api2.ts", mode: "normal" },
+					{ input: "api.yaml", output: "api.ts", outputClient: "client.ts" },
+					{ input: "api2.yaml", output: "api2.ts", outputClient: "client2.ts", mode: "normal" },
 				],
 			};
 
@@ -98,7 +98,7 @@ describe("Config Loading - Playwright", () => {
 
 		it("should handle config without defaults", () => {
 			const config: PlaywrightConfigFile = {
-				specs: [{ input: "api.yaml", output: "api.ts", mode: "loose" }],
+				specs: [{ input: "api.yaml", output: "api.ts", outputClient: "client.ts", mode: "loose" }],
 			};
 
 			const merged = mergeConfigWithDefaults(config);
@@ -146,6 +146,7 @@ describe("Config Loading - Playwright", () => {
 					{
 						input: "api.yaml",
 						output: "api.ts",
+						outputClient: "client.ts",
 					},
 					{
 						input: "api2.yaml",
@@ -159,10 +160,26 @@ describe("Config Loading - Playwright", () => {
 			const merged = mergeConfigWithDefaults(config);
 
 			expect(merged[0].validateServiceRequest).toBe(true);
-			// outputClient not set in spec, so should be undefined (not inherited from defaults)
-			expect(merged[0].outputClient).toBeUndefined();
+			expect(merged[0].outputClient).toBe("client.ts");
 			expect(merged[1].validateServiceRequest).toBe(false);
 			expect(merged[1].outputClient).toBe("api2-client.ts");
+		});
+
+		it("should merge emptyObjectBehavior from defaults", () => {
+			const config: PlaywrightConfigFile = {
+				defaults: {
+					emptyObjectBehavior: "record",
+				},
+				specs: [
+					{ input: "api.yaml", output: "api.ts", outputClient: "client.ts" },
+					{ input: "api2.yaml", output: "api2.ts", outputClient: "client2.ts", emptyObjectBehavior: "strict" },
+				],
+			};
+
+			const merged = mergeConfigWithDefaults(config);
+
+			expect(merged[0].emptyObjectBehavior).toBe("record");
+			expect(merged[1].emptyObjectBehavior).toBe("strict");
 		});
 	});
 
@@ -171,6 +188,7 @@ describe("Config Loading - Playwright", () => {
 			const specConfig: OpenApiPlaywrightGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
+				outputClient: "client.ts",
 				mode: "normal",
 				includeDescriptions: true,
 			};
@@ -192,6 +210,7 @@ describe("Config Loading - Playwright", () => {
 			const specConfig: OpenApiPlaywrightGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
+				outputClient: "client.ts",
 				mode: "normal",
 				showStats: true,
 			};
@@ -211,6 +230,7 @@ describe("Config Loading - Playwright", () => {
 			const specConfig: OpenApiPlaywrightGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
+				outputClient: "client.ts",
 				mode: "loose",
 			};
 
@@ -224,6 +244,7 @@ describe("Config Loading - Playwright", () => {
 			const specConfig: OpenApiPlaywrightGeneratorOptions = {
 				input: "api.yaml",
 				output: "api.ts",
+				outputClient: "client.ts",
 				validateServiceRequest: false,
 			};
 
@@ -239,6 +260,23 @@ describe("Config Loading - Playwright", () => {
 			expect(merged.outputService).toBe("custom-service.ts");
 			expect(merged.validateServiceRequest).toBe(true);
 		});
+
+		it("should override emptyObjectBehavior via CLI", () => {
+			const specConfig: OpenApiPlaywrightGeneratorOptions = {
+				input: "api.yaml",
+				output: "api.ts",
+				outputClient: "client.ts",
+				emptyObjectBehavior: "loose",
+			};
+
+			const cliOptions: Partial<OpenApiPlaywrightGeneratorOptions> = {
+				emptyObjectBehavior: "record",
+			};
+
+			const merged = mergeCliWithConfig(specConfig, cliOptions);
+
+			expect(merged.emptyObjectBehavior).toBe("record");
+		});
 	});
 	describe("Config priority order", () => {
 		it("should respect precedence: CLI > per-spec > defaults", () => {
@@ -252,6 +290,7 @@ describe("Config Loading - Playwright", () => {
 					{
 						input: "api.yaml",
 						output: "api.ts",
+						outputClient: "client.ts",
 						mode: "strict",
 						suffix: "model",
 					},

@@ -9,6 +9,8 @@ describe("Type Aliases", () => {
 		it("should export QueryParams type alias", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -23,6 +25,8 @@ describe("Type Aliases", () => {
 		it("should export HttpHeaders type alias", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -35,6 +39,8 @@ describe("Type Aliases", () => {
 		it("should export UrlEncodedFormData type alias", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -47,6 +53,8 @@ describe("Type Aliases", () => {
 		it("should export MultipartFormData type alias", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -59,6 +67,8 @@ describe("Type Aliases", () => {
 		it("should export RequestBody type alias", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -71,6 +81,8 @@ describe("Type Aliases", () => {
 		it("should use type aliases in ApiRequestContextOptions", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -88,6 +100,8 @@ describe("Type Aliases", () => {
 		it("should use QueryParams in serializeParams method", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -103,6 +117,8 @@ describe("Type Aliases", () => {
 			const fixtureWithParams = TestUtils.getFixturePath("query-params-api.yaml");
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureWithParams,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -118,6 +134,8 @@ describe("Type Aliases", () => {
 			const fixtureWithForms = TestUtils.getFixturePath("multi-content-api.yaml");
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureWithForms,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -133,6 +151,8 @@ describe("Type Aliases", () => {
 		it("should include type aliases in standalone client file", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -151,6 +171,8 @@ describe("Type Aliases", () => {
 		it("should use type aliases consistently across client and service", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -171,6 +193,8 @@ describe("Type Aliases", () => {
 		it("should include JSDoc comments for QueryParams", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -184,6 +208,8 @@ describe("Type Aliases", () => {
 		it("should include JSDoc comments for HttpHeaders", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -195,6 +221,8 @@ describe("Type Aliases", () => {
 		it("should include JSDoc comments for form data types", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -207,6 +235,8 @@ describe("Type Aliases", () => {
 		it("should include JSDoc comments for RequestBody", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -220,6 +250,8 @@ describe("Type Aliases", () => {
 		it("should import all used type aliases from client in split service file", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -238,6 +270,8 @@ describe("Type Aliases", () => {
 			const fixtureWithParams = TestUtils.getFixturePath("query-params-api.yaml");
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureWithParams,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -258,6 +292,8 @@ describe("Type Aliases", () => {
 			const fixtureWithForms = TestUtils.getFixturePath("multi-content-api.yaml");
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureWithForms,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -279,6 +315,8 @@ describe("Type Aliases", () => {
 		it("should still support inline type usage in existing generated code", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 
@@ -292,6 +330,8 @@ describe("Type Aliases", () => {
 		it("should maintain all existing functionality with new type aliases", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "api-service.ts",
+				outputClient: "api-client.ts",
 				useOperationId: true,
 			});
 

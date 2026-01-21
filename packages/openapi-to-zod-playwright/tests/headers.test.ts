@@ -8,6 +8,8 @@ describe("Headers", () => {
 	function generateOutput(): string {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: false,
 		});
 		return generator.generateClientString();
@@ -57,6 +59,8 @@ describe("Headers", () => {
 		function generateServiceOutput(): string {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 			});
 			return generator.generateServiceString();

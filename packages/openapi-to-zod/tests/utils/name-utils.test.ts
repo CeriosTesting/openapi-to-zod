@@ -60,6 +60,28 @@ describe("Name Utilities", () => {
 		it("should add both prefix and suffix with dotted names", () => {
 			expect(toCamelCase("Company.Models.User", { prefix: "api", suffix: "Dto" })).toBe("apiCompanyModelsUserDto");
 		});
+
+		it("should preserve multi-word prefix casing", () => {
+			expect(toCamelCase("User", { prefix: "apiV2" })).toBe("apiV2User");
+			expect(toCamelCase("User", { prefix: "myApi" })).toBe("myApiUser");
+			expect(toCamelCase("User", { prefix: "ApiV2" })).toBe("apiV2User");
+			expect(toCamelCase("User", { prefix: "APIv2" })).toBe("aPIv2User");
+		});
+
+		it("should preserve multi-word suffix casing", () => {
+			expect(toCamelCase("User", { suffix: "ResponseDto" })).toBe("userResponseDto");
+			expect(toCamelCase("User", { suffix: "DataTransferObject" })).toBe("userDataTransferObject");
+			expect(toCamelCase("User", { suffix: "DTO" })).toBe("userDTO");
+		});
+
+		it("should capitalize lowercase suffix for proper camelCase", () => {
+			expect(toCamelCase("User", { suffix: "dto" })).toBe("userDto");
+			expect(toCamelCase("User", { suffix: "schema" })).toBe("userSchema");
+		});
+		it("should preserve casing with both multi-word prefix and suffix", () => {
+			expect(toCamelCase("User", { prefix: "apiV2", suffix: "ResponseDto" })).toBe("apiV2UserResponseDto");
+			expect(toCamelCase("User", { prefix: "myApi", suffix: "DTO" })).toBe("myApiUserDTO");
+		});
 	});
 
 	describe("toPascalCase", () => {

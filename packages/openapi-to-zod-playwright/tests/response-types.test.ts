@@ -7,7 +7,12 @@ describe("Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("primitives-api.yaml");
 
 		it("should handle number responses", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns number
@@ -16,7 +21,12 @@ describe("Response Types", () => {
 		});
 
 		it("should handle string responses", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns string
@@ -25,7 +35,12 @@ describe("Response Types", () => {
 		});
 
 		it("should handle boolean responses", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns boolean
@@ -34,7 +49,12 @@ describe("Response Types", () => {
 		});
 
 		it("should handle array responses", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceOutput = generator.generateServiceString();
 
 			// Check service method returns array
@@ -43,7 +63,12 @@ describe("Response Types", () => {
 		});
 
 		it("should validate primitive responses with Zod", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceOutput = generator.generateServiceString();
 
 			// Should have methods for all primitive types
@@ -58,7 +83,12 @@ describe("Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		function generateOutput(): string {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			return generator.generateSchemasString();
 		}
 
@@ -81,7 +111,12 @@ describe("Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should handle 204 No Content responses in service", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceString = generator.generateServiceString();
 
 			// DELETE should return void for 204 in service
@@ -89,7 +124,12 @@ describe("Response Types", () => {
 		});
 
 		it("should not have empty return; for void methods", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceString = generator.generateServiceString();
 
 			// Void methods should not have unnecessary return; statements
@@ -97,7 +137,12 @@ describe("Response Types", () => {
 		});
 
 		it("should not try to parse body for 204 responses", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceString = generator.generateServiceString();
 
 			// Should check for method existence
@@ -109,7 +154,12 @@ describe("Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 		it("should have @returns with actual type name, not HTTP status description", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceString = generator.generateServiceString();
 
 			// @returns should contain the actual type name
@@ -118,7 +168,12 @@ describe("Response Types", () => {
 		});
 
 		it("should not have @returns for void methods", () => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			const serviceString = generator.generateServiceString();
 
 			// Void methods should not have @returns tag

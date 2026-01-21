@@ -10,6 +10,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 			});
 
@@ -25,6 +26,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["Authorization"],
 			});
@@ -45,6 +47,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["*"],
 			});
@@ -60,6 +63,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["X-*"],
 			});
@@ -80,6 +84,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["authorization", "x-request-id"], // lowercase
 			});
@@ -101,6 +106,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["Authorization", "X-Request-*"],
 			});
@@ -122,6 +128,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: [],
 			});
@@ -264,6 +271,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["NonExistentHeader"],
 			});
@@ -282,6 +290,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["*"],
 			});
@@ -300,6 +309,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: simpleFixture,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["Authorization"],
 			});
@@ -317,6 +327,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["X-NonExistent"],
 			});
@@ -354,6 +365,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: ["X-*", "Auth*"],
 			});
@@ -371,6 +383,7 @@ describe("Ignore Headers Feature", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "test.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 				ignoreHeaders: undefined,
 			});

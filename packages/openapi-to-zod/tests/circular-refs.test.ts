@@ -7,6 +7,7 @@ describe("Circular Reference Handling", () => {
 	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
 		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath("circular.yaml"),
+			output: "output.ts",
 			mode: "normal",
 			...options,
 		});
@@ -54,6 +55,7 @@ describe("Circular Reference Handling", () => {
 		// Test a schema that directly references itself (e.g., tree node with left/right children)
 		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath("self-reference.yaml"),
+			output: "output.ts",
 			mode: "normal",
 		});
 

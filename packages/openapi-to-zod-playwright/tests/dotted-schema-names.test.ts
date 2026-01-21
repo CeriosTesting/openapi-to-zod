@@ -14,6 +14,7 @@ describe("Dotted Schema Names Handling", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: schemaOutputFile,
+				outputClient: clientOutputFile,
 			});
 
 			generator.generate();
@@ -40,6 +41,7 @@ describe("Dotted Schema Names Handling", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: schemaOutputFile,
+				outputClient: clientOutputFile,
 			});
 
 			generator.generate();
@@ -53,6 +55,7 @@ describe("Dotted Schema Names Handling", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: schemaOutputFile,
+				outputClient: clientOutputFile,
 			});
 
 			generator.generate();
@@ -164,6 +167,7 @@ components:
 				const generator = new OpenApiPlaywrightGenerator({
 					input: testFile,
 					output: TestUtils.getOutputPath("multiple-dots.ts"),
+					outputClient: TestUtils.getOutputPath("multiple-dots-client.ts"),
 				});
 
 				generator.generate();
@@ -210,6 +214,7 @@ components:
 				const generator = new OpenApiPlaywrightGenerator({
 					input: testFile,
 					output: TestUtils.getOutputPath("edge-dots.ts"),
+					outputClient: TestUtils.getOutputPath("edge-dots-client.ts"),
 				});
 
 				generator.generate();

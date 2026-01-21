@@ -80,10 +80,8 @@ export interface OpenApiGeneratorOptions {
 
 	/**
 	 * Output TypeScript file path
-	 * Optional when using string generation methods (generateString)
-	 * Required when calling generate() to write to a file
 	 */
-	output?: string;
+	output: string;
 
 	/**
 	 * Whether to include descriptions as JSDoc comments
@@ -192,6 +190,20 @@ export interface OpenApiGeneratorOptions {
 	 * @default true
 	 */
 	showStats?: boolean;
+
+	/**
+	 * Fallback parsing method for unknown or missing content types
+	 *
+	 * When a content type is not recognized, this determines how the response is parsed:
+	 * - "text": Use response.text() - safest, always succeeds (default)
+	 * - "json": Use response.json() - may throw if response isn't valid JSON
+	 * - "body": Use response.body() - returns raw Buffer
+	 *
+	 * A warning will be logged during generation when an unknown content type is encountered.
+	 *
+	 * @default "text"
+	 */
+	fallbackContentTypeParsing?: "text" | "json" | "body";
 
 	/**
 	 * Request-specific options that override root-level options

@@ -1,6 +1,14 @@
 import type { OpenApiGeneratorOptions, OperationFilters } from "@cerios/openapi-to-zod";
 
 /**
+ * Zod error formatting options for service validation
+ * - "standard": Uses schema.parseAsync() - throws ZodError directly (default)
+ * - "prettify": Uses z.prettifyError() for human-readable messages
+ * - "prettifyWithValues": Includes actual values in error messages for debugging
+ */
+export type ZodErrorFormat = "standard" | "prettify" | "prettifyWithValues";
+
+/**
  * Playwright-specific operation filtering options
  * Extends base filters with status code filtering for response validation
  */
@@ -31,9 +39,9 @@ export interface PlaywrightOperationFilters extends OperationFilters {
  * Generator options for Playwright client generation
  *
  * File Splitting Architecture:
- * - Schemas (main output): Always generated, contains Zod schemas and TypeScript types
- * - Client (outputClient): Optional, Playwright API passthrough wrapper
- * - Service (outputService): Optional, type-safe validation layer (requires outputClient)
+ * - Schemas (output): Always generated, contains Zod schemas and TypeScript types
+ * - Client (outputClient): Playwright API passthrough wrapper
+ * - Service (outputService): Optional, type-safe validation layer
  */
 export interface OpenApiPlaywrightGeneratorOptions
 	extends Omit<OpenApiGeneratorOptions, "schemaType" | "operationFilters"> {
@@ -45,24 +53,17 @@ export interface OpenApiPlaywrightGeneratorOptions
 	/**
 	 * Output file path for schemas and types (always generated)
 	 * Contains Zod validation schemas and TypeScript type definitions
-	 * Required when calling generate() to write to a file
-	 * Optional when using generateString() for testing
 	 */
-	output?: string;
+	output: string;
 
 	/**
-	 * Optional: Output file path for client class
+	 * Output file path for client class
 	 *
-	 * When specified:
-	 * - Generates a Playwright API passthrough client in a separate file
+	 * Generates a Playwright API passthrough client in a separate file:
 	 * - Client provides thin wrapper around Playwright's APIRequestContext
 	 * - No schema imports needed (pure passthrough)
-	 *
-	 * When omitted:
-	 * - Only schemas and types are generated
-	 * - Use this when you only need validation schemas
 	 */
-	outputClient?: string;
+	outputClient: string;
 
 	/**
 	 * Optional: Output file path for service class
@@ -70,13 +71,10 @@ export interface OpenApiPlaywrightGeneratorOptions
 	 * When specified:
 	 * - Generates a type-safe validation service in a separate file
 	 * - Service uses client for API calls and validates responses with Zod
-	 * - REQUIRES outputClient to be specified (service depends on client)
 	 * - Imports schemas from main output and client class from outputClient
 	 *
 	 * When omitted:
 	 * - No service layer is generated
-	 *
-	 * Note: You cannot generate service without client
 	 */
 	outputService?: string;
 
@@ -187,6 +185,34 @@ export interface OpenApiPlaywrightGeneratorOptions
 	 * @example ["application/json", "text/json", "application/xml"]
 	 */
 	preferredContentTypes?: string[];
+
+	/**
+	 * Fallback parsing method for unknown or missing content types in service generation
+	 *
+	 * When a content type is not recognized, this determines how the response is parsed:
+	 * - "text": Use response.text() - safest, always succeeds (default)
+	 * - "json": Use response.json() - may throw if response isn't valid JSON
+	 * - "body": Use response.body() - returns raw Buffer
+	 *
+	 * A warning will be logged during generation when an unknown content type is encountered.
+	 *
+	 * @default "text"
+	 */
+	fallbackContentTypeParsing?: "text" | "json" | "body";
+
+	/**
+	 * Zod error formatting style for validation errors in service methods
+	 * - "standard": Uses schema.parseAsync() - throws ZodError directly (default)
+	 * - "prettify": Uses z.prettifyError() for human-readable error messages
+	 * - "prettifyWithValues": Includes actual received values in error messages for easier debugging
+	 *
+	 * @default "standard"
+	 * @example
+	 * // standard: throws ZodError with issues array
+	 * // prettify: "✖ Expected string, received number\n  → at blaat[0].foo"
+	 * // prettifyWithValues: "✖ Expected string, received number (received: 123)\n  → at blaat[0].foo"
+	 */
+	zodErrorFormat?: ZodErrorFormat;
 }
 
 /**
@@ -202,7 +228,7 @@ export interface PlaywrightConfigFile {
 
 	/**
 	 * Array of OpenAPI specifications to process
-	 * Each spec must have input and output paths
+	 * Each spec must have input, output, and outputClient paths
 	 */
 	specs: OpenApiPlaywrightGeneratorOptions[];
 
@@ -219,13 +245,10 @@ export interface PlaywrightConfigFile {
  *
  * File Splitting Examples:
  *
- * 1. Schemas only (no client, no service):
- *    { input: 'api.yaml', output: 'schemas.ts' }
- *
- * 2. Schemas + Client (separate files):
+ * 1. Schemas + Client (minimum required):
  *    { input: 'api.yaml', output: 'schemas.ts', outputClient: 'client.ts' }
  *
- * 3. Schemas + Client + Service (all separate):
+ * 2. Schemas + Client + Service (full setup):
  *    { input: 'api.yaml', output: 'schemas.ts', outputClient: 'client.ts', outputService: 'service.ts' }
  *
  * @example
@@ -238,15 +261,15 @@ export interface PlaywrightConfigFile {
  *     includeDescriptions: true
  *   },
  *   specs: [
- *     // Schemas only
- *     { input: 'api-v1.yaml', output: 'tests/schemas.ts' },
+ *     // Schemas + Client (minimum required)
+ *     { input: 'api-v1.yaml', output: 'tests/schemas.ts', outputClient: 'tests/client.ts' },
  *
  *     // Schemas + Client + Service (full setup)
  *     {
  *       input: 'api-v2.yaml',
-       output: 'tests/schemas.ts',
-       outputClient: 'tests/client.ts',
-       outputService: 'tests/service.ts'
+ *       output: 'tests/schemas.ts',
+ *       outputClient: 'tests/client.ts',
+ *       outputService: 'tests/service.ts'
  *     }
  *   ]
  * });

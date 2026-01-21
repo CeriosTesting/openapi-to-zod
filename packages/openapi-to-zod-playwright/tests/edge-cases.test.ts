@@ -7,7 +7,12 @@ describe("Edge Cases", () => {
 	it("should handle empty OpenAPI spec", () => {
 		const fixtureFile = TestUtils.getFixturePath("empty-spec.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		const output = generator.generateSchemasString();
 
@@ -19,7 +24,12 @@ describe("Edge Cases", () => {
 	it("should handle spec with no paths", () => {
 		const fixtureFile = TestUtils.getFixturePath("no-paths.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		const output = generator.generateSchemasString();
 
@@ -30,7 +40,12 @@ describe("Edge Cases", () => {
 	it("should handle paths with no operations", () => {
 		const fixtureFile = TestUtils.getFixturePath("no-operations.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		const output = generator.generateSchemasString();
 		expect(output).toBeTruthy();
@@ -39,7 +54,12 @@ describe("Edge Cases", () => {
 	it("should handle very long path names", () => {
 		const fixtureFile = TestUtils.getFixturePath("long-paths.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		const clientOutput = generator.generateClientString();
 		expect(clientOutput).toBeTruthy();
@@ -51,7 +71,12 @@ describe("Edge Cases", () => {
 	it("should handle special characters in paths", () => {
 		const fixtureFile = TestUtils.getFixturePath("special-chars-paths.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		const clientOutput = generator.generateClientString();
 		expect(clientOutput).toBeTruthy();
@@ -62,7 +87,12 @@ describe("Edge Cases", () => {
 	it("should handle circular references in schemas", () => {
 		const fixtureFile = TestUtils.getFixturePath("circular-schemas.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "api-service.ts",
+			outputClient: "api-client.ts",
+		});
 
 		const schemasOutput = generator.generateSchemasString();
 		const clientOutput = generator.generateClientString();
@@ -75,7 +105,12 @@ describe("Edge Cases", () => {
 	it("should handle very deeply nested schemas", () => {
 		const fixtureFile = TestUtils.getFixturePath("deep-nesting.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		const output = generator.generateSchemasString();
 		expect(output).toBeTruthy();
@@ -84,13 +119,23 @@ describe("Edge Cases", () => {
 
 	it("should throw error for non-existent input file", () => {
 		expect(() => {
-			new OpenApiPlaywrightGenerator({ useOperationId: false, input: TestUtils.getFixturePath("non-existent.yaml") });
+			new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: TestUtils.getFixturePath("non-existent.yaml"),
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 		}).toThrow(FileOperationError);
 	});
 
 	it("should throw error for missing input path", () => {
 		expect(() => {
-			new OpenApiPlaywrightGenerator({ useOperationId: false, input: "" });
+			new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: "",
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 		}).toThrow(FileOperationError);
 	});
 
@@ -98,7 +143,12 @@ describe("Edge Cases", () => {
 		const fixtureFile = TestUtils.getFixturePath("invalid-yaml.yaml");
 
 		expect(() => {
-			const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+			const generator = new OpenApiPlaywrightGenerator({
+				useOperationId: false,
+				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
+			});
 			generator.generateSchemasString();
 		}).toThrow();
 	});
@@ -110,7 +160,12 @@ describe("Performance", () => {
 
 		const startTime = Date.now();
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		generator.generateSchemasString();
 
@@ -124,7 +179,12 @@ describe("Performance", () => {
 	it("should handle multiple generations without memory leaks", () => {
 		const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 
 		// Generate multiple times
 		for (let i = 0; i < 100; i++) {
@@ -141,6 +201,8 @@ describe("Performance", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			useOperationId: false,
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			showStats: false, // Disable stats to avoid timestamp differences
 		});
 

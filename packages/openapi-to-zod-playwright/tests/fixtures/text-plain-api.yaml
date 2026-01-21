@@ -1,0 +1,108 @@
+openapi: 3.0.0
+info:
+  title: Text Plain API
+  version: 1.0.0
+  description: API that returns text/plain responses
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Health status as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+  /version:
+    get:
+      operationId: getVersion
+      summary: Get version string
+      responses:
+        '200':
+          description: Version string
+          content:
+            text/plain:
+              schema:
+                type: string
+  /logs:
+    get:
+      operationId: getLogs
+      summary: Get logs as text
+      responses:
+        '200':
+          description: Log content
+          content:
+            text/plain:
+              schema:
+                type: string
+  /config:
+    get:
+      operationId: getConfig
+      summary: Get config as text/html
+      responses:
+        '200':
+          description: Config as HTML
+          content:
+            text/html:
+              schema:
+                type: string
+  /data.xml:
+    get:
+      operationId: getXmlData
+      summary: Get XML data
+      responses:
+        '200':
+          description: XML data
+          content:
+            application/xml:
+              schema:
+                type: string
+  /image:
+    get:
+      operationId: getImage
+      summary: Get image
+      responses:
+        '200':
+          description: PNG image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+  /document:
+    get:
+      operationId: getDocument
+      summary: Get PDF document
+      responses:
+        '200':
+          description: PDF document
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+  /archive:
+    get:
+      operationId: getArchive
+      summary: Get ZIP archive
+      responses:
+        '200':
+          description: ZIP archive
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+  /custom:
+    get:
+      operationId: getCustom
+      summary: Get custom content type
+      responses:
+        '200':
+          description: Custom unknown content type
+          content:
+            application/x-custom-type:
+              schema:
+                type: string

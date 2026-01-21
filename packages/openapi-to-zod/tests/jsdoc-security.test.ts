@@ -70,6 +70,7 @@ components:
 
 			const generator = new OpenApiGenerator({
 				input: fixturePath,
+				output: "output.ts",
 				includeDescriptions: true,
 			});
 
@@ -103,6 +104,7 @@ components:
 
 			const generator = new OpenApiGenerator({
 				input: fixturePath,
+				output: "output.ts",
 				includeDescriptions: true,
 			});
 
@@ -133,6 +135,7 @@ components:
 
 			const generator = new OpenApiGenerator({
 				input: fixturePath,
+				output: "output.ts",
 				includeDescriptions: true,
 			});
 
@@ -167,6 +170,7 @@ components:
 
 			const generator = new OpenApiGenerator({
 				input: fixturePath,
+				output: "output.ts",
 				includeDescriptions: true,
 				useDescribe: true,
 			});

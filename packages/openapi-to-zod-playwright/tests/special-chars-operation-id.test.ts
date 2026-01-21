@@ -8,6 +8,8 @@ describe("Special Characters in operationId", () => {
 	it("should sanitize kebab-case operationIds to camelCase", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: true,
 		});
 
@@ -34,6 +36,8 @@ describe("Special Characters in operationId", () => {
 	it("should sanitize snake_case operationIds to camelCase", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: true,
 		});
 
@@ -51,6 +55,8 @@ describe("Special Characters in operationId", () => {
 	it("should convert PascalCase operationIds to camelCase", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: true,
 		});
 
@@ -68,6 +74,8 @@ describe("Special Characters in operationId", () => {
 	it("should preserve already valid camelCase operationIds", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: true,
 		});
 
@@ -81,6 +89,8 @@ describe("Special Characters in operationId", () => {
 	it("should handle mixed special characters", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: true,
 		});
 
@@ -94,6 +104,8 @@ describe("Special Characters in operationId", () => {
 	it("should handle operationIds starting with numbers by prefixing with underscore", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: true,
 		});
 

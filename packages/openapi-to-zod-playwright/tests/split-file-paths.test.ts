@@ -24,6 +24,13 @@ describe("Split Files - Path Edge Cases", () => {
 				rmSync(dir, { recursive: true, force: true });
 			}
 		}
+
+		if (existsSync(TestUtils.getOutputPath("client.ts"))) {
+			rmSync(TestUtils.getOutputPath("client.ts"));
+		}
+		if (existsSync(TestUtils.getOutputPath("service.ts"))) {
+			rmSync(TestUtils.getOutputPath("service.ts"));
+		}
 	});
 
 	describe("Same directory scenarios", () => {

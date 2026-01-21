@@ -52,7 +52,8 @@ This will guide you through creating a configuration file:
 
 ```
 ? Input OpenAPI file path: openapi.yaml
-? Output TypeScript file path: tests/api-client.ts
+? Output file path for schemas and types: tests/schemas.ts
+? Output file path for client class: tests/client.ts
 ? Config file format: TypeScript (recommended)
 ? Include commonly-used defaults? Yes
 ```
@@ -70,7 +71,8 @@ export default defineConfig({
   specs: [
     {
       input: 'openapi.yaml',
-      output: 'tests/api-client.ts',
+      output: 'tests/schemas.ts',
+      outputClient: 'tests/client.ts',
     },
   ],
 });
@@ -142,9 +144,9 @@ export const userSchema = z.object({
 export type User = z.infer<typeof userSchema>;
 ```
 
-### 2. ApiClient (Optional - Thin Passthrough Layer)
+### 2. ApiClient (Always Generated - Thin Passthrough Layer)
 
-Generated when `outputClient` is specified:
+Generated in the `outputClient` file:
 
 - Direct passthrough to Playwright's `ApiRequestContext`
 - No validation - allows testing invalid requests
@@ -162,7 +164,7 @@ const response = await client.postUsers({
 
 ### 3. ApiService (Optional - Validated Layer)
 
-Generated when `outputService` is specified (requires `outputClient`):
+Generated when `outputService` is specified:
 
 - Validates requests with Zod schemas (when `validateServiceRequest: true`)
 - Validates response status with Playwright `expect()`
@@ -206,7 +208,8 @@ The `stripPathPrefix` option removes common prefixes from API paths before gener
 export default defineConfig({
   specs: [{
     input: 'openapi.yaml',
-    output: 'client.ts',
+    output: 'schemas.ts',
+    outputClient: 'client.ts',
     stripPathPrefix: '/api/v1.0',  // Strip this prefix from all paths
     basePath: '/api/v1.0'          // Add it back for HTTP requests
   }]
@@ -252,7 +255,8 @@ Use glob patterns to strip dynamic prefixes (e.g., version numbers):
 export default defineConfig({
   specs: [{
     input: 'openapi.yaml',
-    output: 'client.ts',
+    output: 'schemas.ts',
+    outputClient: 'client.ts',
     // Strip any versioned API prefix using wildcards
     stripPathPrefix: '/api/v*'
   }]
@@ -518,7 +522,7 @@ export default defineConfig({
     // TypeScript config - RegExp literal (single escaping)
     customDateTimeFormatRegex: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/,
   },
-  specs: [{ input: 'openapi.yaml', output: 'src/schemas.ts' }],
+  specs: [{ input: 'openapi.yaml', output: 'src/schemas.ts', outputClient: 'src/client.ts' }],
 });
 ```
 

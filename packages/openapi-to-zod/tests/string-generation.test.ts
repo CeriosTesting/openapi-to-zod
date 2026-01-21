@@ -12,6 +12,7 @@ describe("String Generation Methods", () => {
 	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
 		const generator = new OpenApiGenerator({
 			input: fixturePath,
+			output: "output.ts",
 			...options,
 		});
 		return generator.generateString();
@@ -25,21 +26,10 @@ describe("String Generation Methods", () => {
 		expect(output).toContain("z.object({");
 	});
 
-	it("should work without output path when using generateString()", () => {
+	it("should work when using generateString()", () => {
 		const output = generateOutput();
 		expect(output).toBeTruthy();
 		expect(output.length).toBeGreaterThan(0);
-	});
-
-	it("should throw error when calling generate() without output path", () => {
-		const generator = new OpenApiGenerator({
-			input: fixturePath,
-		});
-
-		expect(() => generator.generate()).toThrow(
-			"Output path is required when calling generate(). " +
-				"Either provide an 'output' option or use generateString() to get the result as a string."
-		);
 	});
 
 	it("should generate schemas with output path provided", () => {

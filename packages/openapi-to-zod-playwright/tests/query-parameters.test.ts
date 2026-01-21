@@ -8,6 +8,8 @@ describe("Query Parameters", () => {
 	function generateClientOutput(): string {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: false,
 		});
 		return generator.generateClientString();

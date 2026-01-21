@@ -9,6 +9,8 @@ describe("Operation Filtering", () => {
 		describe("should include only operations with specified tags", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["users"],
@@ -55,6 +57,8 @@ describe("Operation Filtering", () => {
 		describe("should exclude operations with specified tags", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					excludeTags: ["internal", "admin"],
@@ -101,6 +105,8 @@ describe("Operation Filtering", () => {
 		describe("should handle multiple tag matching", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["users", "products"],
@@ -135,6 +141,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includePaths: ["/users", "/users/**"],
@@ -154,6 +161,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includePaths: ["/api/v1/**"],
@@ -171,6 +179,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					excludePaths: ["/admin/**", "/internal/**"],
@@ -194,6 +203,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeMethods: ["get"],
@@ -216,6 +226,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					excludeMethods: ["delete"],
@@ -238,6 +249,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					excludeDeprecated: true,
@@ -257,6 +269,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 			});
 
@@ -273,6 +286,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeOperationIds: ["getUser*"],
@@ -294,6 +308,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					excludeOperationIds: ["*Admin*", "*Internal*"],
@@ -317,6 +332,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeStatusCodes: ["200", "201"],
@@ -334,6 +350,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeStatusCodes: ["2xx"],
@@ -351,6 +368,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					excludeStatusCodes: ["5xx"],
@@ -367,6 +385,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeStatusCodes: ["200", "4xx"],
@@ -385,6 +404,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["users"],
@@ -406,6 +426,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["users", "admin"],
@@ -424,6 +445,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["users"],
@@ -444,6 +466,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: [],
@@ -469,6 +492,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["nonexistent-tag"],
@@ -488,6 +512,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 				operationFilters: {
 					includeTags: ["users"],
@@ -507,6 +532,7 @@ describe("Operation Filtering", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
 				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 			});
 

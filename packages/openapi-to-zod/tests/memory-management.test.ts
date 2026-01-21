@@ -131,6 +131,7 @@ describe("Memory Management", () => {
 			for (let i = 0; i < 100; i++) {
 				const generator = new OpenApiGenerator({
 					input: TestUtils.getFixturePath("simple.yaml"),
+					output: "output.ts",
 				});
 				generator.generateString();
 			}
@@ -152,6 +153,7 @@ describe("Memory Management", () => {
 			for (let i = 0; i < 10; i++) {
 				const generator = new OpenApiGenerator({
 					input: TestUtils.getFixturePath("complex.yaml"),
+					output: "output.ts",
 				});
 				generator.generateString();
 			}

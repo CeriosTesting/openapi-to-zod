@@ -7,6 +7,7 @@ describe("Not Keyword (OpenAPI 3.1)", () => {
 	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
 		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath("not-keyword.yaml"),
+			output: "output.ts",
 			...options,
 		});
 		return generator.generateString();

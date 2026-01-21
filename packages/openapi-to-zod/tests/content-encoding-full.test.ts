@@ -7,6 +7,7 @@ describe("Content Encoding (OpenAPI 3.1)", () => {
 	function generateOutput(options: Partial<OpenApiGeneratorOptions> = {}): string {
 		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath("content-encoding-full.yaml"),
+			output: "output.ts",
 			...options,
 		});
 		return generator.generateString();

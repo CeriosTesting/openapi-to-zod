@@ -8,6 +8,8 @@ describe("Imports", () => {
 	it("should not include Playwright imports in schemas-only output", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 		});
 
 		const output = generator.generateSchemasString();
@@ -20,6 +22,8 @@ describe("Imports", () => {
 	it("should include Zod import", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 		});
 
 		const output = generator.generateSchemasString();
@@ -29,6 +33,8 @@ describe("Imports", () => {
 	it("should organize imports correctly", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 		});
 
 		const output = generator.generateSchemasString();
@@ -47,6 +53,8 @@ describe("Imports", () => {
 	it("should include Playwright imports in client file", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 		});
 
 		const clientString = generator.generateClientString();
@@ -59,6 +67,8 @@ describe("Imports", () => {
 	it("should include proper imports in split files", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 		});
 
 		const clientString = generator.generateClientString();

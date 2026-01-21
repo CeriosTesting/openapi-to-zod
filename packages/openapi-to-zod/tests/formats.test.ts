@@ -11,6 +11,7 @@ describe("Format Validation", () => {
 	function generateOutput(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
 		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath(fixture),
+			output: "output.ts",
 			...options,
 		});
 		return generator.generateString();

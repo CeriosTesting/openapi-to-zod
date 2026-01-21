@@ -15,6 +15,7 @@ describe("Edge Case Improvements", () => {
 	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
 		const generator = new OpenApiGenerator({
 			input: fixturePath,
+			output: "output.ts",
 			...options,
 		});
 		return generator.generateString();

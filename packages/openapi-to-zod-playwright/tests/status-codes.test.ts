@@ -6,12 +6,22 @@ describe("Status Codes", () => {
 	const fixtureFile = TestUtils.getFixturePath("simple-api.yaml");
 
 	function generateClientOutput(): string {
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 		return generator.generateClientString();
 	}
 
 	function generateServiceOutput(): string {
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 		return generator.generateServiceString();
 	}
 
@@ -30,7 +40,12 @@ describe("Status Codes", () => {
 	});
 
 	it("should generate error methods for 4xx/5xx responses", () => {
-		const generator = new OpenApiPlaywrightGenerator({ useOperationId: false, input: fixtureFile });
+		const generator = new OpenApiPlaywrightGenerator({
+			useOperationId: false,
+			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
+		});
 		const schemasOutput = generator.generateSchemasString();
 		const serviceOutput = generator.generateServiceString();
 

@@ -9,7 +9,7 @@ describe("Comprehensive Compilation Tests", () => {
 	const outputFiles: string[] = [];
 
 	// Helper to track and generate output
-	function generateAndTrack(name: string, options: OpenApiGeneratorOptions): void {
+	function generateAndTrack(name: string, options: Omit<OpenApiGeneratorOptions, "output">): void {
 		const outputPath = TestUtils.getOutputPath(`compilation-${name}.ts`);
 		outputFiles.push(outputPath);
 

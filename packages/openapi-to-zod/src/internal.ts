@@ -20,12 +20,17 @@ export { executeBatch, type Generator, getBatchExitCode } from "./batch-executor
 export type { BaseOperationFilters, RequestResponseOptions } from "./utils/config-schemas";
 export { OperationFiltersSchema, RequestResponseOptionsSchema } from "./utils/config-schemas";
 export { formatConfigValidationError } from "./utils/config-validation";
-
+// Content type utilities
+export {
+	type ContentTypeParseResult,
+	type FallbackContentTypeParsing,
+	getResponseParseMethod,
+} from "./utils/content-type-utils";
 // Caching utilities
 export { LRUCache } from "./utils/lru-cache";
-
 // String and naming utilities
 export { toCamelCase, toPascalCase } from "./utils/name-utils";
+
 // Operation filtering utilities
 export {
 	createFilterStatistics,

@@ -239,11 +239,12 @@ async function initConfigFile(): Promise<void> {
 		{
 			type: "text",
 			name: "outputClient",
-			message: "Output file path for client class (leave empty to skip):",
-			initial: "",
+			message: "Output file path for client class:",
+			initial: "tests/client.ts",
+			validate: value => value.length > 0 || "Client output path is required",
 		},
 		{
-			type: (_prev, values) => (values.outputClient ? "text" : null),
+			type: "text",
 			name: "outputService",
 			message: "Output file path for service class (leave empty to skip):",
 			initial: "",
@@ -267,7 +268,7 @@ async function initConfigFile(): Promise<void> {
 	]);
 
 	// Handle user cancellation (Ctrl+C)
-	if (!response.output || !response.format) {
+	if (!response.output || !response.outputClient || !response.format) {
 		console.log("\nInitialization cancelled.");
 		return;
 	}
@@ -283,10 +284,11 @@ async function initConfigFile(): Promise<void> {
 		configFilename = "openapi-to-zod-playwright.config.ts";
 
 		// Build spec object
-		const specConfig: string[] = [`      input: '${input}',`, `      output: '${output}',`];
-		if (outputClient) {
-			specConfig.push(`      outputClient: '${outputClient}',`);
-		}
+		const specConfig: string[] = [
+			`      input: '${input}',`,
+			`      output: '${output}',`,
+			`      outputClient: '${outputClient}',`,
+		];
 		if (outputService) {
 			specConfig.push(`      outputService: '${outputService}',`);
 		}
@@ -326,10 +328,8 @@ ${specConfig.join("\n")}
 		const specObj: any = {
 			input,
 			output,
+			outputClient,
 		};
-		if (outputClient) {
-			specObj.outputClient = outputClient;
-		}
 		if (outputService) {
 			specObj.outputService = outputService;
 		}

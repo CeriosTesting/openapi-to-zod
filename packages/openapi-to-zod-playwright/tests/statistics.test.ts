@@ -9,6 +9,8 @@ describe("Statistics Generation", () => {
 		it("should include statistics in schema file when showStats is true", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -23,6 +25,8 @@ describe("Statistics Generation", () => {
 		it("should not include statistics in schema file when showStats is false", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: false,
 			});
 
@@ -38,6 +42,8 @@ describe("Statistics Generation", () => {
 		it("should include statistics in client file when showStats is true", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -56,6 +62,8 @@ describe("Statistics Generation", () => {
 		it("should not include statistics in client file when showStats is false", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: false,
 			});
 
@@ -69,6 +77,8 @@ describe("Statistics Generation", () => {
 		it("should calculate correct endpoint count", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -82,6 +92,8 @@ describe("Statistics Generation", () => {
 		it("should list all HTTP methods used", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -94,6 +106,8 @@ describe("Statistics Generation", () => {
 		it("should count unique path parameters", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -106,6 +120,8 @@ describe("Statistics Generation", () => {
 		it("should include ISO timestamp", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -120,6 +136,8 @@ describe("Statistics Generation", () => {
 		it("should include statistics in service file when showStats is true", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -143,6 +161,8 @@ describe("Statistics Generation", () => {
 		it("should not include statistics in service file when showStats is false", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: false,
 			});
 
@@ -160,6 +180,8 @@ describe("Statistics Generation", () => {
 		it("should calculate correct method count", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -176,6 +198,8 @@ describe("Statistics Generation", () => {
 		it("should count methods with response validation", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -192,6 +216,8 @@ describe("Statistics Generation", () => {
 		it("should count methods with query parameters", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -207,6 +233,8 @@ describe("Statistics Generation", () => {
 		it("should count schema and type imports", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -223,6 +251,8 @@ describe("Statistics Generation", () => {
 		it("should include ISO timestamp", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -242,6 +272,8 @@ describe("Statistics Generation", () => {
 			const emptyFixture = TestUtils.getFixturePath("empty-api.yaml");
 			const generator = new OpenApiPlaywrightGenerator({
 				input: emptyFixture,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -256,6 +288,8 @@ describe("Statistics Generation", () => {
 			const multiParamFixture = TestUtils.getFixturePath("multi-param-api.yaml");
 			const generator = new OpenApiPlaywrightGenerator({
 				input: multiParamFixture,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -269,6 +303,8 @@ describe("Statistics Generation", () => {
 			const allMethodsFixture = TestUtils.getFixturePath("all-methods.yaml");
 			const generator = new OpenApiPlaywrightGenerator({
 				input: allMethodsFixture,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -284,6 +320,8 @@ describe("Statistics Generation", () => {
 		it("should show same endpoint count in client and service statistics", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -310,6 +348,8 @@ describe("Statistics Generation", () => {
 		it("should format statistics as comments", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -338,6 +378,8 @@ describe("Statistics Generation", () => {
 		it("should place statistics before imports", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 
@@ -354,6 +396,8 @@ describe("Statistics Generation", () => {
 		it("should include blank line between statistics and code", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				showStats: true,
 			});
 

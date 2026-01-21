@@ -9,6 +9,8 @@ describe("Query Parameter Schema Types in Service", () => {
 		it("should use typed query params from operationId in service methods", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 			});
 
@@ -23,6 +25,8 @@ describe("Query Parameter Schema Types in Service", () => {
 		it("should use the operationId-based type name for query params", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: true,
 			});
 
@@ -38,6 +42,8 @@ describe("Query Parameter Schema Types in Service", () => {
 		it("should still use operationId-based query params when operationId exists", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 			});
 
@@ -54,6 +60,8 @@ describe("Query Parameter Schema Types in Service", () => {
 		it("should use the operationId-based type name even when useOperationId is false", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 			});
 
@@ -71,6 +79,8 @@ describe("Query Parameter Schema Types Without OperationId", () => {
 	it("should generate typed query params using path+method when no operationId exists", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: false,
 		});
 
@@ -85,6 +95,8 @@ describe("Query Parameter Schema Types Without OperationId", () => {
 	it("should generate path-based query param types for GET /users", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: false,
 		});
 
@@ -97,6 +109,8 @@ describe("Query Parameter Schema Types Without OperationId", () => {
 	it("should generate path-based query param types for GET /products/{productId}", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: false,
 		});
 
@@ -109,6 +123,8 @@ describe("Query Parameter Schema Types Without OperationId", () => {
 	it("should generate path-based query param types for GET /orders", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: false,
 		});
 
@@ -121,6 +137,8 @@ describe("Query Parameter Schema Types Without OperationId", () => {
 	it("should work with useOperationId: true when operationId is missing", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: true, // Even with true, missing operationId uses path-based
 		});
 
@@ -135,6 +153,8 @@ describe("Query Parameter Schema Types Without OperationId", () => {
 	it("should NOT generate query param type for endpoint without query params", () => {
 		const generator = new OpenApiPlaywrightGenerator({
 			input: fixtureFile,
+			output: "output.ts",
+			outputClient: "client.ts",
 			useOperationId: false,
 		});
 
@@ -157,6 +177,8 @@ describe("Header Parameter Schema Types in Service", () => {
 			// when useOperationId is false
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
+				output: "output.ts",
+				outputClient: "client.ts",
 				useOperationId: false,
 			});
 

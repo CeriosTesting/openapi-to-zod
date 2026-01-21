@@ -7,6 +7,7 @@ describe("Stats Option", () => {
 	function generateOutput(options?: Partial<OpenApiGeneratorOptions>): string {
 		const generator = new OpenApiGenerator({
 			input: TestUtils.getFixturePath("simple.yaml"),
+			output: "output.ts",
 			mode: "normal",
 			...options,
 		});

@@ -8,6 +8,7 @@ describe("Enum Generation", () => {
 		function generateWithZodEnum(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
 			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath(fixture),
+				output: "output.ts",
 				mode: "normal",
 				...options,
 			});
@@ -82,6 +83,7 @@ describe("Enum Generation", () => {
 		function generateWithZodEnum(fixture: string, options?: Partial<OpenApiGeneratorOptions>): string {
 			const generator = new OpenApiGenerator({
 				input: TestUtils.getFixturePath(fixture),
+				output: "output.ts",
 				mode: "normal",
 				...options,
 			});

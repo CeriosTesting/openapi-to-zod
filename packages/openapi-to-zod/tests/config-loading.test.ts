@@ -108,6 +108,23 @@ describe("Config Loading", () => {
 			expect(merged[0].suffix).toBe("dto");
 			expect(merged[0].mode).toBe("normal");
 		});
+
+		it("should merge emptyObjectBehavior from defaults", () => {
+			const config: ConfigFile = {
+				defaults: {
+					emptyObjectBehavior: "record",
+				},
+				specs: [
+					{ input: "api.yaml", output: "api.ts" },
+					{ input: "api2.yaml", output: "api2.ts", emptyObjectBehavior: "strict" },
+				],
+			};
+
+			const merged = mergeConfigWithDefaults(config);
+
+			expect(merged[0].emptyObjectBehavior).toBe("record");
+			expect(merged[1].emptyObjectBehavior).toBe("strict");
+		});
 	});
 
 	describe("mergeCliWithConfig", () => {
@@ -162,6 +179,22 @@ describe("Config Loading", () => {
 
 			expect(merged.mode).toBe("loose");
 			expect(merged.input).toBe("api.yaml");
+		});
+
+		it("should override emptyObjectBehavior via CLI", () => {
+			const specConfig: OpenApiGeneratorOptions = {
+				input: "api.yaml",
+				output: "api.ts",
+				emptyObjectBehavior: "loose",
+			};
+
+			const cliOptions: Partial<OpenApiGeneratorOptions> = {
+				emptyObjectBehavior: "record",
+			};
+
+			const merged = mergeCliWithConfig(specConfig, cliOptions);
+
+			expect(merged.emptyObjectBehavior).toBe("record");
 		});
 	});
 

@@ -11,6 +11,7 @@ const config: PlaywrightConfigFile = {
 		{
 			input: "tests/fixtures/simple.yaml",
 			output: "tests/output/simple-from-config.ts",
+			outputClient: "tests/output/simple-client.ts",
 		},
 		{
 			input: "tests/fixtures/complex.yaml",

@@ -47,16 +47,16 @@ export function toCamelCase(str: string, options?: NamingOptions): string {
 				.join("");
 	}
 
-	// Add prefix
+	// Add prefix (only lowercase first char for camelCase, preserve rest)
 	if (options?.prefix) {
-		const prefix = options.prefix.toLowerCase();
+		const prefix = options.prefix.charAt(0).toLowerCase() + options.prefix.slice(1);
 		name = prefix + name.charAt(0).toUpperCase() + name.slice(1);
 	}
 
-	// Add suffix before "Schema"
+	// Add suffix (capitalize first char for proper camelCase, preserve rest)
 	if (options?.suffix) {
-		const suffix = options.suffix;
-		name = name + suffix.charAt(0).toUpperCase() + suffix.slice(1).toLowerCase();
+		const suffix = options.suffix.charAt(0).toUpperCase() + options.suffix.slice(1);
+		name = name + suffix;
 	}
 
 	return name;

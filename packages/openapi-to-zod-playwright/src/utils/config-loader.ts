@@ -19,17 +19,20 @@ const OperationFiltersSchema = BaseOperationFiltersSchema.extend({
 	excludeStatusCodes: z.array(z.string()).optional(),
 });
 
+const ZodErrorFormatSchema = z.enum(["standard", "prettify", "prettifyWithValues"]);
+
 const OpenApiPlaywrightGeneratorOptionsSchema = z.strictObject({
 	mode: z.enum(["strict", "normal", "loose"]).optional(),
 	input: z.string(),
-	output: z.string().optional(),
-	outputClient: z.string().optional(),
+	output: z.string(),
+	outputClient: z.string(),
 	outputService: z.string().optional(),
 	includeDescriptions: z.boolean().optional(),
 	validateServiceRequest: z.boolean().optional(),
 	ignoreHeaders: z.array(z.string()).optional(),
 	useDescribe: z.boolean().optional(),
 	defaultNullable: z.boolean().optional(),
+	emptyObjectBehavior: z.enum(["strict", "loose", "record"]).optional(),
 	prefix: z.string().optional(),
 	suffix: z.string().optional(),
 	stripSchemaPrefix: z.string().optional(),
@@ -44,6 +47,8 @@ const OpenApiPlaywrightGeneratorOptionsSchema = z.strictObject({
 	batchSize: z.number().positive().optional(),
 	useOperationId: z.boolean().optional(),
 	preferredContentTypes: z.array(z.string()).optional(),
+	fallbackContentTypeParsing: z.enum(["text", "json", "body"]).optional(),
+	zodErrorFormat: ZodErrorFormatSchema.optional(),
 	customDateTimeFormatRegex: z
 		.union([
 			z.string().refine(
@@ -70,6 +75,7 @@ const PlaywrightConfigFileSchema = z.strictObject({
 			includeDescriptions: z.boolean().optional(),
 			useDescribe: z.boolean().optional(),
 			defaultNullable: z.boolean().optional(),
+			emptyObjectBehavior: z.enum(["strict", "loose", "record"]).optional(),
 			prefix: z.string().optional(),
 			suffix: z.string().optional(),
 			stripSchemaPrefix: z.string().optional(),
@@ -88,6 +94,8 @@ const PlaywrightConfigFileSchema = z.strictObject({
 			batchSize: z.number().positive().optional(),
 			useOperationId: z.boolean().optional(),
 			preferredContentTypes: z.array(z.string()).optional(),
+			fallbackContentTypeParsing: z.enum(["text", "json", "body"]).optional(),
+			zodErrorFormat: ZodErrorFormatSchema.optional(),
 			customDateTimeFormatRegex: z
 				.union([
 					z.string().refine(
@@ -112,8 +120,8 @@ const PlaywrightConfigFileSchema = z.strictObject({
 			message:
 				"Configuration must include at least one specification. Each specification should have 'input' and 'output' paths.",
 		})
-		.refine(specs => specs.every(spec => spec.input), {
-			message: "Each specification must have an 'input' path defined",
+		.refine(specs => specs.every(spec => spec.input && spec.output && spec.outputClient), {
+			message: "Each specification must have 'input', 'output', and 'outputClient' paths defined",
 		}),
 	executionMode: z.enum(["parallel", "sequential"]).optional(),
 });
@@ -188,6 +196,7 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPl
 			includeDescriptions: defaults.includeDescriptions,
 			useDescribe: defaults.useDescribe,
 			defaultNullable: defaults.defaultNullable,
+			emptyObjectBehavior: defaults.emptyObjectBehavior,
 			prefix: defaults.prefix,
 			suffix: defaults.suffix,
 			showStats: defaults.showStats,
@@ -195,6 +204,8 @@ export function mergeConfigWithDefaults(config: PlaywrightConfigFile): OpenApiPl
 			ignoreHeaders: defaults.ignoreHeaders,
 			customDateTimeFormatRegex: defaults.customDateTimeFormatRegex,
 			preferredContentTypes: defaults.preferredContentTypes,
+			fallbackContentTypeParsing: defaults.fallbackContentTypeParsing,
+			zodErrorFormat: defaults.zodErrorFormat,
 			// outputClient and outputService are intentionally NOT inherited from defaults
 			// Each spec should define its own file paths
 

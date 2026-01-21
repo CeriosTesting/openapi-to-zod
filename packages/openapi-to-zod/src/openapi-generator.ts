@@ -248,13 +248,6 @@ export class OpenApiGenerator {
 	 * Generate the complete output file
 	 */
 	generate(): void {
-		if (!this.options.output) {
-			throw new ConfigurationError(
-				"Output path is required when calling generate(). " +
-					"Either provide an 'output' option or use generateString() to get the result as a string.",
-				{ hasOutput: false }
-			);
-		}
 		const output = this.generateString();
 		const normalizedOutput = normalize(this.options.output);
 		this.ensureDirectoryExists(normalizedOutput);

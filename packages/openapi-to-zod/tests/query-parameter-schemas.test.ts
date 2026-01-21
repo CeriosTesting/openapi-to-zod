@@ -9,6 +9,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should generate query parameter schemas for operations with query params", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -35,6 +36,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should generate correct types for query parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -53,6 +55,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should handle required query parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -69,6 +72,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should handle array parameters with different serialization styles", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -88,6 +92,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should handle number constraints in query parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -102,6 +107,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should generate schemas with correct JSDoc comments", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 			includeDescriptions: true,
 		};
@@ -118,6 +124,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should respect strict mode for query parameter objects", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "strict",
 		};
 
@@ -131,6 +138,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should respect loose mode for query parameter objects", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "loose",
 		};
 
@@ -144,6 +152,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should work with prefix and suffix options", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 			prefix: "api",
 			suffix: "dto",
@@ -160,6 +169,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should handle useDescribe option for parameter descriptions", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 			useDescribe: true,
 			includeDescriptions: true,
@@ -177,6 +187,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should handle operations without query parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -193,6 +204,7 @@ describe("Query Parameter Schema Generation", () => {
 		// The generator should skip those operations
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -205,6 +217,7 @@ describe("Query Parameter Schema Generation", () => {
 	it("should generate valid TypeScript/Zod code", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: fixtureInput,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -225,6 +238,7 @@ describe("Query Parameter Schema Generation Without OperationId", () => {
 	it("should generate query param schemas using path+method naming when no operationId", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: noOperationIdFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -251,6 +265,7 @@ describe("Query Parameter Schema Generation Without OperationId", () => {
 	it("should NOT generate query param schema when no query params exist", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: noOperationIdFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -265,6 +280,7 @@ describe("Query Parameter Schema Generation Without OperationId", () => {
 	it("should generate header param schemas using path+method naming when no operationId", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: noOperationIdFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -278,6 +294,7 @@ describe("Query Parameter Schema Generation Without OperationId", () => {
 	it("should generate correct types for query params without operationId", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: noOperationIdFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -298,6 +315,7 @@ describe("Query Parameter Schema Generation Without OperationId", () => {
 	it("should handle path params correctly when generating query param schema names", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: noOperationIdFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -315,6 +333,7 @@ describe("Query Parameter Schema Generation Without OperationId", () => {
 	it("should work with useDescribe option for operations without operationId", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: noOperationIdFixture,
+			output: "output.ts",
 			mode: "normal",
 			useDescribe: true,
 			includeDescriptions: true,
@@ -335,6 +354,7 @@ describe("Query Parameter Schema Generation with stripPathPrefix", () => {
 	it("should strip path prefix when generating query param schema names", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: stripPathPrefixFixture,
+			output: "output.ts",
 			mode: "normal",
 			stripPathPrefix: "/api/v1",
 		};
@@ -355,6 +375,7 @@ describe("Query Parameter Schema Generation with stripPathPrefix", () => {
 	it("should handle path params correctly with stripPathPrefix", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: stripPathPrefixFixture,
+			output: "output.ts",
 			mode: "normal",
 			stripPathPrefix: "/api/v1",
 		};
@@ -371,6 +392,7 @@ describe("Query Parameter Schema Generation with stripPathPrefix", () => {
 	it("should support glob patterns in stripPathPrefix", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: stripPathPrefixFixture,
+			output: "output.ts",
 			mode: "normal",
 			stripPathPrefix: "/api/v*",
 		};
@@ -386,6 +408,7 @@ describe("Query Parameter Schema Generation with stripPathPrefix", () => {
 	it("should generate typed schema imports", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: stripPathPrefixFixture,
+			output: "output.ts",
 			mode: "normal",
 			stripPathPrefix: "/api/v1",
 		};
@@ -405,6 +428,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should resolve $ref to component parameters for query params", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -425,6 +449,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should handle operations with only $ref parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -443,6 +468,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should apply constraints from component parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -457,6 +483,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should handle enum values from component parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -470,6 +497,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should include descriptions from component parameters when useDescribe is enabled", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 			useDescribe: true,
 			includeDescriptions: true,
@@ -486,6 +514,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should resolve header parameter $refs correctly", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -501,6 +530,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should not generate query param schema when only header $refs exist", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -514,6 +544,7 @@ describe("Component Parameter $ref Resolution", () => {
 	it("should handle mixed inline and $ref parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: componentParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -535,6 +566,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should include path-level query parameters in operation schemas", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -551,6 +583,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should merge path-level and operation-level query parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -568,6 +601,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should include path-level header parameters in operation schemas", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -583,6 +617,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should merge operation-level params with path-level params from $ref", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -598,6 +633,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should generate schemas for operations with only path-level params", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -612,6 +648,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should handle nested $ref resolution in path-level parameters", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -627,6 +664,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should preserve constraints from path-level component parameter $refs", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 		};
 
@@ -640,6 +678,7 @@ describe("Path-Level Parameter Support", () => {
 	it("should include descriptions from path-level parameters when useDescribe is enabled", () => {
 		const options: OpenApiGeneratorOptions = {
 			input: pathLevelParamsFixture,
+			output: "output.ts",
 			mode: "normal",
 			useDescribe: true,
 			includeDescriptions: true,
