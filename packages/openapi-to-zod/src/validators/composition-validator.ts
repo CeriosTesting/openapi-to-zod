@@ -73,7 +73,8 @@ export function generateUnion(
 
 	// Simplify single-item oneOf/anyOf - no union needed
 	if (schemas.length === 1) {
-		let singleSchema = context.generatePropertySchema(schemas[0], currentSchema);
+		// Suppress defaultNullable - this is a schema definition, not a property value
+		let singleSchema = context.generatePropertySchema(schemas[0], currentSchema, false, true);
 		if (options?.passthrough && !singleSchema.includes(".catchall(")) {
 			singleSchema = `${singleSchema}.catchall(z.unknown())`;
 		}
@@ -97,7 +98,8 @@ export function generateUnion(
 					"Falling back to z.union() instead of z.discriminatedUnion()."
 			);
 
-			let schemaStrings = resolvedSchemas.map(s => context.generatePropertySchema(s, currentSchema));
+			// Suppress defaultNullable on each variant - they are schema definitions, not property values
+			let schemaStrings = resolvedSchemas.map(s => context.generatePropertySchema(s, currentSchema, false, true));
 			if (options?.passthrough) {
 				schemaStrings = schemaStrings.map(s => (s.includes(".catchall(") ? s : `${s}.catchall(z.unknown())`));
 			}
@@ -108,7 +110,8 @@ export function generateUnion(
 		}
 
 		// Use discriminated union for better type inference
-		let schemaStrings = resolvedSchemas.map(s => context.generatePropertySchema(s, currentSchema));
+		// Suppress defaultNullable on each variant - they are schema definitions, not property values
+		let schemaStrings = resolvedSchemas.map(s => context.generatePropertySchema(s, currentSchema, false, true));
 		if (options?.passthrough) {
 			schemaStrings = schemaStrings.map(s => (s.includes(".catchall(") ? s : `${s}.catchall(z.unknown())`));
 		}
@@ -116,7 +119,8 @@ export function generateUnion(
 		return wrapNullable(union, isNullable);
 	}
 
-	let schemaStrings = schemas.map(s => context.generatePropertySchema(s, currentSchema));
+	// Suppress defaultNullable on each variant - they are schema definitions, not property values
+	let schemaStrings = schemas.map(s => context.generatePropertySchema(s, currentSchema, false, true));
 	if (options?.passthrough) {
 		schemaStrings = schemaStrings.map(s => (s.includes(".catchall(") ? s : `${s}.catchall(z.unknown())`));
 	}
@@ -221,18 +225,18 @@ function detectConflictingProperties(schemas: OpenAPISchema[], context: Composit
  * - For $refs: use baseSchema.extend(otherSchema.shape)
  * - For inline objects: use baseSchema.extend({ prop: z.string() })
  * - .nullable() must be applied AFTER all .extend() calls
+ * - defaultNullable should NOT apply to schemas in allOf - they are schema shapes, not property values
  */
 export function generateAllOf(
 	schemas: OpenAPISchema[],
 	isNullable: boolean,
 	context: CompositionValidatorContext,
-	currentSchema?: string,
-	explicitNullableFalse = false
+	currentSchema?: string
 ): string {
 	if (schemas.length === 1) {
-		// When outer schema has explicit nullable: false, suppress defaultNullable on inner schema
-		// This ensures that allOf: [{ $ref: '...' }] with nullable: false won't make the ref nullable
-		const singleSchema = context.generatePropertySchema(schemas[0], currentSchema, false, explicitNullableFalse);
+		// Single-item allOf is essentially an alias - suppress defaultNullable
+		// because this is a schema definition, not a property value
+		const singleSchema = context.generatePropertySchema(schemas[0], currentSchema, false, true);
 		return wrapNullable(singleSchema, isNullable);
 	}
 
@@ -252,8 +256,9 @@ export function generateAllOf(
 	let result: string;
 	if (allObjects) {
 		// Use .extend() for object schemas (Zod v4 compliant - .merge() is deprecated)
-		// First schema is the base - generate it normally
-		let merged = context.generatePropertySchema(schemas[0], currentSchema, false);
+		// First schema is the base - generate with suppressDefaultNullable=true
+		// because this is a schema shape, not a property value
+		let merged = context.generatePropertySchema(schemas[0], currentSchema, false, true);
 
 		// For subsequent schemas, determine how to extend
 		for (let i = 1; i < schemas.length; i++) {
@@ -261,26 +266,28 @@ export function generateAllOf(
 
 			if (schema.$ref) {
 				// For $ref schemas, use .extend(refSchema.shape)
-				// The ref generates a schema variable name like "userSchema"
-				const refSchema = context.generatePropertySchema(schema, currentSchema, false);
+				// Suppress defaultNullable - this is a schema shape, not a property value
+				const refSchema = context.generatePropertySchema(schema, currentSchema, false, true);
 				merged = `${merged}.extend(${refSchema}.shape)`;
 			} else if (context.generateInlineObjectShape && (schema.properties || schema.type === "object")) {
 				// For inline objects, generate shape directly as object literal
 				// This avoids the .nullable().shape bug - we pass { prop: z.string() }
 				// directly to .extend() instead of z.object({...}).nullable().shape
+				// Note: generateInlineObjectShape respects defaultNullable for properties INSIDE the object
 				const inlineShape = context.generateInlineObjectShape(schema, currentSchema);
 				merged = `${merged}.extend(${inlineShape})`;
 			} else {
 				// Fallback for schemas without properties (e.g., just has allOf)
-				// Generate full schema and use .shape
-				const schemaString = context.generatePropertySchema(schema, currentSchema, false);
+				// Generate full schema with suppressDefaultNullable and use .shape
+				const schemaString = context.generatePropertySchema(schema, currentSchema, false, true);
 				merged = `${merged}.extend(${schemaString}.shape)`;
 			}
 		}
 		result = merged;
 	} else {
 		// Use .and() for non-object schemas (intersection)
-		const schemaStrings = schemas.map(s => context.generatePropertySchema(s, currentSchema, false));
+		// Suppress defaultNullable on each schema in the intersection
+		const schemaStrings = schemas.map(s => context.generatePropertySchema(s, currentSchema, false, true));
 		let merged = schemaStrings[0];
 		for (let i = 1; i < schemaStrings.length; i++) {
 			merged = `${merged}.and(${schemaStrings[i]})`;

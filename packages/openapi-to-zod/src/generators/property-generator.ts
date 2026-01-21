@@ -453,19 +453,20 @@ export class PropertyGenerator {
 
 		// Handle allOf
 		if (schema.allOf) {
-			// Check if outer schema has explicit nullable: false
-			// This needs to be passed to generateAllOf so inner schemas don't get defaultNullable applied
-			const explicitNullableFalse = schema.nullable === false;
+			// For allOf compositions, only apply nullable if explicitly set on the schema.
+			// defaultNullable should NOT apply to composition results - they define schema shapes,
+			// not property values. The .nullable() on individual properties inside the composition
+			// is handled by generateInlineObjectShape which respects defaultNullable.
+			const compositionNullable = isNullable(schema, false);
 			let composition = generateAllOf(
 				schema.allOf,
-				nullable,
+				compositionNullable,
 				{
 					generatePropertySchema: this.generatePropertySchema.bind(this),
 					generateInlineObjectShape: this.generateInlineObjectShape.bind(this),
 					resolveSchemaRef: this.resolveSchemaRef.bind(this),
 				},
-				currentSchema,
-				explicitNullableFalse
+				currentSchema
 			);
 
 			// Apply unevaluatedProperties if specified
@@ -478,11 +479,14 @@ export class PropertyGenerator {
 
 		// Handle oneOf with discriminator support
 		if (schema.oneOf) {
+			// For oneOf compositions, only apply nullable if explicitly set on the schema.
+			// defaultNullable should NOT apply to composition results.
+			const compositionNullable = isNullable(schema, false);
 			const needsPassthrough = schema.unevaluatedProperties !== undefined;
 			let composition = generateUnion(
 				schema.oneOf,
 				schema.discriminator?.propertyName,
-				nullable,
+				compositionNullable,
 				{
 					generatePropertySchema: this.generatePropertySchema.bind(this),
 					resolveDiscriminatorMapping: this.resolveDiscriminatorMapping.bind(this),
@@ -505,11 +509,14 @@ export class PropertyGenerator {
 
 		// Handle anyOf with discriminator support
 		if (schema.anyOf) {
+			// For anyOf compositions, only apply nullable if explicitly set on the schema.
+			// defaultNullable should NOT apply to composition results.
+			const compositionNullable = isNullable(schema, false);
 			const needsPassthrough = schema.unevaluatedProperties !== undefined;
 			let composition = generateUnion(
 				schema.anyOf,
 				schema.discriminator?.propertyName,
-				nullable,
+				compositionNullable,
 				{
 					generatePropertySchema: this.generatePropertySchema.bind(this),
 					resolveDiscriminatorMapping: this.resolveDiscriminatorMapping.bind(this),

@@ -35,10 +35,10 @@ For complete Zod schema generation features, see the [@cerios/openapi-to-zod REA
 ## Installation
 
 ```bash
-npm install @cerios/openapi-to-zod-playwright @cerios/openapi-to-zod @playwright/test zod
+npm install @cerios/openapi-to-zod-playwright
 ```
 
-> **Note:** `@cerios/openapi-to-zod` is required as a peer dependency for shared utilities and the core functionality.
+> **Note:** Peer dependencies (`@cerios/openapi-to-zod`, `@playwright/test`, `zod`) are automatically installed by npm v7+. If you're using an older npm version, install them manually.
 
 ## Quick Start
 
