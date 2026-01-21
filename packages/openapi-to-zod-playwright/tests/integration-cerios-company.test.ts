@@ -1,4 +1,6 @@
 import { execSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 import { TestUtils } from "./utils/test-utils";
@@ -14,6 +16,9 @@ describe("Integration Tests for Cerios Company", () => {
 		const serviceFile = TestUtils.getOutputPath("cerios-company/stripSchemaPrefix-service.ts");
 		let serviceContent: string;
 
+		// Create a temporary tsconfig that maps the package to the source
+		const tempTsConfigPath = TestUtils.getOutputPath("cerios-company/tsconfig.test.json");
+
 		beforeAll(() => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: fixtureFile,
@@ -27,6 +32,25 @@ describe("Integration Tests for Cerios Company", () => {
 			schemasContent = generator.generateSchemasString();
 			clientContent = generator.generateClientString();
 			serviceContent = generator.generateServiceString();
+
+			// Create temporary tsconfig with path mappings for package imports
+			// Path must be relative to the tsconfig location (tests/output/cerios-company -> src)
+			const tsConfig = {
+				compilerOptions: {
+					target: "ES2020",
+					module: "ESNext",
+					moduleResolution: "bundler",
+					strict: true,
+					skipLibCheck: true,
+					noEmit: true,
+					baseUrl: ".",
+					paths: {
+						"@cerios/openapi-to-zod-playwright": ["../../../src/index.ts"],
+					},
+				},
+				include: ["./*.ts"],
+			};
+			writeFileSync(tempTsConfigPath, JSON.stringify(tsConfig, null, 2));
 		});
 
 		it("schemas should compile without errors", { timeout: 10_000 }, () => {
@@ -53,9 +77,10 @@ describe("Integration Tests for Cerios Company", () => {
 
 		it("client should compile without errors", { timeout: 10_000 }, () => {
 			try {
-				execSync(`npx tsc --noEmit --skipLibCheck ${clientFile}`, {
+				execSync(`npx tsc --project ${tempTsConfigPath}`, {
 					stdio: "pipe",
 					encoding: "utf-8",
+					cwd: dirname(clientFile),
 				});
 			} catch (error: any) {
 				const output = error.stdout || error.stderr || error.message;
@@ -69,9 +94,10 @@ describe("Integration Tests for Cerios Company", () => {
 
 		it("service should compile without errors", { timeout: 10_000 }, () => {
 			try {
-				execSync(`npx tsc --noEmit --skipLibCheck ${serviceFile}`, {
+				execSync(`npx tsc --project ${tempTsConfigPath}`, {
 					stdio: "pipe",
 					encoding: "utf-8",
+					cwd: dirname(serviceFile),
 				});
 			} catch (error: any) {
 				const output = error.stdout || error.stderr || error.message;

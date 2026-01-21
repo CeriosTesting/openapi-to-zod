@@ -25,7 +25,23 @@ export {
 	SpecValidationError,
 } from "./errors";
 export { OpenApiPlaywrightGenerator } from "./openapi-playwright-generator";
-
+// Runtime exports for generated code
+export type {
+	ApiRequestContextOptions,
+	HttpHeaders,
+	MultipartFormData,
+	MultipartFormValue,
+	QueryParams,
+	RequestBody,
+	UrlEncodedFormData,
+} from "./runtime";
+export { serializeParams } from "./runtime";
+export {
+	formatZodErrorPath,
+	formatZodErrorWithValues,
+	parseWithPrettifyError,
+	parseWithPrettifyErrorWithValues,
+} from "./runtime/zod-helpers";
 export type {
 	OpenApiPlaywrightGeneratorOptions,
 	PlaywrightConfigFile,

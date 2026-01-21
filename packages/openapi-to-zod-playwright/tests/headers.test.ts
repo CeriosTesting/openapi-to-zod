@@ -18,24 +18,24 @@ describe("Headers", () => {
 	it("should include headers option in client methods", () => {
 		const output = generateOutput();
 
-		// Client uses raw Playwright options which include headers
-		expect(output).toContain("headers?:");
+		// Client imports ApiRequestContextOptions which includes headers
+		expect(output).toContain("import type { ApiRequestContextOptions");
+		expect(output).toContain("options?: ApiRequestContextOptions");
 	});
 
 	it("should handle optional headers", () => {
 		const output = generateOutput();
 
-		// Headers are in the unified options parameter
+		// Headers are in the unified options parameter (from package import)
 		expect(output).toContain("options?:");
-		expect(output).toContain("headers?:");
+		expect(output).toContain("@cerios/openapi-to-zod-playwright");
 	});
 
 	it("should use raw Playwright options with headers", () => {
 		const output = generateOutput();
 
-		// Client should define ApiRequestContextOptions type with headers
-		expect(output).toContain("export type ApiRequestContextOptions");
-		expect(output).toContain("headers?:");
+		// Client should import ApiRequestContextOptions type (which includes headers)
+		expect(output).toContain("import type { ApiRequestContextOptions");
 
 		// Client methods should use ApiRequestContextOptions
 		expect(output).toContain("options?: ApiRequestContextOptions");
@@ -51,8 +51,8 @@ describe("Headers", () => {
 	it("should pass headers through to Playwright", () => {
 		const output = generateOutput();
 
-		// Headers are part of the raw Playwright options
-		expect(output).toContain("headers?:");
+		// Headers are part of ApiRequestContextOptions (imported from package)
+		expect(output).toContain("ApiRequestContextOptions");
 	});
 
 	describe("Service Layer - Typed Headers", () => {

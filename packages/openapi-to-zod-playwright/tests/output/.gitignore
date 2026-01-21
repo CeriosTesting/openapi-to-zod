@@ -1,2 +1,3 @@
 *.ts
+**/tsconfig.test.json
 !.gitkeep

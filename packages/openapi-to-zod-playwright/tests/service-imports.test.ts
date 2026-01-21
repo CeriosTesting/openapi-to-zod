@@ -87,9 +87,10 @@ describe("Service Imports", () => {
 				TestUtils.getOutputPath("test-client.ts")
 			);
 
-			// Should import RequestBody type
-			expect(serviceFile).toContain("type RequestBody");
-			expect(serviceFile).toMatch(/import \{[^}]*type RequestBody[^}]*\} from/);
+			// RequestBody is now imported from the package (when needed by service)
+			// The service uses types from schema imports or inline types
+			// If RequestBody is needed, it comes from @cerios/openapi-to-zod-playwright
+			expect(serviceFile).toContain("@cerios/openapi-to-zod-playwright");
 		});
 
 		it("should NOT import QueryParams when not used", () => {

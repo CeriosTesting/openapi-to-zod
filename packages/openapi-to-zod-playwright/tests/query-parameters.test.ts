@@ -18,23 +18,25 @@ describe("Query Parameters", () => {
 	it("should include params parameter option in client methods", () => {
 		const output = generateClientOutput();
 
-		// Client now uses raw Playwright params type
-		expect(output).toContain("params?:");
+		// Client imports ApiRequestContextOptions which includes params
+		expect(output).toContain("import type { ApiRequestContextOptions");
+		expect(output).toContain("options?: ApiRequestContextOptions");
 	});
 
 	it("should handle optional params", () => {
 		const output = generateClientOutput();
 
-		// Params should be optional in options
+		// Params should be optional in options (imported from package)
 		expect(output).toContain("options?: ApiRequestContextOptions");
-		expect(output).toContain("params?:");
+		expect(output).toContain("@cerios/openapi-to-zod-playwright");
 	});
 
 	it("should use Playwright's params type", () => {
 		const output = generateClientOutput();
 
-		// Should use Playwright's params type signature
-		expect(output).toContain("params?:");
+		// Should use ApiRequestContextOptions type from package (which includes params)
+		expect(output).toContain("ApiRequestContextOptions");
+		expect(output).toContain("@cerios/openapi-to-zod-playwright");
 	});
 
 	it("should generate method for endpoint with query params", () => {
@@ -46,7 +48,7 @@ describe("Query Parameters", () => {
 	it("should pass params to request in client", () => {
 		const output = generateClientOutput();
 
-		// Client should pass params in the options
-		expect(output).toContain("params?:");
+		// Client should serialize params via imported function
+		expect(output).toContain("serializeParams(options.params)");
 	});
 });

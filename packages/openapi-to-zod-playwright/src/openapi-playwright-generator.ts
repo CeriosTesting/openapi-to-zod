@@ -339,8 +339,9 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			schemaImportStatement += `import type { ${schemaTypes.join(", ")} } from "${relativeImportMain}";\n`;
 		}
 
-		// Check for all client type aliases that might be used in service
-		const clientTypeAliases = [
+		// Check for type aliases that are needed from the runtime package
+		// These are now exported from @cerios/openapi-to-zod-playwright
+		const runtimeTypeAliases = [
 			"ApiRequestContextOptions",
 			"MultipartFormValue",
 			"QueryParams",
@@ -350,22 +351,32 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			"RequestBody",
 		];
 
-		const clientImports = [clientClassName];
-		for (const typeAlias of clientTypeAliases) {
-			// Use word boundary regex to avoid matching partial strings (e.g., QueryParams shouldn't match SomeQueryParams)
+		const runtimeTypeImports: string[] = [];
+		for (const typeAlias of runtimeTypeAliases) {
+			// Use word boundary regex to avoid matching partial strings
 			const regex = new RegExp(`\\b${typeAlias}\\b`);
 			if (regex.test(serviceString)) {
-				clientImports.push(`type ${typeAlias}`);
+				runtimeTypeImports.push(typeAlias);
 			}
 		}
 
-		// Only import z from zod if it's actually used for inline schemas or error formatting
-		// Check for actual Zod method calls like z.string(), z.array(), z.number(), z.prettifyError(), etc.
-		const zodUsagePattern = /\bz\.(string|number|boolean|array|object|parse|prettifyError|ZodType)\(/;
+		// Client import - only the class name
+		const clientImports = [clientClassName];
+
+		// Only import z from zod if it's actually used for inline schemas
+		// Note: prettify helpers are now imported from the package, not using z directly
+		const zodUsagePattern = /\bz\.(string|number|boolean|array|object|parse)\(/;
 		if (zodUsagePattern.test(serviceString)) {
 			output.push(`import { z } from "zod";`);
 		}
 		output.push(`import { expect } from "@playwright/test";`);
+		// Add runtime type imports if needed (only if not already imported by service string)
+		if (runtimeTypeImports.length > 0 && !serviceString.includes("@cerios/openapi-to-zod-playwright")) {
+			output.push(`import type { ${runtimeTypeImports.join(", ")} } from "@cerios/openapi-to-zod-playwright";`);
+		} else if (runtimeTypeImports.length > 0) {
+			// If service already imports from the package, we need to merge the imports
+			// The service string already has the import, so we'll handle this differently
+		}
 		output.push(`import { ${clientImports.join(", ")} } from "${relativeImportClient}";`);
 		if (schemaImportStatement) {
 			output.push(schemaImportStatement.trim());

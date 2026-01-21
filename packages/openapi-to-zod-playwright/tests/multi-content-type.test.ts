@@ -241,13 +241,9 @@ describe("Multi-Content-Type Support", () => {
 
 			const clientSection = generator.generateClientString();
 
-			// Should define ApiRequestContextOptions type with all properties
-			expect(clientSection).toContain("export type ApiRequestContextOptions");
-			expect(clientSection).toContain("data?:");
-			expect(clientSection).toContain("form?:");
-			expect(clientSection).toContain("multipart?:");
-			expect(clientSection).toContain("params?:");
-			expect(clientSection).toContain("headers?:");
+			// Should import ApiRequestContextOptions type from package
+			expect(clientSection).toContain("import type { ApiRequestContextOptions");
+			expect(clientSection).toContain("@cerios/openapi-to-zod-playwright");
 
 			// Client methods should use the type
 			expect(clientSection).toContain("options?: ApiRequestContextOptions");
@@ -264,10 +260,9 @@ describe("Multi-Content-Type Support", () => {
 
 			const clientSection = generator.generateClientString();
 
-			// ApiRequestContextOptions should include Playwright request options
-			expect(clientSection).toContain("export type ApiRequestContextOptions");
-			expect(clientSection).toContain("timeout?:");
-			expect(clientSection).toContain("failOnStatusCode?:");
+			// ApiRequestContextOptions is imported from package (includes timeout, failOnStatusCode, etc)
+			expect(clientSection).toContain("@cerios/openapi-to-zod-playwright");
+			expect(clientSection).toContain("ApiRequestContextOptions");
 
 			// Client methods should use the type
 			expect(clientSection).toContain("options?: ApiRequestContextOptions");

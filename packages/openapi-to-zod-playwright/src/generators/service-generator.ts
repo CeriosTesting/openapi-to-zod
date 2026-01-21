@@ -114,10 +114,20 @@ export function generateServiceClass(
 		)
 		.join("\n\n");
 
-	// Generate helper functions based on error format
-	const helperFunctions = generateZodErrorHelpers(zodErrorFormat);
+	// Build runtime imports based on error format
+	const runtimeImports: string[] = [];
+	if (zodErrorFormat === "prettify") {
+		runtimeImports.push("parseWithPrettifyError");
+	} else if (zodErrorFormat === "prettifyWithValues") {
+		runtimeImports.push("parseWithPrettifyErrorWithValues");
+	}
 
-	return `
+	const runtimeImportStatement =
+		runtimeImports.length > 0
+			? `import { ${runtimeImports.join(", ")} } from "@cerios/openapi-to-zod-playwright";\n`
+			: "";
+
+	return `${runtimeImportStatement}
 /**
  * Type-safe API service with validation
  * Separate methods for each request content-type and status code
@@ -127,69 +137,7 @@ export class ${className} {
 	constructor(private readonly _client: ${clientClassName}) {}
 
 ${methods}
-${helperFunctions}
 }`;
-}
-
-/**
- * Generate helper methods for Zod error formatting
- * These are added as private methods inside the service class
- */
-function generateZodErrorHelpers(format: ZodErrorFormat): string {
-	if (format === "prettify") {
-		return `
-	/**
-	 * Parse data with Zod schema asynchronously and throw prettified error on failure
-	 */
-	private async parseWithPrettifyError<T>(schema: z.ZodType<T>, data: unknown): Promise<T> {
-		const result = await schema.safeParseAsync(data);
-		if (!result.success) {
-			throw Object.assign(new Error(z.prettifyError(result.error)), { cause: result.error });
-		}
-		return result.data;
-	}`;
-	}
-
-	if (format === "prettifyWithValues") {
-		return `
-	/**
-	 * Format Zod error path for display
-	 */
-	private formatZodErrorPath(path: PropertyKey[]): string {
-		return path
-			.map(segment => (typeof segment.valueOf() === "number" ? \`[\${segment.toString()}]\` : \`.\${segment.toString()}\`))
-			.join("")
-			.replace(/^\\./, "");
-	}
-
-	/**
-	 * Format Zod error with actual received values for debugging
-	 */
-	private formatZodErrorWithValues(error: z.ZodError, input: unknown): string {
-		return error.issues
-			.map(issue => {
-				const value = issue.path.reduce<unknown>(
-					(acc, key) => (acc && typeof acc === "object" ? (acc as Record<string, unknown>)[key as string] : undefined),
-					input
-				);
-				return \`✖ \${issue.message} (received: \${JSON.stringify(value)})\\n  → at \${this.formatZodErrorPath(issue.path)}\`;
-			})
-			.join("\\n");
-	}
-
-	/**
-	 * Parse data with Zod schema asynchronously and throw error with values on failure
-	 */
-	private async parseWithPrettifyErrorWithValues<T>(schema: z.ZodType<T>, data: unknown): Promise<T> {
-		const result = await schema.safeParseAsync(data);
-		if (!result.success) {
-			throw Object.assign(new Error(this.formatZodErrorWithValues(result.error, data)), { cause: result.error });
-		}
-		return result.data;
-	}`;
-	}
-
-	return "";
 }
 
 /**
@@ -510,10 +458,10 @@ function generateParseCall(schemaVar: string, dataVar: string, format: ZodErrorF
 	if (format === "standard") {
 		return `await ${schemaVar}.parseAsync(${dataVar})`;
 	} else if (format === "prettify") {
-		return `await this.parseWithPrettifyError(${schemaVar}, ${dataVar})`;
+		return `await parseWithPrettifyError(${schemaVar}, ${dataVar})`;
 	} else {
 		// prettifyWithValues
-		return `await this.parseWithPrettifyErrorWithValues(${schemaVar}, ${dataVar})`;
+		return `await parseWithPrettifyErrorWithValues(${schemaVar}, ${dataVar})`;
 	}
 }
 
