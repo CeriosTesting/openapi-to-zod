@@ -1,5 +1,15 @@
 # @cerios/openapi-to-zod
 
+## 1.3.1
+
+### Patch Changes
+
+- 36c6f96: Inline schema code generation now applies the configured prefix and suffix options to schema variable names, ensuring consistent naming between referenced and inline schemas.
+
+  Fix for emptyObjectBehavior. Now working correctly
+
+  defaultnullable fix for $ref
+
 ## 1.3.0
 
 ### Minor Changes
