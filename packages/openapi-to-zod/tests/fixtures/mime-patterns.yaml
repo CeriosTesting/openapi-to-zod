@@ -1,0 +1,36 @@
+openapi: 3.0.3
+info:
+  title: MIME Pattern Test API
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Attachment:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        mimetype:
+          type: string
+          maxLength: 255
+          pattern: "^\\w+\\/[-+.\\w]+$"
+        content:
+          type: string
+
+    MediaFile:
+      type: object
+      properties:
+        type:
+          type: string
+          pattern: "^(image|video|audio)\\/[\\w.+-]+$"
+        url:
+          type: string
+          pattern: "^https?:\\/\\/[\\w.-]+(\\/[\\w.\\/-]*)?$"
+
+    ApiEndpoint:
+      type: object
+      properties:
+        path:
+          type: string
+          pattern: "^\\/api\\/v\\d+\\/[\\w\\/]+$"

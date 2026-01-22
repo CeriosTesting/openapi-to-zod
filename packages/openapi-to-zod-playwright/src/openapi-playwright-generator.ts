@@ -7,7 +7,12 @@ import { LRUCache, toPascalCase } from "@cerios/openapi-to-zod/internal";
 import { parse } from "yaml";
 import { ClientGenerationError, ConfigurationError, FileOperationError, SpecValidationError } from "./errors";
 import { generateClientClass } from "./generators/client-generator";
-import { generateServiceClass } from "./generators/service-generator";
+import { generateInlineRequestSchemas, generateInlineResponseSchemas } from "./generators/inline-schema-generator";
+import {
+	collectInlineRequestSchemas,
+	collectInlineResponseSchemas,
+	generateServiceClass,
+} from "./generators/service-generator";
 import type { OpenApiPlaywrightGeneratorOptions } from "./types";
 import { validateIgnorePatterns } from "./utils/header-filters";
 
@@ -126,7 +131,61 @@ export class OpenApiPlaywrightGenerator implements Generator {
 		}
 
 		const schemaGenerator = new OpenApiGenerator(this.options);
-		return schemaGenerator.generateString();
+		let schemasString = schemaGenerator.generateString();
+
+		// Common options for inline schema generation
+		const inlineSchemaOptions = {
+			spec: this.spec,
+			prefix: this.options.prefix || "",
+			suffix: this.options.suffix || "",
+			mode: this.options.mode,
+			includeDescriptions: this.options.includeDescriptions,
+			useDescribe: this.options.useDescribe,
+			stripSchemaPrefix: this.options.stripSchemaPrefix,
+			defaultNullable: this.options.defaultNullable,
+			emptyObjectBehavior: this.options.emptyObjectBehavior,
+		};
+
+		// Collect inline schemas
+		const inlineRequestSchemas = collectInlineRequestSchemas(
+			this.spec,
+			this.options.useOperationId ?? false,
+			this.options.operationFilters,
+			this.options.ignoreHeaders,
+			this.options.stripPathPrefix,
+			this.options.preferredContentTypes
+		);
+
+		const inlineResponseSchemas = collectInlineResponseSchemas(
+			this.spec,
+			this.options.useOperationId ?? false,
+			this.options.operationFilters,
+			this.options.ignoreHeaders,
+			this.options.stripPathPrefix,
+			this.options.preferredContentTypes
+		);
+
+		// Generate inline request schemas first (alphabetically before response schemas)
+		if (inlineRequestSchemas.size > 0) {
+			const inlineRequestSchemasCode = generateInlineRequestSchemas(inlineRequestSchemas, inlineSchemaOptions);
+
+			if (inlineRequestSchemasCode.trim()) {
+				schemasString += "\n\n";
+				schemasString += inlineRequestSchemasCode;
+			}
+		}
+
+		// Generate inline response schemas
+		if (inlineResponseSchemas.size > 0) {
+			const inlineResponseSchemasCode = generateInlineResponseSchemas(inlineResponseSchemas, inlineSchemaOptions);
+
+			if (inlineResponseSchemasCode.trim()) {
+				schemasString += "\n\n";
+				schemasString += inlineResponseSchemasCode;
+			}
+		}
+
+		return schemasString;
 	}
 
 	/**

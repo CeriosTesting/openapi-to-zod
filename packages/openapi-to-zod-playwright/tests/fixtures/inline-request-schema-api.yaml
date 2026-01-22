@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Inline Request Schema Test API
+  version: 1.0.0
+components:
+  schemas:
+    Placeholder:
+      type: object
+      properties:
+        id:
+          type: string
+paths:
+  /inline:
+    post:
+      operationId: postInline
+      summary: Post with inline request body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                age:
+                  type: integer
+              required:
+                - name
+                - email
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                required:
+                  - id
+                  - name
+  /inline-complex:
+    put:
+      operationId: putInlineComplex
+      summary: Put with complex inline request body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                  required:
+                    - firstName
+                tags:
+                  type: array
+                  items:
+                    type: string
+                metadata:
+                  type: object
+                  additionalProperties:
+                    type: string
+              required:
+                - user
+      responses:
+        '200':
+          description: Updated

@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info:
+  title: ReadOnly Inline Request Schema Test API
+  version: 1.0.0
+components:
+  schemas:
+    Placeholder:
+      type: object
+      properties:
+        id:
+          type: string
+paths:
+  /users:
+    post:
+      operationId: createUser
+      summary: Create user with readOnly properties that should be filtered
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  readOnly: true
+                name:
+                  type: string
+                email:
+                  type: string
+                createdAt:
+                  type: string
+                  format: date-time
+                  readOnly: true
+              required:
+                - name
+                - email
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  createdAt:
+                    type: string
+                required:
+                  - id
+                  - name

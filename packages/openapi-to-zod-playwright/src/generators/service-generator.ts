@@ -16,6 +16,7 @@ import { shouldIgnoreHeader } from "../utils/header-filters";
 import { extractPathParams, generateMethodName, sanitizeOperationId, sanitizeParamName } from "../utils/method-naming";
 import { shouldIncludeOperation } from "../utils/operation-filters";
 import { generateOperationJSDoc } from "../utils/operation-jsdoc";
+import { generateInlineRequestSchemaName } from "./inline-schema-generator";
 
 interface ResponseInfo {
 	statusCode: string;
@@ -25,6 +26,16 @@ interface ResponseInfo {
 	hasBody: boolean;
 	contentType: string;
 	inlineSchema?: any; // For inline schemas (arrays, objects without $ref)
+	inlineSchemaName?: string; // Generated name for inline schemas (e.g., "GetUsersResponse")
+}
+
+interface RequestBodyInfo {
+	contentType: string;
+	schema?: string;
+	schemaName?: string;
+	required: boolean;
+	inlineSchema?: any; // For inline schemas (objects without $ref)
+	inlineSchemaName?: string; // Generated name for inline schemas (e.g., "PostUsersRequest")
 }
 
 interface EndpointInfo {
@@ -34,6 +45,7 @@ interface EndpointInfo {
 	pathParams: string[];
 	parameters?: any[];
 	requestBody?: any;
+	requestBodyInfo?: RequestBodyInfo; // Parsed request body information
 	responses: ResponseInfo[];
 	queryParamSchemaName?: string; // Name of the generated query parameter schema
 	headerParamSchemaName?: string; // Name of the generated header parameter schema
@@ -47,6 +59,72 @@ interface EndpointInfo {
  */
 function stripContentTypeParams(contentType: string): string {
 	return contentType.split(";")[0].trim();
+}
+
+/**
+ * Parse request body information including inline schema detection
+ */
+function parseRequestBodyInfo(
+	requestBody: any,
+	methodName: string,
+	preferredContentTypes?: string[]
+): RequestBodyInfo | undefined {
+	if (!requestBody?.content) {
+		return undefined;
+	}
+
+	const contentTypes = Object.keys(requestBody.content);
+	const selectedContentType = selectContentType(contentTypes, preferredContentTypes);
+
+	if (!selectedContentType) {
+		return undefined;
+	}
+
+	const contentObj = requestBody.content[selectedContentType];
+	const schema = contentObj?.schema;
+
+	if (!schema) {
+		return {
+			contentType: selectedContentType,
+			required: requestBody.required ?? false,
+		};
+	}
+
+	// Check if it's a $ref or inline schema
+	if (schema.$ref) {
+		const parts = schema.$ref.split("/");
+		const schemaName = parts[parts.length - 1];
+		return {
+			contentType: selectedContentType,
+			schema: schema.$ref,
+			schemaName,
+			required: requestBody.required ?? false,
+		};
+	}
+
+	// It's an inline schema - generate a name for it
+	// Only generate inline schema for JSON content (form data doesn't need validation schemas)
+	if (!selectedContentType.includes("json")) {
+		return {
+			contentType: selectedContentType,
+			required: requestBody.required ?? false,
+		};
+	}
+
+	const hasMultipleJsonContentTypes = contentTypes.filter(ct => ct.includes("json") || ct.includes("xml")).length > 1;
+
+	const inlineSchemaName = generateInlineRequestSchemaName(
+		methodName,
+		selectedContentType,
+		hasMultipleJsonContentTypes
+	);
+
+	return {
+		contentType: selectedContentType,
+		required: requestBody.required ?? false,
+		inlineSchema: schema,
+		inlineSchemaName,
+	};
 }
 
 /**
@@ -306,6 +384,28 @@ function extractEndpoints(
 				? resolveRequestBodyRef(operation.requestBody, spec)
 				: undefined;
 
+			// Parse request body info including inline schema detection
+			const requestBodyInfo = resolvedRequestBody
+				? parseRequestBodyInfo(resolvedRequestBody, methodName, preferredContentTypes)
+				: undefined;
+
+			// Count success responses to determine if we need status suffixes for inline schemas
+			const successResponses = responses.filter(r => {
+				const code = Number.parseInt(r.statusCode, 10);
+				return code >= 200 && code < 300;
+			});
+			const hasMultipleStatuses = successResponses.length > 1;
+
+			// Generate inline schema names for responses that have inline schemas
+			for (const response of responses) {
+				if (response.inlineSchema && response.hasBody && !response.schemaName) {
+					// Generate name like "GetUsersResponse" or "GetUsers200Response"
+					const pascalMethodName = methodName.charAt(0).toUpperCase() + methodName.slice(1);
+					const statusSuffix = hasMultipleStatuses ? response.statusCode : "";
+					response.inlineSchemaName = `${pascalMethodName}${statusSuffix}Response`;
+				}
+			}
+
 			endpoints.push({
 				path,
 				method: method.toUpperCase(),
@@ -313,6 +413,7 @@ function extractEndpoints(
 				pathParams,
 				parameters: operation.parameters,
 				requestBody: resolvedRequestBody,
+				requestBodyInfo,
 				responses,
 				queryParamSchemaName,
 				headerParamSchemaName,
@@ -547,16 +648,22 @@ function generateServiceMethod(
 			const optionalMarker = isRequired ? "" : "?";
 
 			if (requestContentType === "application/json") {
-				const schema =
-					requestBody.content[requestContentType]?.schema || requestBody.content["application/json"]?.schema;
-				if (schema?.$ref) {
-					const schemaName = schema.$ref.split("/").pop();
-					// Apply stripSchemaPrefix before converting to valid TypeScript type name
-					const strippedName = stripPrefix(schemaName, stripSchemaPrefix);
+				// Check if we have inline request schema info
+				const requestBodyInfo = endpoint.requestBodyInfo;
+
+				if (requestBodyInfo?.schemaName) {
+					// Has $ref schema
+					const strippedName = stripPrefix(requestBodyInfo.schemaName, stripSchemaPrefix);
 					const typeName = toPascalCase(strippedName);
 					optionsProps.push(`data${optionalMarker}: ${typeName}`);
-					schemaImports.add(schemaName);
+					schemaImports.add(requestBodyInfo.schemaName);
+				} else if (requestBodyInfo?.inlineSchemaName) {
+					// Has inline schema with generated name
+					const typeName = requestBodyInfo.inlineSchemaName;
+					optionsProps.push(`data${optionalMarker}: ${typeName}`);
+					schemaImports.add(`inline:${requestBodyInfo.inlineSchemaName}`);
 				} else {
+					// Fallback to RequestBody
 					optionsProps.push(`data${optionalMarker}: RequestBody`);
 				}
 			} else if (requestContentType === "application/x-www-form-urlencoded") {
@@ -587,7 +694,15 @@ function generateServiceMethod(
 		returnType = `Promise<${typeName}>`;
 		returnTypeName = typeName;
 		schemaImports.add(response.schemaName);
+	} else if (response?.hasBody && response.inlineSchemaName) {
+		// Use the generated inline schema name for return type
+		const typeName = response.inlineSchemaName;
+		returnType = `Promise<${typeName}>`;
+		returnTypeName = typeName;
+		// Mark for import - will be handled by inline schema generation
+		schemaImports.add(`inline:${response.inlineSchemaName}`);
 	} else if (response?.hasBody && response.inlineSchema) {
+		// Fallback for inline schemas without generated names (shouldn't normally happen)
 		const inlineInfo = generateInlineSchemaCode(response.inlineSchema, stripSchemaPrefix);
 		if (inlineInfo) {
 			returnType = `Promise<${inlineInfo.typeName}>`;
@@ -645,15 +760,32 @@ function generateServiceMethod(
 			validationCode.push("");
 		}
 
-		// Validate request body (only for application/json with a schema ref)
+		// Validate request body (for application/json with a schema ref or inline schema)
 		if (hasRequestBody && requestContentType === "application/json") {
-			const schema = requestBody.content[requestContentType]?.schema || requestBody.content["application/json"]?.schema;
-			if (schema?.$ref) {
-				const schemaName = schema.$ref.split("/").pop();
-				const strippedBodyName = stripPrefix(schemaName, stripSchemaPrefix);
+			const requestBodyInfo = endpoint.requestBodyInfo;
+			const isRequired = requestBody.required === true;
+
+			if (requestBodyInfo?.schemaName) {
+				// Has $ref schema - validate with named schema
+				const strippedBodyName = stripPrefix(requestBodyInfo.schemaName, stripSchemaPrefix);
 				const bodySchemaVar = `${toCamelCase(strippedBodyName, { prefix, suffix })}Schema`;
-				schemaImports.add(`${schemaName}Schema`);
-				const isRequired = requestBody.required === true;
+				schemaImports.add(`${requestBodyInfo.schemaName}Schema`);
+
+				if (isRequired) {
+					validationCode.push(`\t\t// Validate request body`);
+					validationCode.push(`\t\t${generateParseCall(bodySchemaVar, "options.data", zodErrorFormat)};`);
+					validationCode.push("");
+				} else {
+					validationCode.push(`\t\t// Validate request body`);
+					validationCode.push(`\t\tif (options?.data !== undefined) {`);
+					validationCode.push(`\t\t\t${generateParseCall(bodySchemaVar, "options.data", zodErrorFormat)};`);
+					validationCode.push(`\t\t}`);
+					validationCode.push("");
+				}
+			} else if (requestBodyInfo?.inlineSchemaName) {
+				// Has inline schema - validate with generated named schema
+				const bodySchemaVar = `${toCamelCase(requestBodyInfo.inlineSchemaName, { prefix, suffix })}Schema`;
+
 				if (isRequired) {
 					validationCode.push(`\t\t// Validate request body`);
 					validationCode.push(`\t\t${generateParseCall(bodySchemaVar, "options.data", zodErrorFormat)};`);
@@ -666,6 +798,7 @@ function generateServiceMethod(
 					validationCode.push("");
 				}
 			}
+			// If no schema (requestBodyInfo is undefined), skip validation
 		}
 	}
 
@@ -705,7 +838,32 @@ function generateServiceMethod(
 		validationCode.push(`\t\t// Parse and validate response body`);
 		validationCode.push(`\t\tconst body = await ${parseMethod};`);
 		validationCode.push(`\t\treturn ${generateParseCall(schemaVar, "body", zodErrorFormat)};`);
+	} else if (response?.hasBody && response.inlineSchemaName) {
+		// Use the generated inline schema name for validation
+		const schemaVar = `${toCamelCase(response.inlineSchemaName, { prefix, suffix })}Schema`;
+
+		// Determine parse method based on content type
+		const parseResult = getResponseParseMethod(response.contentType, fallbackContentTypeParsing);
+		if (parseResult.isUnknown) {
+			console.warn(
+				`[openapi-to-zod-playwright] Unknown content type "${response.contentType}" for ${endpoint.method} ${endpoint.path}, using fallback "${parseResult.method}"`
+			);
+		}
+
+		let parseMethod: string;
+		if (parseResult.method === "json") {
+			parseMethod = "response.json()";
+		} else if (parseResult.method === "text") {
+			parseMethod = "response.text()";
+		} else {
+			parseMethod = "response.body()";
+		}
+
+		validationCode.push(`\t\t// Parse and validate response body`);
+		validationCode.push(`\t\tconst body = await ${parseMethod};`);
+		validationCode.push(`\t\treturn ${generateParseCall(schemaVar, "body", zodErrorFormat)};`);
 	} else if (response?.hasBody && response.inlineSchema) {
+		// Fallback for inline schemas without generated names (shouldn't normally happen)
 		const inlineInfo = generateInlineSchemaCode(response.inlineSchema, stripSchemaPrefix, prefix, suffix);
 		if (inlineInfo) {
 			// Determine parse method based on content type
@@ -799,4 +957,120 @@ function generateServiceMethod(
 	async ${finalMethodName}(${paramList}): ${returnType} {
 ${validationCode.join("\n")}
 	}`;
+}
+/**
+ * Information about an inline response schema collected from endpoints
+ */
+export interface CollectedInlineSchema {
+	/** Generated schema name (e.g., "GetUsersResponse") */
+	schemaName: string;
+	/** The raw OpenAPI schema definition */
+	schema: any;
+	/** Method name this schema belongs to */
+	methodName: string;
+	/** HTTP status code */
+	statusCode: string;
+	/** HTTP method (GET, POST, etc.) */
+	httpMethod: string;
+	/** API path */
+	path: string;
+}
+
+/**
+ * Collect all inline response schemas from the OpenAPI spec
+ * Returns a map of schema name to schema info
+ */
+export function collectInlineResponseSchemas(
+	spec: OpenAPISpec,
+	useOperationId: boolean,
+	operationFilters?: PlaywrightOperationFilters,
+	ignoreHeaders?: string[],
+	stripPrefix?: string,
+	preferredContentTypes?: string[]
+): Map<string, CollectedInlineSchema> {
+	const inlineSchemas = new Map<string, CollectedInlineSchema>();
+
+	const endpoints = extractEndpoints(
+		spec,
+		useOperationId,
+		operationFilters,
+		ignoreHeaders,
+		stripPrefix,
+		preferredContentTypes
+	);
+
+	for (const endpoint of endpoints) {
+		for (const response of endpoint.responses) {
+			if (response.inlineSchemaName && response.inlineSchema && response.hasBody) {
+				inlineSchemas.set(response.inlineSchemaName, {
+					schemaName: response.inlineSchemaName,
+					schema: response.inlineSchema,
+					methodName: endpoint.methodName,
+					statusCode: response.statusCode,
+					httpMethod: endpoint.method,
+					path: endpoint.path,
+				});
+			}
+		}
+	}
+
+	return inlineSchemas;
+}
+
+/**
+ * Information about an inline request schema collected from endpoints
+ */
+export interface CollectedInlineRequestSchema {
+	/** Generated schema name (e.g., "PostUsersRequest") */
+	schemaName: string;
+	/** The raw OpenAPI schema definition */
+	schema: any;
+	/** Method name this schema belongs to */
+	methodName: string;
+	/** Content type (e.g., "application/json") */
+	contentType: string;
+	/** HTTP method (GET, POST, etc.) */
+	httpMethod: string;
+	/** API path */
+	path: string;
+}
+
+/**
+ * Collect all inline request schemas from the OpenAPI spec
+ * Returns a map of schema name to schema info
+ */
+export function collectInlineRequestSchemas(
+	spec: OpenAPISpec,
+	useOperationId: boolean,
+	operationFilters?: PlaywrightOperationFilters,
+	ignoreHeaders?: string[],
+	stripPrefix?: string,
+	preferredContentTypes?: string[]
+): Map<string, CollectedInlineRequestSchema> {
+	const inlineSchemas = new Map<string, CollectedInlineRequestSchema>();
+
+	const endpoints = extractEndpoints(
+		spec,
+		useOperationId,
+		operationFilters,
+		ignoreHeaders,
+		stripPrefix,
+		preferredContentTypes
+	);
+
+	for (const endpoint of endpoints) {
+		const requestBodyInfo = endpoint.requestBodyInfo;
+		if (requestBodyInfo?.inlineSchemaName && requestBodyInfo.inlineSchema) {
+			inlineSchemas.set(requestBodyInfo.inlineSchemaName, {
+				schemaName: requestBodyInfo.inlineSchemaName,
+				schema: requestBodyInfo.inlineSchema,
+				methodName: endpoint.methodName,
+				contentType: requestBodyInfo.contentType,
+				httpMethod: endpoint.method,
+				path: endpoint.path,
+			});
+		}
+	}
+
+	return inlineSchemas;
 }

@@ -6,7 +6,7 @@ describe("Response Types", () => {
 	describe("Primitive Response Types", () => {
 		const fixtureFile = TestUtils.getFixturePath("primitives-api.yaml");
 
-		it("should handle number responses", () => {
+		it("should handle number responses with named schema", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				useOperationId: false,
 				input: fixtureFile,
@@ -15,12 +15,12 @@ describe("Response Types", () => {
 			});
 			const serviceOutput = generator.generateServiceString();
 
-			// Check service method returns number
+			// Check service method returns named type (inline schemas now get named types)
 			expect(serviceOutput).toContain("async getCount");
-			expect(serviceOutput).toContain("Promise<number>");
+			expect(serviceOutput).toContain("Promise<GetCountResponse>");
 		});
 
-		it("should handle string responses", () => {
+		it("should handle string responses with named schema", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				useOperationId: false,
 				input: fixtureFile,
@@ -29,12 +29,12 @@ describe("Response Types", () => {
 			});
 			const serviceOutput = generator.generateServiceString();
 
-			// Check service method returns string
+			// Check service method returns named type
 			expect(serviceOutput).toContain("async getMessage");
-			expect(serviceOutput).toContain("Promise<string>");
+			expect(serviceOutput).toContain("Promise<GetMessageResponse>");
 		});
 
-		it("should handle boolean responses", () => {
+		it("should handle boolean responses with named schema", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				useOperationId: false,
 				input: fixtureFile,
@@ -43,12 +43,12 @@ describe("Response Types", () => {
 			});
 			const serviceOutput = generator.generateServiceString();
 
-			// Check service method returns boolean
+			// Check service method returns named type
 			expect(serviceOutput).toContain("async getActive");
-			expect(serviceOutput).toContain("Promise<boolean>");
+			expect(serviceOutput).toContain("Promise<GetActiveResponse>");
 		});
 
-		it("should handle array responses", () => {
+		it("should handle array responses with named schema", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				useOperationId: false,
 				input: fixtureFile,
@@ -57,12 +57,12 @@ describe("Response Types", () => {
 			});
 			const serviceOutput = generator.generateServiceString();
 
-			// Check service method returns array
+			// Check service method returns named type
 			expect(serviceOutput).toContain("async getTags");
-			expect(serviceOutput).toContain("Promise<string[]>");
+			expect(serviceOutput).toContain("Promise<GetTagsResponse>");
 		});
 
-		it("should validate primitive responses with Zod", () => {
+		it("should validate primitive responses with named Zod schemas", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				useOperationId: false,
 				input: fixtureFile,
@@ -71,11 +71,11 @@ describe("Response Types", () => {
 			});
 			const serviceOutput = generator.generateServiceString();
 
-			// Should have methods for all primitive types
-			expect(serviceOutput).toContain("Promise<number>");
-			expect(serviceOutput).toContain("Promise<string>");
-			expect(serviceOutput).toContain("Promise<boolean>");
-			expect(serviceOutput).toContain("Promise<string[]>");
+			// Should have methods with named response types (inline schemas now get named types)
+			expect(serviceOutput).toContain("Promise<GetCountResponse>");
+			expect(serviceOutput).toContain("Promise<GetMessageResponse>");
+			expect(serviceOutput).toContain("Promise<GetActiveResponse>");
+			expect(serviceOutput).toContain("Promise<GetTagsResponse>");
 		});
 	});
 
@@ -163,7 +163,8 @@ describe("Response Types", () => {
 			const serviceString = generator.generateServiceString();
 
 			// @returns should contain the actual type name
-			expect(serviceString).toContain("@returns User[]");
+			// For inline array schemas like `type: array, items: $ref`, we now generate named response types
+			expect(serviceString).toContain("@returns GetUsersResponse");
 			expect(serviceString).toContain("@returns User");
 		});
 

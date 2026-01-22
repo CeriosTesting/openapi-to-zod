@@ -7,6 +7,7 @@ import { generateEnum } from "./generators/enum-generator";
 import { generateJSDoc } from "./generators/jsdoc-generator";
 import { PropertyGenerator } from "./generators/property-generator";
 import type { OpenAPISchema, OpenAPISpec, OpenApiGeneratorOptions, ResolvedOptions } from "./types";
+import { LRUCache } from "./utils/lru-cache";
 import { resolveRef, toCamelCase, toPascalCase } from "./utils/name-utils";
 import {
 	createFilterStatistics,
@@ -17,7 +18,7 @@ import {
 } from "./utils/operation-filters";
 import { stripPathPrefix, stripPrefix } from "./utils/pattern-utils";
 import { mergeParameters } from "./utils/ref-resolver";
-import { configureDateTimeFormat, configurePatternCache } from "./validators/string-validator";
+import { buildDateTimeValidation } from "./validators/string-validator";
 
 type SchemaContext = "request" | "response" | "both";
 
@@ -33,6 +34,10 @@ export class OpenApiGenerator {
 	private responseOptions: ResolvedOptions;
 	private needsZodImport = true;
 	private filterStats: FilterStatistics = createFilterStatistics();
+	/** Instance-level pattern cache for parallel-safe execution */
+	private patternCache: LRUCache<string, string>;
+	/** Instance-level date-time validation string for parallel-safe execution */
+	private dateTimeValidation: string;
 
 	constructor(options: OpenApiGeneratorOptions) {
 		// Validate input path early
@@ -63,15 +68,11 @@ export class OpenApiGenerator {
 			customDateTimeFormatRegex: options.customDateTimeFormatRegex,
 		};
 
-		// Configure pattern cache size if specified
-		if (this.options.cacheSize) {
-			configurePatternCache(this.options.cacheSize);
-		}
+		// Create instance-level pattern cache (parallel-safe)
+		this.patternCache = new LRUCache<string, string>(this.options.cacheSize ?? 1000);
 
-		// Configure custom date-time format if specified
-		if (this.options.customDateTimeFormatRegex) {
-			configureDateTimeFormat(this.options.customDateTimeFormatRegex);
-		}
+		// Build date-time validation string (parallel-safe, no global state)
+		this.dateTimeValidation = buildDateTimeValidation(this.options.customDateTimeFormatRegex);
 
 		// Validate input file exists
 		try {
@@ -156,6 +157,8 @@ export class OpenApiGenerator {
 				suffix: this.options.suffix,
 			},
 			stripSchemaPrefix: this.options.stripSchemaPrefix,
+			dateTimeValidation: this.dateTimeValidation,
+			patternCache: this.patternCache,
 		});
 	}
 
@@ -649,6 +652,8 @@ export class OpenApiGenerator {
 				suffix: this.options.suffix,
 			},
 			stripSchemaPrefix: this.options.stripSchemaPrefix,
+			dateTimeValidation: this.dateTimeValidation,
+			patternCache: this.patternCache,
 		});
 
 		// Check if this is just a simple $ref (alias)

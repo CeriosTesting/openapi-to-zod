@@ -164,7 +164,7 @@ describe("zodErrorFormat option", () => {
 	});
 
 	describe("generated service file imports", () => {
-		it("should import z from zod when using prettify format with inline schemas", () => {
+		it("should NOT import z from zod when using prettify format with named inline schemas", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: resolve(FIXTURES_DIR, "simple-api.yaml"),
 				output: resolve(FIXTURES_DIR, "../output/test-schemas.ts"),
@@ -180,11 +180,11 @@ describe("zodErrorFormat option", () => {
 				resolve(FIXTURES_DIR, "../output/test-client.ts")
 			);
 
-			// z is needed for inline schemas like z.array()
-			expect(serviceFile).toContain('import { z } from "zod"');
+			// z is NOT needed since inline schemas now use named schemas in the schemas file
+			expect(serviceFile).not.toContain('import { z } from "zod"');
 		});
 
-		it("should import z from zod when using prettifyWithValues format with inline schemas", () => {
+		it("should NOT import z from zod when using prettifyWithValues format with named inline schemas", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: resolve(FIXTURES_DIR, "simple-api.yaml"),
 				output: resolve(FIXTURES_DIR, "../output/test-schemas.ts"),
@@ -200,8 +200,8 @@ describe("zodErrorFormat option", () => {
 				resolve(FIXTURES_DIR, "../output/test-client.ts")
 			);
 
-			// z is needed for inline schemas like z.array()
-			expect(serviceFile).toContain('import { z } from "zod"');
+			// z is NOT needed since inline schemas now use named schemas in the schemas file
+			expect(serviceFile).not.toContain('import { z } from "zod"');
 		});
 
 		it("should include runtime type imports (RequestBody, UrlEncodedFormData) alongside zodErrorFormat helpers", () => {

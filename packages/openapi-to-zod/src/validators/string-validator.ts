@@ -1,22 +1,22 @@
 import type { OpenAPISchema } from "../types";
-import { LRUCache } from "../utils/lru-cache";
+import type { LRUCache } from "../utils/lru-cache";
 import { addDescription, escapePattern } from "../utils/string-utils";
 
-// Performance optimization: Cache compiled regex patterns with configurable size limit
-// Cache is shared across all generators for performance, but size can be configured per generator
-let PATTERN_CACHE = new LRUCache<string, string>(1000);
-
 /**
- * Configure the pattern cache size
- * Should be called before generating schemas for large specifications
+ * Context for string validation generation (parallel-safe)
  */
-export function configurePatternCache(size: number): void {
-	if (size > 0 && size !== PATTERN_CACHE.capacity) {
-		PATTERN_CACHE = new LRUCache<string, string>(size);
-	}
+export interface StringValidatorContext {
+	/**
+	 * Zod validation string for date-time format fields
+	 */
+	dateTimeValidation: string;
+	/**
+	 * Instance-level cache for escaped regex patterns
+	 */
+	patternCache: LRUCache<string, string>;
 }
 
-// Default format map (without date-time, which can be customized)
+// Default format map (immutable, without date-time which is passed via context)
 const DEFAULT_FORMAT_MAP: Record<string, string> = {
 	uuid: "z.uuid()",
 	email: "z.email()",
@@ -49,40 +49,37 @@ const DEFAULT_FORMAT_MAP: Record<string, string> = {
 		'z.string().refine((val) => /^(0|[1-9]\\d*)(#|(\\/([^~/]|~0|~1)+)*)$/.test(val), { message: "Must be a valid relative JSON Pointer" })',
 };
 
-// Mutable format map that includes date-time and can be configured
-let FORMAT_MAP: Record<string, string> = {
-	...DEFAULT_FORMAT_MAP,
-	"date-time": "z.iso.datetime()",
-};
-
 /**
- * Configure custom date-time format validation
- * Overrides the default z.iso.datetime() with a custom regex pattern
+ * Build the Zod validation string for date-time format
+ * Pure function that returns the validation string without side effects
  *
- * @param pattern - Regex pattern (string or RegExp) for date-time validation
+ * @param pattern - Optional regex pattern (string or RegExp) for date-time validation
+ * @returns Zod validation string (either "z.iso.datetime()" or custom regex)
  * @throws {Error} If the provided pattern is not a valid regular expression
- * @example
- * // String pattern (required for JSON/YAML configs)
- * configureDateTimeFormat('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$')
  *
  * @example
- * // RegExp literal (TypeScript configs only)
- * configureDateTimeFormat(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)
+ * // Default (no pattern)
+ * buildDateTimeValidation() // Returns "z.iso.datetime()"
+ *
+ * @example
+ * // String pattern (for JSON/YAML configs)
+ * buildDateTimeValidation('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$')
+ *
+ * @example
+ * // RegExp literal (TypeScript configs)
+ * buildDateTimeValidation(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)
  */
-export function configureDateTimeFormat(pattern?: string | RegExp): void {
+export function buildDateTimeValidation(pattern?: string | RegExp): string {
 	if (!pattern) {
-		// Reset to default
-		FORMAT_MAP["date-time"] = "z.iso.datetime()";
-		return;
+		return "z.iso.datetime()";
 	}
 
 	// Convert RegExp to string if needed
 	const patternStr = pattern instanceof RegExp ? pattern.source : pattern;
 
-	// Empty string resets to default
+	// Empty string returns default
 	if (patternStr === "") {
-		FORMAT_MAP["date-time"] = "z.iso.datetime()";
-		return;
+		return "z.iso.datetime()";
 	}
 
 	// Validate the regex pattern
@@ -99,26 +96,32 @@ export function configureDateTimeFormat(pattern?: string | RegExp): void {
 	// Escape the pattern for use in generated code
 	const escapedPattern = escapePattern(patternStr);
 
-	// Update the format map with the custom regex
-	FORMAT_MAP["date-time"] = `z.string().regex(/${escapedPattern}/)`;
-}
-
-/**
- * Reset format map to defaults (useful for testing)
- */
-export function resetFormatMap(): void {
-	FORMAT_MAP = {
-		...DEFAULT_FORMAT_MAP,
-		"date-time": "z.iso.datetime()",
-	};
+	return `z.string().regex(/${escapedPattern}/)`;
 }
 
 /**
  * Generate Zod validation for string with format (Zod v4 compatible)
+ * Thread-safe: uses context for date-time validation and pattern cache
+ *
+ * @param schema - OpenAPI schema to generate validation for
+ * @param useDescribe - Whether to add .describe() calls
+ * @param context - Context containing dateTimeValidation and patternCache (parallel-safe)
  */
-export function generateStringValidation(schema: OpenAPISchema, useDescribe: boolean): string {
-	// Handle format with Zod v4 top-level functions (performance optimized with map)
-	let validation = FORMAT_MAP[schema.format || ""] || "z.string()";
+export function generateStringValidation(
+	schema: OpenAPISchema,
+	useDescribe: boolean,
+	context: StringValidatorContext
+): string {
+	// Handle format with Zod v4 top-level functions
+	// Use context.dateTimeValidation for date-time format, DEFAULT_FORMAT_MAP for others
+	let validation: string;
+	const format = schema.format || "";
+
+	if (format === "date-time") {
+		validation = context.dateTimeValidation;
+	} else {
+		validation = DEFAULT_FORMAT_MAP[format] || "z.string()";
+	}
 
 	// Add length constraints
 	if (schema.minLength !== undefined) {
@@ -128,12 +131,12 @@ export function generateStringValidation(schema: OpenAPISchema, useDescribe: boo
 		validation += `.max(${schema.maxLength})`;
 	}
 
-	// Add pattern (with cached escaping for performance)
+	// Add pattern (with cached escaping for performance using context.patternCache)
 	if (schema.pattern) {
-		let escapedPattern = PATTERN_CACHE.get(schema.pattern);
+		let escapedPattern = context.patternCache.get(schema.pattern);
 		if (escapedPattern === undefined) {
 			escapedPattern = escapePattern(schema.pattern);
-			PATTERN_CACHE.set(schema.pattern, escapedPattern);
+			context.patternCache.set(schema.pattern, escapedPattern);
 		}
 		validation += `.regex(/${escapedPattern}/)`;
 	}
@@ -171,10 +174,10 @@ export function generateStringValidation(schema: OpenAPISchema, useDescribe: boo
 			validation += `.max(${schema.maxLength})`;
 		}
 		if (schema.pattern) {
-			let escapedPattern = PATTERN_CACHE.get(schema.pattern);
+			let escapedPattern = context.patternCache.get(schema.pattern);
 			if (escapedPattern === undefined) {
 				escapedPattern = escapePattern(schema.pattern);
-				PATTERN_CACHE.set(schema.pattern, escapedPattern);
+				context.patternCache.set(schema.pattern, escapedPattern);
 			}
 			validation += `.regex(/${escapedPattern}/)`;
 		}

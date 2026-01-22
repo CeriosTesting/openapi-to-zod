@@ -1,19 +1,16 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
-import { resetFormatMap } from "../src/validators/string-validator";
 
 /**
  * Tests for customDateTimeFormatRegex option
  * Validates that users can override the default z.iso.datetime() validation
  * with custom regex patterns for date-time format fields
+ *
+ * Note: Each generator instance has isolated state, so no cleanup is needed
+ * between tests (parallel-safe design)
  */
 describe("Custom DateTime Format", () => {
-	afterEach(() => {
-		// Reset format map after each test to avoid pollution between tests
-		resetFormatMap();
-	});
-
 	/**
 	 * Helper function to generate output from a minimal OpenAPI spec
 	 */
@@ -427,9 +424,9 @@ components:
 		});
 	});
 
-	describe("Format Map Reset", () => {
-		it("should reset to default after calling resetFormatMap()", () => {
-			// First, set a custom format
+	describe("Isolation Between Generators", () => {
+		it("should not leak custom format to subsequent generators", () => {
+			// First, generate with a custom format
 			const customPattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$";
 			const output1 = generateFromSpec("", {
 				customDateTimeFormatRegex: customPattern,
@@ -438,13 +435,10 @@ components:
 			expect(output1).toContain("z.string().regex(");
 			expect(output1).not.toContain("z.iso.datetime()");
 
-			// Reset
-			resetFormatMap();
-
-			// Generate again without custom format
+			// Generate again without custom format (should use default, not inherit from previous)
 			const output2 = generateFromSpec("");
 
-			// Should use default again
+			// Should use default (parallel-safe isolation)
 			expect(output2).toContain("z.iso.datetime()");
 			expect(output2).not.toContain("z.string().regex(");
 		});
@@ -457,9 +451,7 @@ components:
 			});
 			expect(output1).toContain("z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/");
 
-			// Reset and use different pattern
-			resetFormatMap();
-
+			// Use different pattern (should be isolated)
 			const pattern2 = "^\\d{2}/\\d{2}/\\d{4}$";
 			const output2 = generateFromSpec("", {
 				customDateTimeFormatRegex: pattern2,

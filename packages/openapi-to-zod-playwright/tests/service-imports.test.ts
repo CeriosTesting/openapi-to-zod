@@ -5,7 +5,7 @@ import { TestUtils } from "./utils/test-utils";
 
 describe("Service Imports", () => {
 	describe("Zod import (z)", () => {
-		it("should import z from zod when inline schemas are used", () => {
+		it("should use named inline response schemas instead of inline z calls", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: TestUtils.getFixturePath("inline-schema-api.yaml"),
 				output: TestUtils.getOutputPath("test-schemas.ts"),
@@ -15,8 +15,10 @@ describe("Service Imports", () => {
 
 			const serviceString = generator.generateServiceString();
 
-			// Should contain z.string().parse() for inline string schema
-			expect(serviceString).toContain("z.string()");
+			// Should NOT contain inline z.string() - now uses named schema
+			expect(serviceString).not.toContain("z.string()");
+			// Should use named response schema
+			expect(serviceString).toContain("getTestResponseSchema");
 
 			const serviceFile = generator["generateServiceFile"](
 				TestUtils.getOutputPath("test-service.ts"),
@@ -24,8 +26,8 @@ describe("Service Imports", () => {
 				TestUtils.getOutputPath("test-client.ts")
 			);
 
-			// Should import z from zod
-			expect(serviceFile).toContain('import { z } from "zod";');
+			// Should NOT import z from zod when only named schemas are used
+			expect(serviceFile).not.toContain('import { z } from "zod";');
 		});
 
 		it("should NOT import z from zod when only named schemas are used", () => {
@@ -51,7 +53,7 @@ describe("Service Imports", () => {
 			expect(serviceFile).not.toContain('import { z } from "zod";');
 		});
 
-		it("should import z when array inline schemas are used", () => {
+		it("should use named schemas for array inline schemas instead of z.array", () => {
 			const generator = new OpenApiPlaywrightGenerator({
 				input: TestUtils.getFixturePath("simple-api.yaml"),
 				output: TestUtils.getOutputPath("test-schemas.ts"),
@@ -66,9 +68,11 @@ describe("Service Imports", () => {
 				TestUtils.getOutputPath("test-client.ts")
 			);
 
-			// simple-api.yaml returns User[] which is z.array(userSchema)
-			expect(serviceFile).toContain('import { z } from "zod";');
-			expect(serviceString).toContain("z.array(");
+			// simple-api.yaml returns User[] - now uses named schema instead of z.array(userSchema)
+			expect(serviceFile).not.toContain('import { z } from "zod";');
+			expect(serviceString).not.toContain("z.array(");
+			// Should use named response schema
+			expect(serviceString).toContain("getUsersResponseSchema");
 		});
 	});
 
@@ -203,7 +207,7 @@ describe("Service Imports", () => {
 	});
 
 	describe("Real-world scenarios", () => {
-		it("should handle complex API with correct imports", () => {
+		it("should handle complex API with correct imports - no inline z usage when named schemas are used", () => {
 			// Use simple-api which has various realistic scenarios
 			const generator = new OpenApiPlaywrightGenerator({
 				input: TestUtils.getFixturePath("simple-api.yaml"),
@@ -218,8 +222,8 @@ describe("Service Imports", () => {
 				TestUtils.getOutputPath("test-client.ts")
 			);
 
-			// Should import z for inline schemas
-			expect(serviceFile).toContain('import { z } from "zod";');
+			// Should NOT import z since inline schemas now use named schemas in schemas file
+			expect(serviceFile).not.toContain('import { z } from "zod";');
 
 			// Should import RequestBody when needed
 			if (generator.generateServiceString().includes("RequestBody")) {

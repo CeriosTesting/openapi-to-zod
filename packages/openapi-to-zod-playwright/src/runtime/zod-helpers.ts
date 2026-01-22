@@ -54,15 +54,20 @@ export function formatZodErrorPath(path: PropertyKey[]): string {
  * @returns Formatted error message with values
  */
 export function formatZodErrorWithValues(error: z.ZodError, input: unknown): string {
-	return error.issues
+	const formattedIssues = error.issues
 		.map(issue => {
 			const value = issue.path.reduce<unknown>(
 				(acc, key) => (acc && typeof acc === "object" ? (acc as Record<string, unknown>)[key as string] : undefined),
 				input
 			);
-			return `✖ ${issue.message} (received: ${JSON.stringify(value)})\n  → at ${formatZodErrorPath(issue.path)}`;
+			// Skip printing received value for objects/arrays (e.g., "Unrecognized key" errors)
+			const isObjectOrArray = typeof value === "object" && value !== null;
+			const receivedPart = isObjectOrArray ? "" : ` (received: ${JSON.stringify(value)})`;
+			return `✖ ${issue.message}${receivedPart}\n  → at ${formatZodErrorPath(issue.path)}`;
 		})
 		.join("\n");
+	// Leading newline so first error starts on its own line after "ZodValidationError:"
+	return `\n${formattedIssues}`;
 }
 
 /**

@@ -14,9 +14,11 @@ export function escapeDescription(str: string): string {
 /**
  * Escape regex pattern for use in code
  * Only escapes forward slashes which would terminate the regex literal
+ * Handles patterns that may already have escaped forward slashes from JSON
  */
 export function escapePattern(str: string): string {
-	return str.replace(/\//g, "\\/");
+	// Use negative lookbehind to only escape forward slashes that are NOT already preceded by a backslash
+	return str.replace(/(?<!\\)\//g, "\\/");
 }
 
 /**

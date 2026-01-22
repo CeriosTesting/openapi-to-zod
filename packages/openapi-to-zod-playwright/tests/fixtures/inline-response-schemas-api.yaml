@@ -1,0 +1,214 @@
+openapi: 3.0.3
+info:
+  title: Inline Response Schema Test API
+  description: API with various inline response schemas for testing
+  version: 1.0.0
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Get list of users
+      responses:
+        "200":
+          description: Successful response with inline schema
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - id
+                    - name
+                  properties:
+                    id:
+                      type: integer
+                      minimum: 1
+                    name:
+                      type: string
+                      minLength: 1
+                      maxLength: 100
+                    email:
+                      type: string
+                      format: email
+                    createdAt:
+                      type: string
+                      format: date-time
+
+    post:
+      operationId: createUser
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - name
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+
+  /users/{id}:
+    get:
+      operationId: getUserById
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - name
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  profile:
+                    type: object
+                    properties:
+                      bio:
+                        type: string
+                        maxLength: 500
+                      avatarUrl:
+                        type: string
+                        format: uri
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - code
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - USER_NOT_FOUND
+                      - INVALID_ID
+
+  /products:
+    get:
+      operationId: getProducts
+      summary: Get list of products with complex inline schema
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - pagination
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - name
+                        - price
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        price:
+                          type: number
+                          minimum: 0
+                        tags:
+                          type: array
+                          items:
+                            type: string
+                          minItems: 0
+                          maxItems: 10
+                  pagination:
+                    type: object
+                    required:
+                      - page
+                      - pageSize
+                      - total
+                    properties:
+                      page:
+                        type: integer
+                        minimum: 1
+                      pageSize:
+                        type: integer
+                        minimum: 1
+                        maximum: 100
+                      total:
+                        type: integer
+                        minimum: 0
+
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check endpoint
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - healthy
+                      - unhealthy
+                  uptime:
+                    type: number
+                  version:
+                    type: string
+                    pattern: "^\\d+\\.\\d+\\.\\d+$"
+
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email

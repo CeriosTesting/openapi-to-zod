@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: Inline Schema Options Test API
+  version: 1.0.0
+components:
+  schemas:
+    # Referenced schema for stripSchemaPrefix testing
+    PrefixedUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+      required:
+        - id
+        - username
+paths:
+  /create:
+    post:
+      operationId: createItem
+      summary: Create an item with inline request body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the item
+                tenantId:
+                  type: string
+                  format: uuid
+                metadata:
+                  type: object
+                  description: Additional metadata for the item
+                description:
+                  type: string
+                  description: A detailed description of the item
+                owner:
+                  $ref: '#/components/schemas/PrefixedUser'
+              required:
+                - name
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                    description: The created item name
+                  createdAt:
+                    type: string
+                    format: date-time
+                  settings:
+                    type: object
+                    description: Item settings
+                required:
+                  - id
+                  - name
+  /item/{id}:
+    get:
+      operationId: getItem
+      summary: Get an item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  title:
+                    type: string
+                    description: The item title
+                  config:
+                    type: object
+                    description: Configuration object
+                  author:
+                    $ref: '#/components/schemas/PrefixedUser'
+                required:
+                  - id
+                  - title

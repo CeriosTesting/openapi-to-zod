@@ -58,6 +58,43 @@ describe("String Utilities", () => {
 		it("should handle complex patterns with forward slashes", () => {
 			expect(escapePattern("^https://example.com/path$")).toBe("^https:\\/\\/example.com\\/path$");
 		});
+
+		it("should not double-escape already escaped forward slashes", () => {
+			// Pattern from JSON: "^\\w+\\/[-+.\\w]+$" becomes "^\w+\\/[-+.\w]+$" after JSON parsing
+			// The \/ should not become \\/
+			expect(escapePattern("^\\w+\\/[-+.\\w]+$")).toBe("^\\w+\\/[-+.\\w]+$");
+		});
+
+		it("should handle MIME type pattern from OpenAPI spec", () => {
+			// This is the actual pattern from the user's OpenAPI spec after JSON parsing
+			const mimeTypePattern = "^\\w+\\/[-+.\\w]+$";
+			const escaped = escapePattern(mimeTypePattern);
+			// Should produce valid regex literal content
+			expect(escaped).toBe("^\\w+\\/[-+.\\w]+$");
+			// Verify it creates a valid regex
+			expect(() => new RegExp(escaped)).not.toThrow();
+		});
+
+		it("should escape unescaped forward slashes while preserving escaped ones", () => {
+			// Mix of escaped and unescaped forward slashes
+			expect(escapePattern("a/b\\/c/d")).toBe("a\\/b\\/c\\/d");
+		});
+
+		it("should handle pattern with multiple unescaped forward slashes", () => {
+			expect(escapePattern("^https://api.example.com/v1/users$")).toBe("^https:\\/\\/api.example.com\\/v1\\/users$");
+		});
+
+		it("should handle empty string", () => {
+			expect(escapePattern("")).toBe("");
+		});
+
+		it("should handle pattern with only forward slash", () => {
+			expect(escapePattern("/")).toBe("\\/");
+		});
+
+		it("should handle pattern with only escaped forward slash", () => {
+			expect(escapePattern("\\/")).toBe("\\/");
+		});
 	});
 
 	describe("escapeJSDoc", () => {

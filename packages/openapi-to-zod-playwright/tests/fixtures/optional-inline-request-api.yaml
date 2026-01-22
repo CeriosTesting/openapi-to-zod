@@ -1,0 +1,30 @@
+openapi: 3.0.3
+info:
+  title: Optional Inline Request Schema Test API
+  version: 1.0.0
+components:
+  schemas:
+    Placeholder:
+      type: object
+      properties:
+        id:
+          type: string
+paths:
+  /optional-body:
+    patch:
+      operationId: patchOptionalBody
+      summary: Patch with optional inline request body
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Updated

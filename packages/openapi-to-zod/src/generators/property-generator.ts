@@ -30,6 +30,15 @@ export interface PropertyGeneratorContext {
 	 * @default 'loose'
 	 */
 	emptyObjectBehavior: "strict" | "loose" | "record";
+	/**
+	 * Zod validation string for date-time format fields
+	 * @default "z.iso.datetime()"
+	 */
+	dateTimeValidation: string;
+	/**
+	 * Instance-level cache for escaped regex patterns (parallel-safe)
+	 */
+	patternCache: LRUCache<string, string>;
 }
 
 /**
@@ -561,7 +570,10 @@ export class PropertyGenerator {
 
 		switch (primaryType) {
 			case "string":
-				validation = generateStringValidation(schema, this.context.useDescribe);
+				validation = generateStringValidation(schema, this.context.useDescribe, {
+					dateTimeValidation: this.context.dateTimeValidation,
+					patternCache: this.context.patternCache,
+				});
 				break;
 
 			case "number":

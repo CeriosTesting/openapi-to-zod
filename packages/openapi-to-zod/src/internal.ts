@@ -16,6 +16,9 @@
 // Batch execution utilities
 export { executeBatch, type Generator, getBatchExitCode } from "./batch-executor";
 
+// Property generator for schema generation
+export { PropertyGenerator, type PropertyGeneratorContext } from "./generators/property-generator";
+
 // Configuration schemas and validation
 export type { BaseOperationFilters, RequestResponseOptions } from "./utils/config-schemas";
 export { OperationFiltersSchema, RequestResponseOptionsSchema } from "./utils/config-schemas";
@@ -54,5 +57,5 @@ export {
 export { escapeJSDoc } from "./utils/string-utils";
 // TypeScript loading utilities
 export { createTypeScriptLoader } from "./utils/typescript-loader";
-// String validator configuration
-export { configureDateTimeFormat, resetFormatMap } from "./validators/string-validator";
+// String validator utilities
+export { buildDateTimeValidation } from "./validators/string-validator";

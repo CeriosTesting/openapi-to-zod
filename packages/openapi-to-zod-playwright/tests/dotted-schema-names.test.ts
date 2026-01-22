@@ -101,7 +101,8 @@ describe("Dotted Schema Names Handling", () => {
 			const content = readFileSync(serviceOutputFile, "utf-8");
 
 			// Should use converted type names (no dots)
-			expect(content).toMatch(/Promise<CompanyModelsUser\[\]>/);
+			// For inline array schemas, we now generate named response types
+			expect(content).toMatch(/Promise<GetApiV1UsersResponse>/);
 			expect(content).toMatch(/data\?:\s+CompanyModelsUserCreate/);
 			expect(content).toMatch(/Promise<VendorApiProduct>/);
 
