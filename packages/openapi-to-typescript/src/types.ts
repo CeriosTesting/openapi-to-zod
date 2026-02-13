@@ -52,6 +52,7 @@ export interface DefaultOptions {
 	suffix?: string;
 	stripSchemaPrefix?: string | string[];
 	stripPathPrefix?: string;
+	useOperationId?: boolean;
 	operationFilters?: OperationFilters;
 	showStats?: boolean;
 	batchSize?: number;

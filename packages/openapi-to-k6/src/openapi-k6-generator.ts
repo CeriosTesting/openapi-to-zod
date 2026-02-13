@@ -97,6 +97,7 @@ export class OpenApiK6Generator implements Generator {
 			prefix: this.options.prefix,
 			suffix: this.options.suffix,
 			stripSchemaPrefix: this.options.stripSchemaPrefix,
+			useOperationId: this.options.useOperationId,
 			defaultNullable: this.options.defaultNullable,
 			enumFormat: "union",
 		});

@@ -73,6 +73,7 @@ const code = generator.generateString();
 | `defaultNullable` | `boolean` | `false` | Treat properties as nullable by default |
 | `stripSchemaPrefix` | `string \| string[]` | - | Remove prefix from schema names (supports glob) |
 | `stripPathPrefix` | `string` | - | Remove prefix from paths |
+| `useOperationId` | `boolean` | `true` | Use operationId for operation-derived type names when available |
 | `prefix` | `string` | - | Add prefix to generated type names |
 | `suffix` | `string` | - | Add suffix to generated type names |
 | `operationFilters` | `object` | - | Filter operations by tags, paths, methods |

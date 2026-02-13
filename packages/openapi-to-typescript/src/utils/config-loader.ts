@@ -105,6 +105,7 @@ export function mergeConfigWithDefaults(config: ConfigFile): TypeScriptGenerator
 			enumFormat: defaults.enumFormat,
 			includeDescriptions: defaults.includeDescriptions,
 			defaultNullable: defaults.defaultNullable,
+			useOperationId: defaults.useOperationId,
 			prefix: defaults.prefix,
 			suffix: defaults.suffix,
 			stripSchemaPrefix: defaults.stripSchemaPrefix,

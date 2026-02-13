@@ -9,7 +9,7 @@ import {
 	extractSchemaRefs,
 	type FilterStatistics,
 	formatFilterStatistics,
-	generateMethodNameFromPath,
+	getOperationName,
 	LRUCache,
 	loadOpenAPISpec,
 	mergeParameters,
@@ -71,6 +71,7 @@ export class OpenApiGenerator {
 			suffix: options.suffix,
 			stripSchemaPrefix: options.stripSchemaPrefix,
 			stripPathPrefix: options.stripPathPrefix,
+			useOperationId: options.useOperationId ?? true,
 			showStats: options.showStats ?? true,
 			request: options.request,
 			response: options.response,
@@ -576,19 +577,13 @@ export class OpenApiGenerator {
 					continue;
 				}
 
-				// Generate schema name from operationId or path+method fallback
-				let pascalOperationId: string;
-				if (operation.operationId) {
-					// Use toPascalCase only for kebab-case IDs, simple capitalization for camelCase
-					pascalOperationId = operation.operationId.includes("-")
-						? toPascalCase(operation.operationId)
-						: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
-				} else {
-					// Fallback: generate name from path + method
-					// Apply stripPathPrefix if configured (for consistency with Playwright service generator)
-					const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
-					pascalOperationId = generateMethodNameFromPath(method, strippedPath);
-				}
+				const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
+				const pascalOperationId = getOperationName(
+					operation.operationId,
+					method,
+					strippedPath,
+					this.options.useOperationId
+				);
 				const schemaName = `${pascalOperationId}QueryParams`; // Initialize dependencies for this schema
 				if (!this.schemaDependencies.has(schemaName)) {
 					this.schemaDependencies.set(schemaName, new Set());
@@ -731,18 +726,13 @@ export class OpenApiGenerator {
 					continue;
 				}
 
-				// Generate schema name from operationId or path+method fallback
-				let pascalOperationId: string;
-				if (operation.operationId) {
-					pascalOperationId = operation.operationId.includes("-")
-						? toPascalCase(operation.operationId)
-						: operation.operationId.charAt(0).toUpperCase() + operation.operationId.slice(1);
-				} else {
-					// Fallback: generate name from path + method
-					// Apply stripPathPrefix if configured (for consistency with Playwright service generator)
-					const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
-					pascalOperationId = generateMethodNameFromPath(method, strippedPath);
-				}
+				const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
+				const pascalOperationId = getOperationName(
+					operation.operationId,
+					method,
+					strippedPath,
+					this.options.useOperationId
+				);
 				const schemaName = `${pascalOperationId}HeaderParams`;
 
 				// Initialize dependencies for this schema

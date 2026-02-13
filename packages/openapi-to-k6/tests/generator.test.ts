@@ -174,6 +174,35 @@ describe("OpenApiK6Generator", () => {
 	});
 
 	describe("helper methods", () => {
+		it("should use operationId for operation-derived schema types when enabled", () => {
+			const generator = new OpenApiK6Generator({
+				input: fixtureFile,
+				outputClient: "test-client.ts",
+				outputTypes: "test-types.ts",
+				useOperationId: true,
+			});
+
+			const output = generator.generateSchemaTypesString();
+
+			expect(output).toContain("export type ListUsersQueryParams");
+			expect(output).toContain("export type ListUsersHeaderParams");
+		});
+
+		it("should use method+path naming for operation-derived schema types when useOperationId is false", () => {
+			const generator = new OpenApiK6Generator({
+				input: fixtureFile,
+				outputClient: "test-client.ts",
+				outputTypes: "test-types.ts",
+				useOperationId: false,
+			});
+
+			const output = generator.generateSchemaTypesString();
+
+			expect(output).toContain("export type GetUsersQueryParams");
+			expect(output).toContain("export type GetUsersHeaderParams");
+			expect(output).not.toContain("export type ListUsersQueryParams");
+		});
+
 		it("should import mergeRequestParameters from runtime", () => {
 			const generator = new OpenApiK6Generator({
 				input: fixtureFile,

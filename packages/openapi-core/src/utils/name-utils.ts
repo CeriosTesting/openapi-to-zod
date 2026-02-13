@@ -195,10 +195,16 @@ export function generateMethodNameFromPath(httpMethod: string, path: string): st
  * @param operationId - The operationId from OpenAPI spec (may be undefined)
  * @param httpMethod - HTTP method (get, post, put, etc.)
  * @param path - API path (e.g., "/users/{userId}")
+ * @param useOperationId - Whether to prefer operationId when available
  * @returns PascalCase operation name
  */
-export function getOperationName(operationId: string | undefined, httpMethod: string, path: string): string {
-	if (operationId) {
+export function getOperationName(
+	operationId: string | undefined,
+	httpMethod: string,
+	path: string,
+	useOperationId: boolean = true
+): string {
+	if (useOperationId && operationId) {
 		// Use toPascalCase for kebab-case IDs, simple capitalization for camelCase
 		return operationId.includes("-")
 			? toPascalCase(operationId)

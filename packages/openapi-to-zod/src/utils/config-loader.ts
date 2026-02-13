@@ -146,6 +146,7 @@ export function mergeConfigWithDefaults(config: ConfigFile): OpenApiGeneratorOpt
 			includeDescriptions: defaults.includeDescriptions,
 			useDescribe: defaults.useDescribe,
 			defaultNullable: defaults.defaultNullable,
+			useOperationId: defaults.useOperationId,
 			emptyObjectBehavior: defaults.emptyObjectBehavior,
 			schemaType: defaults.schemaType,
 			prefix: defaults.prefix,

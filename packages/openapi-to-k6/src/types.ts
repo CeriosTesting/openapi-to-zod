@@ -72,9 +72,13 @@ export interface OpenApiK6GeneratorOptions extends Omit<TypeScriptGeneratorOptio
 	operationFilters?: OperationFilters;
 
 	/**
-	 * Whether to use operationId from OpenAPI spec for method names
+	 * Whether to use operationId from OpenAPI spec for generated naming
 	 * When true: Uses operationId if available, falls back to generated names
-	 * When false: Always generates method names from HTTP method + path
+	 * When false: Always generates names from HTTP method + path
+	 *
+	 * Affects:
+	 * - Client and service method names
+	 * - Operation-derived TypeScript type names (query/header/request/response)
 	 * @example true: "getUserById" (from operationId)
 	 * @example false: "getUsersByUserId" (generated from GET /users/{userId})
 	 * @default false

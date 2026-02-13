@@ -277,7 +277,8 @@ export interface BaseGeneratorOptions {
 
 	/**
 	 * Strip a common prefix from all paths before generating operation-derived type names
-	 * This is used when operationId is not available and type names are derived from the path.
+	 * This is used when operationId is not available, or when useOperationId is false,
+	 * and type names are derived from the path.
 	 *
 	 * Supports both literal strings and glob patterns:
 	 * - Literal string: "/api/v1" (must match exactly)
@@ -290,6 +291,16 @@ export interface BaseGeneratorOptions {
 	 * @default undefined (no stripping)
 	 */
 	stripPathPrefix?: string;
+
+	/**
+	 * Whether to use operationId from OpenAPI spec for operation-derived naming
+	 *
+	 * When true: uses operationId if available, falls back to method+path naming.
+	 * When false: always uses method+path naming.
+	 *
+	 * @default true
+	 */
+	useOperationId?: boolean;
 
 	/**
 	 * Prefix to add to all generated type/schema names

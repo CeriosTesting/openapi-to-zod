@@ -196,6 +196,7 @@ Examples:
 | `prefix` | `string` | Prefix for schema names |
 | `suffix` | `string` | Suffix for schema names |
 | `stripSchemaPrefix` | `string` | Strip prefix from schema names before generating using glob patterns (e.g., `"Company.Models."` or `"*.Models."`) |
+| `useOperationId` | `boolean` | Use operationId for operation-derived query/header schema names when available (default: `true`) |
 | `showStats` | `boolean` | Include generation statistics |
 | `request` | `object` | Request-specific options (mode, includeDescriptions, useDescribe) |
 | `response` | `object` | Response-specific options (mode, includeDescriptions, useDescribe) |

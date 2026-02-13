@@ -230,6 +230,28 @@ describe("Query Parameter Schema Generation", () => {
 		expect(output).toContain("export type");
 		expect(output).toMatch(/z\.(object|strictObject|looseObject)\(/);
 	});
+
+	it("should use method+path naming when useOperationId is false", () => {
+		const options: OpenApiGeneratorOptions = {
+			input: fixtureInput,
+			outputTypes: "output.ts",
+			mode: "normal",
+			useOperationId: false,
+		};
+
+		const generator = new OpenApiGenerator(options);
+		const output = generator.generateString();
+
+		expect(output).toContain("GetUsersQueryParams");
+		expect(output).toContain("export const getUsersQueryParamsSchema");
+		expect(output).toContain("GetProductsQueryParams");
+		expect(output).toContain("export const getProductsQueryParamsSchema");
+		expect(output).toContain("GetOrdersQueryParams");
+		expect(output).toContain("export const getOrdersQueryParamsSchema");
+
+		expect(output).not.toContain("SearchUsersQueryParams");
+		expect(output).not.toContain("ListProductsQueryParams");
+	});
 });
 
 describe("Query Parameter Schema Generation Without OperationId", () => {

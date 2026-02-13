@@ -281,4 +281,23 @@ describe("TypeScriptGenerator", () => {
 			expect(output).toContain("double?: number");
 		});
 	});
+
+	describe("Operation Naming", () => {
+		it("should use operationId for operation-derived types by default", () => {
+			const output = TestUtils.generateFromCoreFixture("operations", "parameters.yaml");
+
+			expect(output).toContain("export type GetUserQueryParams");
+			expect(output).toContain("export type GetItemsQueryParams");
+		});
+
+		it("should use method+path naming when useOperationId is false", () => {
+			const output = TestUtils.generateFromCoreFixture("operations", "parameters.yaml", {
+				useOperationId: false,
+			});
+
+			expect(output).toContain("export type GetUsersByUserIdQueryParams");
+			expect(output).toContain("export type GetItemsQueryParams");
+			expect(output).not.toContain("export type GetUserQueryParams");
+		});
+	});
 });

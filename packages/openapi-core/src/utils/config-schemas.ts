@@ -58,6 +58,7 @@ export const BaseGeneratorOptionsSchema = z.strictObject({
 	defaultNullable: z.boolean().optional(),
 	stripSchemaPrefix: z.union([z.string(), z.array(z.string())]).optional(),
 	stripPathPrefix: z.string().optional(),
+	useOperationId: z.boolean().optional(),
 	prefix: z.string().optional(),
 	suffix: z.string().optional(),
 	operationFilters: OperationFiltersSchema.optional(),

@@ -76,6 +76,7 @@ export class TypeScriptGenerator {
 			suffix: options.suffix,
 			stripSchemaPrefix: options.stripSchemaPrefix,
 			stripPathPrefix: options.stripPathPrefix,
+			useOperationId: options.useOperationId ?? true,
 			operationFilters: options.operationFilters,
 			showStats: options.showStats ?? true,
 			batchSize: options.batchSize ?? 10,
@@ -545,7 +546,12 @@ export class TypeScriptGenerator {
 
 				// Get operation name (with stripPathPrefix applied)
 				const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
-				const operationName = getOperationName(operation.operationId, method, strippedPath);
+				const operationName = getOperationName(
+					operation.operationId,
+					method,
+					strippedPath,
+					this.options.useOperationId
+				);
 				const typeName = generateQueryParamsTypeName(operationName);
 
 				// Generate properties
@@ -610,7 +616,12 @@ export class TypeScriptGenerator {
 
 				// Get operation name (with stripPathPrefix applied)
 				const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
-				const operationName = getOperationName(operation.operationId, method, strippedPath);
+				const operationName = getOperationName(
+					operation.operationId,
+					method,
+					strippedPath,
+					this.options.useOperationId
+				);
 				const typeName = generateHeaderParamsTypeName(operationName);
 
 				// Generate properties (headers are always strings)
@@ -671,7 +682,12 @@ export class TypeScriptGenerator {
 
 					// Get operation name (with stripPathPrefix applied)
 					const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
-					const operationName = getOperationName(operation.operationId, method, strippedPath);
+					const operationName = getOperationName(
+						operation.operationId,
+						method,
+						strippedPath,
+						this.options.useOperationId
+					);
 					const typeName = generateInlineRequestTypeName(operationName, contentType, hasMultipleContentTypes);
 
 					// Generate the type
@@ -725,7 +741,12 @@ export class TypeScriptGenerator {
 
 						// Get operation name (with stripPathPrefix applied)
 						const strippedPath = stripPathPrefix(path, this.options.stripPathPrefix);
-						const operationName = getOperationName(operation.operationId, method, strippedPath);
+						const operationName = getOperationName(
+							operation.operationId,
+							method,
+							strippedPath,
+							this.options.useOperationId
+						);
 						const typeName = generateInlineResponseTypeName(operationName, statusCode, hasMultipleStatuses);
 
 						// Generate the type

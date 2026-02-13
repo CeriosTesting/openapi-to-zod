@@ -140,7 +140,9 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			validateIgnorePatterns(this.options.ignoreHeaders, this.spec, "openapi-to-zod-playwright");
 		}
 
-		const schemaGenerator = new OpenApiGenerator(this.options);
+		const schemaGeneratorOptions = { ...this.options };
+		schemaGeneratorOptions.useOperationId = true;
+		const schemaGenerator = new OpenApiGenerator(schemaGeneratorOptions);
 		let schemasString = schemaGenerator.generateString();
 
 		// Common options for inline schema generation

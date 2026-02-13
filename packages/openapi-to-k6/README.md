@@ -209,7 +209,7 @@ export const options = {
 | `input` | `string` | required | Path to OpenAPI specification file |
 | `outputClient` | `string` | required | Output path for generated K6 client |
 | `outputTypes` | `string` | - | Separate file for TypeScript types |
-| `useOperationId` | `boolean` | `false` | Use operationId for method names |
+| `useOperationId` | `boolean` | `false` | Use operationId for client/service method names and operation-derived TypeScript type names |
 | `basePath` | `string` | - | Base path to prepend to all endpoints |
 | `stripPathPrefix` | `string` | - | Strip prefix from paths (glob support) |
 | `ignoreHeaders` | `string[]` | - | Header patterns to ignore |
