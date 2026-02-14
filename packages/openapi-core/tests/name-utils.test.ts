@@ -166,6 +166,24 @@ describe("name-utils", () => {
 			expect(getOperationName("list-all-users", "get", "/users")).toBe("ListAllUsers");
 		});
 
+		it("should handle underscore operationId (AFAS-style naming)", () => {
+			expect(getOperationName("Get_Profit_Users", "get", "/profit/users")).toBe("GetProfitUsers");
+			expect(getOperationName("get_Profit_Address", "get", "/profit/address")).toBe("GetProfitAddress");
+			// Note: All-uppercase segments like "API" and "V1" preserve their casing
+			expect(getOperationName("Get_API_V1_Data_List", "get", "/api/v1/data/list")).toBe("GetAPIV1DataList");
+			expect(getOperationName("Create_Order_History_Entry", "post", "/orders/history")).toBe("CreateOrderHistoryEntry");
+		});
+
+		it("should handle dotted operationId", () => {
+			expect(getOperationName("company.getUsers", "get", "/users")).toBe("CompanyGetUsers");
+			expect(getOperationName("api.v1.getItems", "get", "/items")).toBe("ApiV1GetItems");
+		});
+
+		it("should handle mixed separators in operationId", () => {
+			expect(getOperationName("get_users-list", "get", "/users")).toBe("GetUsersList");
+			expect(getOperationName("api.get_user-profile", "get", "/profile")).toBe("ApiGetUserProfile");
+		});
+
 		it("should fall back to path when operationId is undefined", () => {
 			expect(getOperationName(undefined, "get", "/users")).toBe("GetUsers");
 			expect(getOperationName(undefined, "post", "/users/{userId}")).toBe("PostUsersByUserId");

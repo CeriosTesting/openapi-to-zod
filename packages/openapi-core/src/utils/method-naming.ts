@@ -9,9 +9,14 @@ import { capitalize } from "./name-utils";
 
 /**
  * Normalize path segment special characters for method naming
+ * Handles @, commas, curly braces, and other special characters
  */
 function normalizePathSegmentForMethodName(segment: string): string {
-	return segment.replace(/@/g, "-at-");
+	return segment
+		.replace(/@/g, "-at-") // @ becomes "At" after capitalize
+		.replace(/,/g, "-") // comma becomes word separator
+		.replace(/[{}]/g, "") // remove curly braces
+		.replace(/[^a-zA-Z0-9-]/g, "-"); // replace other special chars with separator
 }
 
 /**
@@ -24,6 +29,7 @@ function normalizePathSegmentForMethodName(segment: string): string {
  * pathToPascalCase("/users/{userId}") // "UsersByUserId"
  * pathToPascalCase("/auth/login") // "AuthLogin"
  * pathToPascalCase("/api/v1/organizations/{orgId}/repos/{repoId}") // "ApiV1OrganizationsByOrgIdReposByRepoId"
+ * pathToPascalCase("/connectors/KnCurrencyRates/@Cu,@Sn/{Cu},{Sn}") // "ConnectorsKnCurrencyRatesAtCuAtSnByCuSn"
  */
 export function pathToPascalCase(pathString: string): string {
 	const segments = pathString.split("/").filter(Boolean);
@@ -35,7 +41,20 @@ export function pathToPascalCase(pathString: string): string {
 
 	return segments
 		.map(segment => {
-			// Handle path parameters like {userId}
+			// Check if segment contains any path parameters (has { and })
+			if (segment.includes("{")) {
+				// Extract all path parameters from the segment
+				const paramMatches = segment.match(/\{([^}]+)\}/g);
+				if (paramMatches) {
+					// Extract parameter names and join them
+					const paramNames = paramMatches
+						.map(match => match.slice(1, -1)) // Remove { and }
+						.map(name => capitalize(normalizePathSegmentForMethodName(name)))
+						.join("");
+					return `By${paramNames}`;
+				}
+			}
+			// Handle path parameters like {userId} (simple case, backward compatible)
 			if (segment.startsWith("{") && segment.endsWith("}")) {
 				const paramName = segment.slice(1, -1);
 				return `By${capitalize(normalizePathSegmentForMethodName(paramName))}`;

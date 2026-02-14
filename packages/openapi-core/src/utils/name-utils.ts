@@ -212,8 +212,10 @@ export function getOperationName(
 	useOperationId: boolean = true
 ): string {
 	if (useOperationId && operationId) {
-		// Use toPascalCase for kebab-case IDs, simple capitalization for camelCase
-		return operationId.includes("-")
+		// Use toPascalCase for IDs with word separators (hyphens, underscores, dots, spaces)
+		// Otherwise use simple capitalization for camelCase IDs
+		const needsPascalConversion = /[-_.\s]/.test(operationId);
+		return needsPascalConversion
 			? toPascalCase(operationId)
 			: operationId.charAt(0).toUpperCase() + operationId.slice(1);
 	}

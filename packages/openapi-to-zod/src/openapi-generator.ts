@@ -649,13 +649,10 @@ export class OpenApiGenerator {
 					})
 					.join(",\n");
 
-				const schemaCode = `z.${zodMethod}({\n${propsCode}\n})`; // Apply prefix/suffix to the operation name only, then add QueryParams and Schema
-				const operationName = pascalOperationId; // Already PascalCase
-				const prefixedName = this.options.prefix
-					? `${toPascalCase(this.options.prefix)}${operationName}`
-					: operationName;
-				const suffixedName = this.options.suffix ? `${prefixedName}${toPascalCase(this.options.suffix)}` : prefixedName;
-				const camelCaseSchemaName = `${suffixedName.charAt(0).toLowerCase() + suffixedName.slice(1)}QueryParamsSchema`;
+				const schemaCode = `z.${zodMethod}({\n${propsCode}\n})`;
+				// Apply prefix/suffix using toCamelCase for consistent naming with how generateString generates the type inference
+				const operationName = pascalOperationId;
+				const camelCaseSchemaName = `${toCamelCase(operationName, { prefix: this.options.prefix, suffix: this.options.suffix })}QueryParamsSchema`;
 
 				// Generate JSDoc - use operationId if available, otherwise use method + path
 				const jsdocOperationName = operation.operationId || `${method.toUpperCase()} ${path}`;
@@ -787,12 +784,9 @@ export class OpenApiGenerator {
 				const schemaCode = `z.${zodMethod}({\n${propsCode}\n})`;
 
 				// Apply prefix/suffix to the operation name only, then add HeaderParams and Schema
+				// Use toCamelCase for consistent naming with how generateString generates the type inference
 				const operationName = pascalOperationId;
-				const prefixedName = this.options.prefix
-					? `${toPascalCase(this.options.prefix)}${operationName}`
-					: operationName;
-				const suffixedName = this.options.suffix ? `${prefixedName}${toPascalCase(this.options.suffix)}` : prefixedName;
-				const camelCaseSchemaName = `${suffixedName.charAt(0).toLowerCase() + suffixedName.slice(1)}HeaderParamsSchema`;
+				const camelCaseSchemaName = `${toCamelCase(operationName, { prefix: this.options.prefix, suffix: this.options.suffix })}HeaderParamsSchema`;
 
 				// Generate JSDoc - use operationId if available, otherwise use method + path
 				const jsdocOperationName = operation.operationId || `${method.toUpperCase()} ${path}`;

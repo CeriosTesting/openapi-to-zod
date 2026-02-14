@@ -1,0 +1,206 @@
+openapi: 3.0.3
+info:
+  title: Underscore OperationId Test API
+  description: API with operationIds containing underscores (AFAS-style naming)
+  version: 1.0.0
+
+paths:
+  /profit/users:
+    get:
+      operationId: Get_Profit_Users
+      summary: Get profit users
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: take
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of profit users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfitUser'
+
+  /profit/address:
+    get:
+      operationId: get_Profit_Address
+      summary: Get profit address (lowercase first word)
+      parameters:
+        - name: addressId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Profit address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfitAddress'
+
+  /api/v1/data/list:
+    get:
+      operationId: Get_API_V1_Data_List
+      summary: Get data list with multiple underscores
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: itemsPerPage
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 50
+      responses:
+        '200':
+          description: Data list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+
+  /orders/history:
+    post:
+      operationId: Create_Order_History_Entry
+      summary: Create order history entry
+      parameters:
+        - name: X-Correlation-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Request-Source
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderHistoryEntry'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderHistoryEntry'
+
+  /mixed/params:
+    put:
+      operationId: Update_Mixed_Params_Resource
+      summary: Update resource with both query and header params
+      parameters:
+        - name: resourceId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: includeMetadata
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: X-Api-Version
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Custom-Token
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    ProfitUser:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    ProfitAddress:
+      type: object
+      required:
+        - street
+        - city
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+
+    OrderHistoryEntry:
+      type: object
+      required:
+        - orderId
+        - action
+      properties:
+        orderId:
+          type: string
+        action:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: string
