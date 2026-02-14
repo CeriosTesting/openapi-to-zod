@@ -8,6 +8,13 @@ export interface NamingOptions {
 }
 
 /**
+ * Normalize path segment special characters for method naming
+ */
+function normalizePathSegmentForMethodName(segment: string): string {
+	return segment.replace(/@/g, "-at-");
+}
+
+/**
  * Sanitize a string by replacing invalid identifier characters with underscores
  * Preserves dots, hyphens, underscores, and spaces as word separators
  * Example: "User@Domain" -> "User_Domain"
@@ -177,10 +184,10 @@ export function generateMethodNameFromPath(httpMethod: string, path: string): st
 			if (segment.startsWith("{") && segment.endsWith("}")) {
 				// Path parameter - convert to "ByParamName"
 				const paramName = segment.slice(1, -1);
-				return `By${capitalize(paramName)}`;
+				return `By${capitalize(normalizePathSegmentForMethodName(paramName))}`;
 			}
 			// Regular segment - capitalize and handle special characters
-			return capitalize(segment);
+			return capitalize(normalizePathSegmentForMethodName(segment));
 		})
 		.join("");
 

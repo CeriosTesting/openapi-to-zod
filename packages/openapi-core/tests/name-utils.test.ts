@@ -149,6 +149,10 @@ describe("name-utils", () => {
 				"PutOrganizationsByOrgIdTeamsByTeamIdMembers"
 			);
 		});
+
+		it('should replace "@" with "At" in path segments', () => {
+			expect(generateMethodNameFromPath("get", "/feeds/@channel/{channelId}")).toBe("GetFeedsAtChannelByChannelId");
+		});
 	});
 
 	describe("getOperationName", () => {

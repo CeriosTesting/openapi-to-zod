@@ -8,6 +8,13 @@
 import { capitalize } from "./name-utils";
 
 /**
+ * Normalize path segment special characters for method naming
+ */
+function normalizePathSegmentForMethodName(segment: string): string {
+	return segment.replace(/@/g, "-at-");
+}
+
+/**
  * Converts an OpenAPI path to a PascalCase method name part
  *
  * @param pathString - The OpenAPI path (e.g., "/users/{userId}")
@@ -31,10 +38,10 @@ export function pathToPascalCase(pathString: string): string {
 			// Handle path parameters like {userId}
 			if (segment.startsWith("{") && segment.endsWith("}")) {
 				const paramName = segment.slice(1, -1);
-				return `By${capitalize(paramName)}`;
+				return `By${capitalize(normalizePathSegmentForMethodName(paramName))}`;
 			}
 			// Convert regular segments to PascalCase
-			return capitalize(segment);
+			return capitalize(normalizePathSegmentForMethodName(segment));
 		})
 		.join("");
 }

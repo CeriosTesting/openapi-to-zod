@@ -1,0 +1,36 @@
+openapi: 3.0.0
+info:
+  title: At Sign Paths API
+  version: 1.0.0
+paths:
+  /resources/@collection/{collectionId}:
+    get:
+      summary: Get collection resource
+      parameters:
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resource found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+  /resources/{resourceId}/@archive:
+    delete:
+      summary: Archive resource
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Archived

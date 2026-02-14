@@ -49,6 +49,10 @@ describe("Method Naming Utilities", () => {
 			expect(generateMethodName("post", "/api/v1.2.3/documents")).toBe("postApiV123Documents");
 			expect(generateMethodName("get", "/v2.0/health")).toBe("getV20Health");
 		});
+
+		it('should replace "@" with "At" in path segments', () => {
+			expect(generateMethodName("get", "/feeds/@channel/{channelId}")).toBe("getFeedsAtChannelByChannelId");
+		});
 	});
 	describe("extractPathParams", () => {
 		it("should extract path parameters", () => {
