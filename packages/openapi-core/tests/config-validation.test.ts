@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+
 import { formatConfigValidationError } from "../src/utils/config-validation";
 
 describe("config-validation", () => {

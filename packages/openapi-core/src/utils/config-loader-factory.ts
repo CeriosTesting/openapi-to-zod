@@ -7,7 +7,9 @@
 
 import { type CosmiconfigResult, cosmiconfig } from "cosmiconfig";
 import { z } from "zod";
+
 import { ConfigValidationError } from "../errors";
+
 import { type FormatZodErrorsOptions, formatConfigValidationError } from "./config-validation";
 import { createTypeScriptLoader } from "./typescript-loader";
 

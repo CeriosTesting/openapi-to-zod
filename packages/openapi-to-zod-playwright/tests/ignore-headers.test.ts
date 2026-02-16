@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("Ignore Headers Feature", () => {

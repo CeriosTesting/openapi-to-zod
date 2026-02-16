@@ -45,8 +45,10 @@ export interface PlaywrightOperationFilters extends OperationFilters {
  * - Client (outputClient): Playwright API passthrough wrapper
  * - Service (outputService): Optional, type-safe validation layer
  */
-export interface OpenApiPlaywrightGeneratorOptions
-	extends Omit<OpenApiGeneratorOptions, "schemaType" | "operationFilters"> {
+export interface OpenApiPlaywrightGeneratorOptions extends Omit<
+	OpenApiGeneratorOptions,
+	"schemaType" | "operationFilters"
+> {
 	/**
 	 * Input OpenAPI specification file path (YAML or JSON)
 	 */

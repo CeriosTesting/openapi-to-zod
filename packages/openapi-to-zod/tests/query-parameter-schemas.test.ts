@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
 

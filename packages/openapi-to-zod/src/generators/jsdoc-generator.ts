@@ -1,4 +1,5 @@
 import { escapeJSDoc } from "@cerios/openapi-core";
+
 import type { OpenAPISchema } from "../types";
 
 export interface JSDocOptions {

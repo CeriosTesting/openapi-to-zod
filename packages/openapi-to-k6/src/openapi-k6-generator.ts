@@ -1,8 +1,10 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, normalize, relative } from "node:path";
+
 import type { Generator, OpenAPISpec } from "@cerios/openapi-core";
 import { FileOperationError, LRUCache, loadOpenAPISpecCached } from "@cerios/openapi-core";
 import { TypeScriptGenerator } from "@cerios/openapi-to-typescript";
+
 import { K6ClientGenerationError } from "./errors";
 import { generateK6ClientCode, generateK6TypesCode, getEndpointStats } from "./generators/client-generator";
 import { generateK6ServiceCode, getServiceEndpointStats } from "./generators/service-generator";
@@ -92,7 +94,7 @@ export class OpenApiK6Generator implements Generator {
 	generateSchemaTypesString(): string {
 		const typescriptGenerator = new TypeScriptGenerator({
 			input: this.options.input,
-			outputTypes: this.options.outputTypes || this.options.outputTypes,
+			outputTypes: this.options.outputTypes,
 			includeDescriptions: this.options.includeDescriptions,
 			prefix: this.options.prefix,
 			suffix: this.options.suffix,

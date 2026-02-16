@@ -42,9 +42,5 @@ export {
 	parseWithPrettifyError,
 	parseWithPrettifyErrorWithValues,
 } from "./runtime/zod-helpers";
-export type {
-	OpenApiPlaywrightGeneratorOptions,
-	PlaywrightConfigFile,
-	PlaywrightOperationFilters,
-} from "./types";
+export type { OpenApiPlaywrightGeneratorOptions, PlaywrightConfigFile, PlaywrightOperationFilters } from "./types";
 export { defineConfig } from "./types";

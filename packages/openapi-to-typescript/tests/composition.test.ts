@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { TestUtils } from "./utils/test-utils.js";
 
 describe("Composition Types", () => {

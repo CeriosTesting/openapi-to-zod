@@ -6,6 +6,7 @@ import {
 } from "@cerios/openapi-core";
 import { TypeScriptDefaultsSchema, TypeScriptGeneratorOptionsSchema } from "@cerios/openapi-to-typescript";
 import { z } from "zod";
+
 import type { K6ConfigFile, OpenApiK6GeneratorOptions } from "../types";
 
 /**

@@ -1,6 +1,8 @@
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("CLI", () => {

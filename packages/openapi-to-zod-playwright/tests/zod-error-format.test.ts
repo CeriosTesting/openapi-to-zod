@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 
 const FIXTURES_DIR = resolve(__dirname, "fixtures");

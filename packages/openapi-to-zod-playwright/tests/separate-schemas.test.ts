@@ -1,7 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 /**

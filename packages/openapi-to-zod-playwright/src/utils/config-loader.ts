@@ -10,6 +10,7 @@ import {
 	RequestResponseOptionsSchema,
 } from "@cerios/openapi-core";
 import { z } from "zod";
+
 import type { OpenApiPlaywrightGeneratorOptions, PlaywrightConfigFile } from "../types";
 
 /**

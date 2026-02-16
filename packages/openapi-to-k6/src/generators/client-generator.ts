@@ -12,6 +12,7 @@ import {
 	stripPathPrefix,
 	toPascalCase,
 } from "@cerios/openapi-core";
+
 import type { OpenApiK6GeneratorOptions } from "../types";
 
 interface ParameterInfo {

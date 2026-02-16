@@ -5,6 +5,7 @@
  */
 
 import { applyFormatting, classifyEnumType, numericToEnumMember, stringToEnumMember } from "@cerios/openapi-core";
+
 import type { EnumFormat } from "../types";
 
 export interface EnumGeneratorOptions {

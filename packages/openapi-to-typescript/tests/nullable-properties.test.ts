@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
+
 import { TypeScriptGenerator } from "../src/typescript-generator";
 
 describe("Nullable Type Handling", () => {

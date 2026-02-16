@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
 import {
 	CliOptionsError,
 	ConfigValidationError,
@@ -10,6 +11,7 @@ import {
 } from "@cerios/openapi-core";
 import { Command } from "commander";
 import prompts from "prompts";
+
 import { OpenApiPlaywrightGenerator } from "./openapi-playwright-generator";
 import { loadConfig, mergeConfigWithDefaults } from "./utils/config-loader";
 

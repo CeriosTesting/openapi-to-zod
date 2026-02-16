@@ -27,6 +27,7 @@ Add Content-Type header injection and body serialization for K6 client/service
 ## Generated Code Example
 
 **Client method:**
+
 ```typescript
 createUser(options?: { requestParameters?: Params; body?: RequestBody | null }): Response {
   const url = this.baseUrl + `/users`;
@@ -46,6 +47,7 @@ createUser(options?: { requestParameters?: Params; body?: RequestBody | null }):
 ```
 
 **Service method:**
+
 ```typescript
 createUser(body: CreateUserRequest, requestParameters?: Params): K6ServiceResult<User> {
   const response = this._client.createUser({ requestParameters, body: serializeBody(body) });

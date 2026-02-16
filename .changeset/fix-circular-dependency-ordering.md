@@ -12,6 +12,7 @@ Fixed a bug where schemas involved in mutual circular dependencies (e.g., `Dossi
 **Root cause**: The generator was not properly detecting and handling mutual circular references. When schemas reference each other through `allOf`, the topological sort would place them in an order that caused forward references without using `z.lazy()`.
 
 **Changes**:
+
 - Added pre-analysis phase to detect circular dependency chains before code generation
 - References to any schema in a circular dependency chain now use `z.lazy()` for deferred evaluation
 - Fixed an issue where new `PropertyGenerator` instances weren't receiving the circular dependencies information

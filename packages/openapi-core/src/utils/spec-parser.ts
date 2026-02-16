@@ -6,9 +6,12 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
+
 import { parse as parseYaml } from "yaml";
+
 import { FileOperationError, SpecValidationError } from "../errors";
 import type { OpenAPISpec } from "../types";
+
 import { LRUCache } from "./lru-cache";
 
 /**

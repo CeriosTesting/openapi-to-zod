@@ -1,6 +1,7 @@
-/** biome-ignore-all lint/complexity/useLiteralKeys: <Needed for testing private methods> */
 import { describe, expect, it } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("Service Imports", () => {

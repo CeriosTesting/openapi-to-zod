@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("MIME and URL Patterns with Forward Slashes", () => {

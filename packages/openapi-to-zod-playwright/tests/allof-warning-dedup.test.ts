@@ -1,6 +1,9 @@
 import { existsSync, rmSync } from "node:fs";
+
 import { afterEach, describe, expect, it, vi } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("allOf warning deduplication", () => {

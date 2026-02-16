@@ -1,7 +1,10 @@
 import { writeFileSync } from "node:fs";
+
 import { escapeJSDoc } from "@cerios/openapi-core";
 import { describe, expect, it } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 /**

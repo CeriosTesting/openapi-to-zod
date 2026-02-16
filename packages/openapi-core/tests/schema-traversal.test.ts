@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { OpenAPISchema, OpenAPISpec } from "../src/types";
 import {
 	analyzeSchemaUsage,
@@ -130,7 +131,7 @@ describe("Schema Traversal Utilities", () => {
 			const refs = new Set<string>();
 			const schema: OpenAPISchema = {
 				if: { $ref: "#/components/schemas/Condition" },
-				// biome-ignore lint/suspicious/noThenProperty: Testing OpenAPI if/then/else conditional schema
+				// oxlint-disable-next-line unicorn/no-thenable
 				then: { $ref: "#/components/schemas/ThenSchema" },
 				else: { $ref: "#/components/schemas/ElseSchema" },
 			};

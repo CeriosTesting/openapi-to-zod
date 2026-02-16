@@ -1,8 +1,9 @@
-/** biome-ignore-all lint/suspicious/noTemplateCurlyInString: Needed for testing template literals in generated code */
-
 import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("BasePath Option", () => {

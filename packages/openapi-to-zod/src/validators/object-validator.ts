@@ -1,5 +1,6 @@
 import { generateJSDoc } from "../generators/jsdoc-generator";
 import type { OpenAPISchema } from "../types";
+
 import { generateDependencies, generateDependentRequired, generateIfThenElse } from "./conditional-validator";
 
 /**

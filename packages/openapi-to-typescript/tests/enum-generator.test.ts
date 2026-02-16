@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { generateEnum } from "../src/generators/enum-generator.js";
 
 describe("Enum Generator", () => {

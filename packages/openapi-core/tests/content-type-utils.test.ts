@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { getResponseParseMethod } from "../src/utils/content-type-utils";
 
 describe("content-type-utils", () => {

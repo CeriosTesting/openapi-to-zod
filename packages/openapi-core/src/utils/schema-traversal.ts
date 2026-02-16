@@ -5,6 +5,7 @@
  */
 
 import type { OpenAPISchema, OpenAPISpec } from "../types";
+
 import { resolveRefName } from "./name-utils";
 
 /**

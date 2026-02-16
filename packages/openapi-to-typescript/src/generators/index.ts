@@ -2,11 +2,7 @@
  * Generators for TypeScript code generation
  */
 
-export {
-	type EnumGeneratorOptions,
-	type EnumGeneratorResult,
-	generateEnum,
-} from "./enum-generator";
+export { type EnumGeneratorOptions, type EnumGeneratorResult, generateEnum } from "./enum-generator";
 export {
 	formatTypeProperty,
 	generateTypeDeclaration,

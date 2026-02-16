@@ -7,7 +7,9 @@
 
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
+
 import { parse as parseYaml } from "yaml";
+
 import type { OpenAPISpec } from "../types";
 
 /**

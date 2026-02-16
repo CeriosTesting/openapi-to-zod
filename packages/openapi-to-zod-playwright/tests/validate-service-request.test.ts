@@ -1,5 +1,7 @@
 import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
 
 describe("validateServiceRequest option", () => {
@@ -173,7 +175,6 @@ describe("validateServiceRequest option", () => {
 				validateServiceRequest: true,
 			});
 
-			// biome-ignore lint/complexity/useLiteralKeys: Testing private method
 			const serviceFile = generator["generateServiceFile"]("test-service.ts", "test.ts", "test-client.ts");
 
 			// Should import query param schemas for validation

@@ -36,16 +36,18 @@ export const userSchema: z.ZodType<User> = z.object({ ... });
 ### Usage
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod';
+import { defineConfig } from "@cerios/openapi-to-zod";
 
 export default defineConfig({
-  specs: [{
-    input: 'large-api.yaml',
-    outputTypes: 'src/generated/types.ts',       // TypeScript types
-    outputZodSchemas: 'src/generated/schemas.ts', // Zod schemas
-    enumFormat: 'const-object',                   // Optional
-    typeAssertionThreshold: 100                   // Optional: use double assertion for complex schemas
-  }]
+	specs: [
+		{
+			input: "large-api.yaml",
+			outputTypes: "src/generated/types.ts", // TypeScript types
+			outputZodSchemas: "src/generated/schemas.ts", // Zod schemas
+			enumFormat: "const-object", // Optional
+			typeAssertionThreshold: 100, // Optional: use double assertion for complex schemas
+		},
+	],
 });
 ```
 

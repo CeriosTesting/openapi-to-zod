@@ -13,6 +13,7 @@ import {
 	type FormatZodErrorsOptions,
 } from "@cerios/openapi-core";
 import { z } from "zod";
+
 import type { ConfigFile, TypeScriptGeneratorOptions } from "../types";
 
 /**

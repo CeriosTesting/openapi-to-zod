@@ -66,11 +66,7 @@ export { getResponseParseMethod } from "./utils/content-type-utils";
 // Enum Utilities
 export { numericToEnumMember, stringToEnumMember } from "./utils/enum-utils";
 // Header Filters
-export {
-	filterHeaders,
-	shouldIgnoreHeader,
-	validateIgnorePatterns,
-} from "./utils/header-filters";
+export { filterHeaders, shouldIgnoreHeader, validateIgnorePatterns } from "./utils/header-filters";
 // LRU Cache
 export { LRUCache } from "./utils/lru-cache";
 // Method Naming
@@ -107,11 +103,7 @@ export {
 // Pattern Utilities
 export { isGlobPattern, stripAffixes, stripPathPrefix, stripPrefix, stripSuffix } from "./utils/pattern-utils";
 // Ref Resolution
-export {
-	mergeParameters,
-	resolveRequestBodyRef,
-	resolveResponseRef,
-} from "./utils/ref-resolver";
+export { mergeParameters, resolveRequestBodyRef, resolveResponseRef } from "./utils/ref-resolver";
 // Schema Traversal
 export type { SchemaContext, SchemaUsageAnalysis } from "./utils/schema-traversal";
 export {

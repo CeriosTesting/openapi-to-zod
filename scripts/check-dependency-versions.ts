@@ -18,7 +18,6 @@ const SHARED_DEPS = [
 	"minimatch",
 	"yaml",
 	"@arethetypeswrong/cli",
-	"@biomejs/biome",
 	"@types/node",
 	"tsup",
 	"typescript",

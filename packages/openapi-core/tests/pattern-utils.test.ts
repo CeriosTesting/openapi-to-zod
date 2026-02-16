@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { stripPathPrefix, stripPrefix } from "../src/utils/pattern-utils";
 
 describe("pattern-utils", () => {

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
+
 import { TestUtils } from "./utils/test-utils";
 
 /**

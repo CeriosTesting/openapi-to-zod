@@ -1,4 +1,5 @@
 import { minimatch } from "minimatch";
+
 import type { OperationFilters } from "../types";
 
 /**

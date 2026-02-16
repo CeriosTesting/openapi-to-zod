@@ -9,10 +9,12 @@ Fixed a TypeScript error that occurred when using separate schemas mode (`output
 
 **The Problem:**
 When a property has `nullable: true` in the OpenAPI spec:
+
 - Zod schema generated: `z.string().nullable()` → infers to `string | null`
 - TypeScript type was generating: `string` or `string | undefined` (missing `| null`)
 
 This caused TypeScript errors like:
+
 ```
 Type 'string | null | undefined' is not assignable to type 'string | undefined'.
   Type 'null' is not assignable to type 'string | undefined'.
@@ -24,16 +26,17 @@ The TypeScript generator now correctly handles `nullable: true` (OpenAPI 3.0) an
 ```typescript
 // Before (broken)
 export type User = {
-  email?: string;  // Missing | null
+	email?: string; // Missing | null
 };
 
 // After (fixed)
 export type User = {
-  email?: string | null;  // Correctly includes | null
+	email?: string | null; // Correctly includes | null
 };
 ```
 
 **What was fixed:**
+
 - Nullable handling for `$ref` properties
 - Nullable handling for inline object properties
 - Nullable handling for array types
@@ -48,6 +51,7 @@ Fixed an issue where the `useOperationId` option was being ignored in several pl
 
 **The Problem:**
 When `useOperationId: false` was set:
+
 - Service methods correctly used path-based names: `getApiUsers()`
 - But types were generated with operationId-based names: `SearchUsersQueryParams`
 
@@ -55,6 +59,7 @@ This caused TypeScript errors because the service imported types that didn't exi
 
 **Root Cause:**
 Multiple places hardcoded `useOperationId: true`:
+
 - `generateSchemasString()` forced `useOperationId: true` for schema generator
 - `generateTypesString()` didn't pass `useOperationId` to TypeScriptGenerator
 - `extractEndpoints()` hardcoded `true` in `getOperationName()` calls for QueryParams, HeaderParams, and inline response names
@@ -71,6 +76,7 @@ async searchUsers(options?: { params?: SearchUsersQueryParams })
 ```
 
 **What was fixed:**
+
 - `generateSchemasString()` no longer overrides `useOperationId`
 - `generateTypesString()` passes `useOperationId` to TypeScriptGenerator
 - `extractEndpoints()` uses the passed `useOperationId` for all type names

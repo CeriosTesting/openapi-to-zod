@@ -1,8 +1,11 @@
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 /**

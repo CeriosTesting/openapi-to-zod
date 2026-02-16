@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+
 import { TypeScriptGenerator } from "../src/typescript-generator.js";
+
 import { TestUtils } from "./utils/test-utils.js";
 
 describe("TypeScriptGenerator", () => {

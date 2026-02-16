@@ -61,20 +61,20 @@ This will guide you through creating a configuration file:
 Creates `openapi-to-zod-playwright.config.ts`:
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod-playwright';
+import { defineConfig } from "@cerios/openapi-to-zod-playwright";
 
 export default defineConfig({
-  defaults: {
-    mode: 'normal',
-    validateServiceRequest: false,
-  },
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'tests/schemas.ts',
-      outputClient: 'tests/client.ts',
-    },
-  ],
+	defaults: {
+		mode: "normal",
+		validateServiceRequest: false,
+	},
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "tests/schemas.ts",
+			outputClient: "tests/client.ts",
+		},
+	],
 });
 ```
 
@@ -87,39 +87,39 @@ npx openapi-to-zod-playwright
 ### 3. Use in Tests
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { ApiClient, ApiService } from './api-client';
+import { test, expect } from "@playwright/test";
+import { ApiClient, ApiService } from "./api-client";
 
-test('create and get user', async ({ request }) => {
-  const client = new ApiClient(request);
-  const service = new ApiService(client);
+test("create and get user", async ({ request }) => {
+	const client = new ApiClient(request);
+	const service = new ApiService(client);
 
-  // Create user - validates request and response
-  const user = await service.postUsers201({
-    data: {
-      email: 'test@example.com',
-      name: 'Test User',
-      age: 25
-    }
-  });
+	// Create user - validates request and response
+	const user = await service.postUsers201({
+		data: {
+			email: "test@example.com",
+			name: "Test User",
+			age: 25,
+		},
+	});
 
-  expect(user.email).toBe('test@example.com');
+	expect(user.email).toBe("test@example.com");
 
-  // Get user by ID
-  const fetchedUser = await service.getUsersByUserId(user.id);
-  expect(fetchedUser.id).toBe(user.id);
+	// Get user by ID
+	const fetchedUser = await service.getUsersByUserId(user.id);
+	expect(fetchedUser.id).toBe(user.id);
 });
 
-test('handle error response', async ({ request }) => {
-  const client = new ApiClient(request);
-  const service = new ApiService(client);
+test("handle error response", async ({ request }) => {
+	const client = new ApiClient(request);
+	const service = new ApiService(client);
 
-  // Test error scenario
-  const response = await service.postUsersError({
-    data: { email: 'invalid' } // Missing required 'name'
-  });
+	// Test error scenario
+	const response = await service.postUsersError({
+		data: { email: "invalid" }, // Missing required 'name'
+	});
 
-  expect(response.status()).toBe(400);
+	expect(response.status()).toBe(400);
 });
 ```
 
@@ -136,9 +136,9 @@ This package generates up to three separate files:
 ```typescript
 // Generated schemas
 export const userSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  name: z.string()
+	id: z.string().uuid(),
+	email: z.string().email(),
+	name: z.string(),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -158,7 +158,7 @@ const client = new ApiClient(request);
 
 // Can send invalid data for testing
 const response = await client.postUsers({
-  data: { invalid: 'data' }
+	data: { invalid: "data" },
 });
 ```
 
@@ -177,7 +177,7 @@ const service = new ApiService(client);
 
 // Validates request and response - throws on invalid data
 const user = await service.postUsers201({
-  data: { email: 'test@example.com', name: 'Test' }
+	data: { email: "test@example.com", name: "Test" },
 });
 ```
 
@@ -186,6 +186,7 @@ const user = await service.postUsers201({
 Methods are named using the pattern: `{httpMethod}{PascalCasePath}{StatusCode?}`
 
 Examples:
+
 - `GET /users` → `getUsers()` (single 200 response)
 - `POST /users` → `postUsers201()` (201 response)
 - `GET /users/{userId}` → `getUsersByUserId(userId: string)` (single 200 response)
@@ -206,19 +207,22 @@ The `stripPathPrefix` option removes common prefixes from API paths before gener
 
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    outputClient: 'client.ts',
-    stripPathPrefix: '/api/v1.0',  // Strip this prefix from all paths
-    basePath: '/api/v1.0'          // Add it back for HTTP requests
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			outputClient: "client.ts",
+			stripPathPrefix: "/api/v1.0", // Strip this prefix from all paths
+			basePath: "/api/v1.0", // Add it back for HTTP requests
+		},
+	],
 });
 ```
 
 ### How It Works
 
 **OpenAPI Spec:**
+
 ```yaml
 paths:
   /api/v1.0/users:
@@ -230,17 +234,19 @@ paths:
 ```
 
 **Without `stripPathPrefix`:**
+
 ```typescript
 // Method names generated from full path
-getApiV10Users()    // GET /api/v1.0/users
-getApiV10Posts()    // GET /api/v1.0/posts
+getApiV10Users(); // GET /api/v1.0/users
+getApiV10Posts(); // GET /api/v1.0/posts
 ```
 
 **With `stripPathPrefix: '/api/v1.0'`:**
+
 ```typescript
 // Method names generated from stripped path (cleaner)
-getUsers()    // GET /users (shown in JSDoc)
-getPosts()    // GET /posts (shown in JSDoc)
+getUsers(); // GET /users (shown in JSDoc)
+getPosts(); // GET /posts (shown in JSDoc)
 
 // Actual HTTP requests use basePath
 // GET {baseURL}/api/v1.0/users
@@ -253,17 +259,20 @@ Use glob patterns to strip dynamic prefixes (e.g., version numbers):
 
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    outputClient: 'client.ts',
-    // Strip any versioned API prefix using wildcards
-    stripPathPrefix: '/api/v*'
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			outputClient: "client.ts",
+			// Strip any versioned API prefix using wildcards
+			stripPathPrefix: "/api/v*",
+		},
+	],
 });
 ```
 
 **Matches:**
+
 - `/api/v1.0/users` → `/users`
 - `/api/v2.5/posts` → `/posts`
 - `/api/v10.3/products` → `/products`
@@ -271,6 +280,7 @@ export default defineConfig({
 **Glob Pattern Syntax:**
 
 Glob patterns support powerful matching using [minimatch](https://github.com/isaacs/minimatch):
+
 - `*` matches any characters within a single path segment (stops at `/`)
 - `**` matches any characters across multiple path segments (crosses `/` boundaries)
 - `?` matches a single character
@@ -280,12 +290,12 @@ Glob patterns support powerful matching using [minimatch](https://github.com/isa
 
 ```typescript
 // Examples of glob patterns:
-stripPathPrefix: '/api/v*'                          // Matches /api/v1, /api/v2, /api/v10
-stripPathPrefix: '/api/**/v1'                       // Matches /api/v1, /api/internal/v1, /api/public/v1
-stripPathPrefix: '/api/v*.*'                        // Matches /api/v1.0, /api/v2.5
-stripPathPrefix: '/api/v[0-9]'                      // Matches /api/v1, /api/v2
-stripPathPrefix: '/api/{v1,v2}'                     // Matches /api/v1 or /api/v2
-stripPathPrefix: '/!(internal)/**'                  // Matches any path except those starting with /internal/
+stripPathPrefix: "/api/v*"; // Matches /api/v1, /api/v2, /api/v10
+stripPathPrefix: "/api/**/v1"; // Matches /api/v1, /api/internal/v1, /api/public/v1
+stripPathPrefix: "/api/v*.*"; // Matches /api/v1.0, /api/v2.5
+stripPathPrefix: "/api/v[0-9]"; // Matches /api/v1, /api/v2
+stripPathPrefix: "/api/{v1,v2}"; // Matches /api/v1 or /api/v2
+stripPathPrefix: "/!(internal)/**"; // Matches any path except those starting with /internal/
 ```
 
 ### Normalization
@@ -294,14 +304,15 @@ stripPathPrefix: '/!(internal)/**'                  // Matches any path except t
 
 ```typescript
 // All of these work the same:
-stripPathPrefix: '/api/v1'      // Preferred
-stripPathPrefix: 'api/v1'       // Normalized to /api/v1
-stripPathPrefix: '/api/v1/'     // Trailing slash removed
+stripPathPrefix: "/api/v1"; // Preferred
+stripPathPrefix: "api/v1"; // Normalized to /api/v1
+stripPathPrefix: "/api/v1/"; // Trailing slash removed
 ```
 
 ### Common Patterns
 
 **Pattern 1: Clean Version Prefixes**
+
 ```typescript
 {
   stripPathPrefix: '/api/v1.0',
@@ -311,6 +322,7 @@ stripPathPrefix: '/api/v1/'     // Trailing slash removed
 ```
 
 **Pattern 2: Multiple API Versions with Wildcard**
+
 ```typescript
 {
   stripPathPrefix: '/api/v*',
@@ -320,6 +332,7 @@ stripPathPrefix: '/api/v1/'     // Trailing slash removed
 ```
 
 **Pattern 3: Versioned Paths with Dots**
+
 ```typescript
 {
   stripPathPrefix: '/api/v*.*',
@@ -329,6 +342,7 @@ stripPathPrefix: '/api/v1/'     // Trailing slash removed
 ```
 
 **Pattern 4: Organization Prefix**
+
 ```typescript
 {
   stripPathPrefix: '/myorg/api',
@@ -353,6 +367,7 @@ npx openapi-to-zod-playwright init
 ```
 
 Interactive prompts guide you through:
+
 - Input OpenAPI file path
 - Output file path
 - Config format (TypeScript or JSON)
@@ -393,39 +408,39 @@ npx openapi-to-zod-playwright init --help
 **`openapi-to-zod-playwright.config.ts`**:
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod-playwright';
+import { defineConfig } from "@cerios/openapi-to-zod-playwright";
 
 export default defineConfig({
-  defaults: {
-    mode: 'strict',
-    includeDescriptions: true,
-    showStats: false,
-    validateServiceRequest: false, // Optional request validation
-  },
-  specs: [
-    {
-      input: 'specs/api-v1.yaml',
-      outputTypes: 'src/generated/api-v1.ts',
-      outputClient: 'src/generated/api-v1-client.ts'
-    },
-    {
-      input: 'specs/api-v2.yaml',
-      outputTypes: 'src/generated/api-v2.ts',
-      outputClient: 'src/generated/api-v2-client.ts',
-      outputService: 'src/generated/api-v2-service.ts',
-      stripPathPrefix: '/api/v2', // Strip prefix from paths for cleaner method names
-      basePath: '/api/v2', // Prepend base path to all endpoints
-      mode: 'normal',
-      prefix: 'v2',
-      ignoreHeaders: ['Authorization', 'X-*'], // Ignore specific headers
-      operationFilters: {
-        includeTags: ['public'], // Only include operations with 'public' tag
-        includeStatusCodes: ['2xx', '4xx'], // Only generate for success and client errors
-      },
-      useOperationId: false, // Use path-based method names (default)
-    }
-  ],
-  executionMode: 'parallel' // or 'serial'
+	defaults: {
+		mode: "strict",
+		includeDescriptions: true,
+		showStats: false,
+		validateServiceRequest: false, // Optional request validation
+	},
+	specs: [
+		{
+			input: "specs/api-v1.yaml",
+			outputTypes: "src/generated/api-v1.ts",
+			outputClient: "src/generated/api-v1-client.ts",
+		},
+		{
+			input: "specs/api-v2.yaml",
+			outputTypes: "src/generated/api-v2.ts",
+			outputClient: "src/generated/api-v2-client.ts",
+			outputService: "src/generated/api-v2-service.ts",
+			stripPathPrefix: "/api/v2", // Strip prefix from paths for cleaner method names
+			basePath: "/api/v2", // Prepend base path to all endpoints
+			mode: "normal",
+			prefix: "v2",
+			ignoreHeaders: ["Authorization", "X-*"], // Ignore specific headers
+			operationFilters: {
+				includeTags: ["public"], // Only include operations with 'public' tag
+				includeStatusCodes: ["2xx", "4xx"], // Only generate for success and client errors
+			},
+			useOperationId: false, // Use path-based method names (default)
+		},
+	],
+	executionMode: "parallel", // or 'serial'
 });
 ```
 
@@ -435,26 +450,26 @@ export default defineConfig({
 
 ```json
 {
-  "defaults": {
-    "mode": "strict",
-    "includeDescriptions": true,
-    "showStats": false
-  },
-  "specs": [
-    {
-      "input": "specs/api-v1.yaml",
-      "outputTypes": "src/generated/api-v1.ts",
-      "outputClient": "src/generated/api-v1-client.ts"
-    },
-    {
-      "input": "specs/api-v2.yaml",
-      "outputTypes": "src/generated/api-v2.ts",
-      "outputClient": "src/generated/api-v2-client.ts",
-      "mode": "normal",
-      "prefix": "v2"
-    }
-  ],
-  "executionMode": "parallel"
+	"defaults": {
+		"mode": "strict",
+		"includeDescriptions": true,
+		"showStats": false
+	},
+	"specs": [
+		{
+			"input": "specs/api-v1.yaml",
+			"outputTypes": "src/generated/api-v1.ts",
+			"outputClient": "src/generated/api-v1-client.ts"
+		},
+		{
+			"input": "specs/api-v2.yaml",
+			"outputTypes": "src/generated/api-v2.ts",
+			"outputClient": "src/generated/api-v2-client.ts",
+			"mode": "normal",
+			"prefix": "v2"
+		}
+	],
+	"executionMode": "parallel"
 }
 ```
 
@@ -462,42 +477,43 @@ export default defineConfig({
 
 #### Playwright-Specific Options
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `outputTypes` | `string` | Preferred output path for generated schemas/types (required unless deprecated `output` is set) | `undefined` |
-| `output` | `string` | Deprecated alias for `outputTypes`; allowed for backward compatibility | `undefined` |
-| `outputClient` | `string` | Optional path for client class file | `undefined` |
-| `outputService` | `string` | Optional path for service class file (requires `outputClient`) | `undefined` |
-| `validateServiceRequest` | `boolean` | Enable Zod validation for request bodies in service methods | `false` |
-| `stripPathPrefix` | `string` | Strip prefix from paths before generating method names using glob patterns (literal string or glob pattern) | `undefined` |
-| `ignoreHeaders` | `string[]` | Header patterns to ignore (supports glob patterns like `"X-*"`, `"*"`) | `undefined` |
-| `basePath` | `string` | Base path to prepend to all endpoints (e.g., `"/api/v1"`) | `undefined` |
-| `useOperationId` | `boolean` | Use operationId from spec for method names | `false` |
-| `operationFilters` | `object` | Filter operations (see below) | `undefined` |
+| Option                   | Type       | Description                                                                                                 | Default     |
+| ------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------- | ----------- |
+| `outputTypes`            | `string`   | Preferred output path for generated schemas/types (required unless deprecated `output` is set)              | `undefined` |
+| `output`                 | `string`   | Deprecated alias for `outputTypes`; allowed for backward compatibility                                      | `undefined` |
+| `outputClient`           | `string`   | Optional path for client class file                                                                         | `undefined` |
+| `outputService`          | `string`   | Optional path for service class file (requires `outputClient`)                                              | `undefined` |
+| `validateServiceRequest` | `boolean`  | Enable Zod validation for request bodies in service methods                                                 | `false`     |
+| `stripPathPrefix`        | `string`   | Strip prefix from paths before generating method names using glob patterns (literal string or glob pattern) | `undefined` |
+| `ignoreHeaders`          | `string[]` | Header patterns to ignore (supports glob patterns like `"X-*"`, `"*"`)                                      | `undefined` |
+| `basePath`               | `string`   | Base path to prepend to all endpoints (e.g., `"/api/v1"`)                                                   | `undefined` |
+| `useOperationId`         | `boolean`  | Use operationId from spec for method names                                                                  | `false`     |
+| `operationFilters`       | `object`   | Filter operations (see below)                                                                               | `undefined` |
 
 If `outputTypes` and `output` are both set with different values, configuration validation fails.
 
 #### Operation Filters
 
-| Filter | Type | Description |
-|--------|------|-------------|
-| `includeTags` | `string[]` | Include only operations with these tags |
-| `excludeTags` | `string[]` | Exclude operations with these tags |
-| `includePaths` | `string[]` | Include only these paths (supports glob patterns) |
-| `excludePaths` | `string[]` | Exclude these paths (supports glob patterns) |
-| `includeMethods` | `string[]` | Include only these HTTP methods |
-| `excludeMethods` | `string[]` | Exclude these HTTP methods |
-| `includeOperationIds` | `string[]` | Include only these operationIds |
-| `excludeOperationIds` | `string[]` | Exclude these operationIds |
-| `excludeDeprecated` | `boolean` | Exclude deprecated operations |
-| `includeStatusCodes` | `string[]` | Include only these status codes (e.g., `["2xx", "404"]`) |
-| `excludeStatusCodes` | `string[]` | Exclude these status codes (e.g., `["5xx"]`) |
+| Filter                | Type       | Description                                              |
+| --------------------- | ---------- | -------------------------------------------------------- |
+| `includeTags`         | `string[]` | Include only operations with these tags                  |
+| `excludeTags`         | `string[]` | Exclude operations with these tags                       |
+| `includePaths`        | `string[]` | Include only these paths (supports glob patterns)        |
+| `excludePaths`        | `string[]` | Exclude these paths (supports glob patterns)             |
+| `includeMethods`      | `string[]` | Include only these HTTP methods                          |
+| `excludeMethods`      | `string[]` | Exclude these HTTP methods                               |
+| `includeOperationIds` | `string[]` | Include only these operationIds                          |
+| `excludeOperationIds` | `string[]` | Exclude these operationIds                               |
+| `excludeDeprecated`   | `boolean`  | Exclude deprecated operations                            |
+| `includeStatusCodes`  | `string[]` | Include only these status codes (e.g., `["2xx", "404"]`) |
+| `excludeStatusCodes`  | `string[]` | Exclude these status codes (e.g., `["5xx"]`)             |
 
 #### Core Generator Options
 
 For schema generation options inherited from `@cerios/openapi-to-zod` (like `mode`, `includeDescriptions`, `prefix`, `suffix`, etc.), see the [@cerios/openapi-to-zod Configuration](../openapi-to-zod/README.md#configuration-options).
 
 Common inherited options:
+
 - `mode`: `"strict"` | `"normal"` | `"loose"` - Validation strictness
 - `includeDescriptions`: Include JSDoc comments in generated schemas
 - `showStats`: Include generation statistics in output
@@ -510,20 +526,20 @@ Common inherited options:
 By default, `date-time` format fields use `z.iso.datetime()`, which requires timezone suffix (`Z`). If your API returns date-times **without the `Z` suffix** (e.g., `2026-01-07T14:30:00`), you can override this:
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod-playwright';
+import { defineConfig } from "@cerios/openapi-to-zod-playwright";
 
 export default defineConfig({
-  defaults: {
-    // For date-times without Z suffix (JSON/YAML config)
-    customDateTimeFormatRegex: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$',
-  },
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'src/schemas.ts',
-      outputClient: 'src/client.ts',
-    },
-  ],
+	defaults: {
+		// For date-times without Z suffix (JSON/YAML config)
+		customDateTimeFormatRegex: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+	},
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "src/schemas.ts",
+			outputClient: "src/client.ts",
+		},
+	],
 });
 ```
 
@@ -531,11 +547,11 @@ Or using RegExp literal in TypeScript config:
 
 ```typescript
 export default defineConfig({
-  defaults: {
-    // TypeScript config - RegExp literal (single escaping)
-    customDateTimeFormatRegex: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/,
-  },
-  specs: [{ input: 'openapi.yaml', outputTypes: 'src/schemas.ts', outputClient: 'src/client.ts' }],
+	defaults: {
+		// TypeScript config - RegExp literal (single escaping)
+		customDateTimeFormatRegex: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/,
+	},
+	specs: [{ input: "openapi.yaml", outputTypes: "src/schemas.ts", outputClient: "src/client.ts" }],
 });
 ```
 
@@ -560,11 +576,11 @@ const result = await service.deleteUsersByUserId(userId); // Promise<null>
 
 ```typescript
 // Test error scenarios without validation
-const response = await service.getUsersByUserIdError('invalid-id');
+const response = await service.getUsersByUserIdError("invalid-id");
 expect(response.status()).toBe(404);
 
 const errorBody = await response.json();
-expect(errorBody.message).toContain('not found');
+expect(errorBody.message).toContain("not found");
 ```
 
 ## Path Parameters
@@ -595,11 +611,11 @@ All optional request properties are grouped in an `options` parameter:
 
 ```typescript
 interface RequestOptions {
-  query?: Record<string, any>;      // Query parameters
-  headers?: Record<string, string>; // Request headers
-  data?: T;                          // Request body (JSON)
-  form?: Record<string, any>;        // Form data
-  multipart?: Record<string, any>;   // Multipart form data
+	query?: Record<string, any>; // Query parameters
+	headers?: Record<string, string>; // Request headers
+	data?: T; // Request body (JSON)
+	form?: Record<string, any>; // Form data
+	multipart?: Record<string, any>; // Multipart form data
 }
 ```
 
@@ -607,8 +623,8 @@ interface RequestOptions {
 
 ```typescript
 await service.postUsers201({
-  data: { email: 'test@example.com', name: 'Test User' }, // Validated with Zod
-  headers: { 'X-Custom': 'value' }
+	data: { email: "test@example.com", name: "Test User" }, // Validated with Zod
+	headers: { "X-Custom": "value" },
 });
 ```
 
@@ -617,7 +633,7 @@ await service.postUsers201({
 ```typescript
 // All properties are Partial - allows invalid data
 await client.postUsers({
-  data: { invalid: 'data' } // No validation
+	data: { invalid: "data" }, // No validation
 });
 ```
 
@@ -626,46 +642,46 @@ await client.postUsers({
 ### Happy Path Testing
 
 ```typescript
-test('successful user creation', async ({ request }) => {
-  const service = new ApiService(new ApiClient(request));
+test("successful user creation", async ({ request }) => {
+	const service = new ApiService(new ApiClient(request));
 
-  const user = await service.postUsers201({
-    data: { email: 'test@example.com', name: 'Test' }
-  });
+	const user = await service.postUsers201({
+		data: { email: "test@example.com", name: "Test" },
+	});
 
-  // Automatically validated: status 201, response matches User schema
-  expect(user.id).toBeTruthy();
+	// Automatically validated: status 201, response matches User schema
+	expect(user.id).toBeTruthy();
 });
 ```
 
 ### Error Testing
 
 ```typescript
-test('handle validation errors', async ({ request }) => {
-  const service = new ApiService(new ApiClient(request));
+test("handle validation errors", async ({ request }) => {
+	const service = new ApiService(new ApiClient(request));
 
-  const response = await service.postUsersError({
-    data: { email: 'invalid' } // Missing required 'name'
-  });
+	const response = await service.postUsersError({
+		data: { email: "invalid" }, // Missing required 'name'
+	});
 
-  expect(response.status()).toBe(400);
-  const error = await response.json();
-  expect(error.message).toContain('validation');
+	expect(response.status()).toBe(400);
+	const error = await response.json();
+	expect(error.message).toContain("validation");
 });
 ```
 
 ### Invalid Request Testing
 
 ```typescript
-test('send invalid data', async ({ request }) => {
-  const client = new ApiClient(request);
+test("send invalid data", async ({ request }) => {
+	const client = new ApiClient(request);
 
-  // Use client directly to bypass validation
-  const response = await client.postUsers({
-    data: { completely: 'wrong' }
-  });
+	// Use client directly to bypass validation
+	const response = await client.postUsers({
+		data: { completely: "wrong" },
+	});
 
-  expect(response.status()).toBe(400);
+	expect(response.status()).toBe(400);
 });
 ```
 

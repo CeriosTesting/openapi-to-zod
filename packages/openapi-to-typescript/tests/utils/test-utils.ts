@@ -1,4 +1,5 @@
 import { createTestUtils, type FixtureCategory } from "@cerios/openapi-core/test-utils";
+
 import type { TypeScriptGeneratorOptions } from "../../src/types";
 import { TypeScriptGenerator } from "../../src/typescript-generator";
 

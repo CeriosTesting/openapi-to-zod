@@ -21,12 +21,12 @@ npm install @cerios/openapi-core
 
 ```typescript
 import {
-  shouldIncludeOperation,
-  toPascalCase,
-  toCamelCase,
-  resolveRefName,
-  LRUCache,
-  loadOpenAPISpec,
+	shouldIncludeOperation,
+	toPascalCase,
+	toCamelCase,
+	resolveRefName,
+	LRUCache,
+	loadOpenAPISpec,
 } from "@cerios/openapi-core";
 
 // Load and parse an OpenAPI spec
@@ -37,8 +37,8 @@ const schemaName = resolveRefName("#/components/schemas/User"); // "User"
 
 // Filter operations
 const include = shouldIncludeOperation(operation, path, method, {
-  includeTags: ["users"],
-  excludePaths: ["/internal/*"],
+	includeTags: ["users"],
+	excludePaths: ["/internal/*"],
 });
 
 // Name utilities

@@ -44,6 +44,7 @@ npx @cerios/openapi-to-zod init
 ```
 
 This interactive command will:
+
 - Prompt for your OpenAPI spec path
 - Prompt for output file path
 - Ask if you want to include commonly-used defaults
@@ -67,63 +68,65 @@ The tool will auto-discover your config file and generate schemas.
 #### TypeScript Config (Recommended)
 
 **Minimal:**
+
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod';
+import { defineConfig } from "@cerios/openapi-to-zod";
 
 export default defineConfig({
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'src/schemas.ts',
-    },
-  ],
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "src/schemas.ts",
+		},
+	],
 });
 ```
 
 **With Commonly-Used Defaults:**
+
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod';
+import { defineConfig } from "@cerios/openapi-to-zod";
 
 export default defineConfig({
-  defaults: {
-    mode: 'strict',           // Strictest validation
-    includeDescriptions: true, // Useful JSDoc comments
-    showStats: false,          // Cleaner output
-  },
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'src/schemas.ts',
-    },
-  ],
+	defaults: {
+		mode: "strict", // Strictest validation
+		includeDescriptions: true, // Useful JSDoc comments
+		showStats: false, // Cleaner output
+	},
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "src/schemas.ts",
+		},
+	],
 });
 ```
 
 **Multi-Spec with Custom Options:**
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod';
+import { defineConfig } from "@cerios/openapi-to-zod";
 
 export default defineConfig({
-  defaults: {
-    mode: 'strict',
-    includeDescriptions: true,
-  },
-  specs: [
-    {
-      name: 'api-v1',
-      input: 'specs/api-v1.yaml',
-      outputTypes: 'src/schemas/v1.ts',
-    },
-    {
-      name: 'api-v2',
-      input: 'specs/api-v2.yaml',
-      outputTypes: 'src/schemas/v2.ts',
-      mode: 'normal', // Override default
-      prefix: 'v2',
-    },
-  ],
-  executionMode: 'parallel', // Process specs in parallel (default)
+	defaults: {
+		mode: "strict",
+		includeDescriptions: true,
+	},
+	specs: [
+		{
+			name: "api-v1",
+			input: "specs/api-v1.yaml",
+			outputTypes: "src/schemas/v1.ts",
+		},
+		{
+			name: "api-v2",
+			input: "specs/api-v2.yaml",
+			outputTypes: "src/schemas/v2.ts",
+			mode: "normal", // Override default
+			prefix: "v2",
+		},
+	],
+	executionMode: "parallel", // Process specs in parallel (default)
 });
 ```
 
@@ -133,16 +136,16 @@ export default defineConfig({
 
 ```json
 {
-  "defaults": {
-    "mode": "strict",
-    "includeDescriptions": true
-  },
-  "specs": [
-    {
-      "input": "openapi.yaml",
-      "outputTypes": "src/schemas.ts"
-    }
-  ]
+	"defaults": {
+		"mode": "strict",
+		"includeDescriptions": true
+	},
+	"specs": [
+		{
+			"input": "openapi.yaml",
+			"outputTypes": "src/schemas.ts"
+		}
+	]
 }
 ```
 
@@ -172,35 +175,34 @@ Examples:
 
 ### Configuration Options
 
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `defaults` | `object` | Global options applied to all specs (can be overridden per-spec) |
-| `specs` | `array` | Array of spec configurations (required, minimum 1) |
-| `executionMode` | `"parallel"` \| `"sequential"` | How to process specs (default: `"parallel"`) |
+| Option          | Type                           | Description                                                      |
+| --------------- | ------------------------------ | ---------------------------------------------------------------- |
+| `defaults`      | `object`                       | Global options applied to all specs (can be overridden per-spec) |
+| `specs`         | `array`                        | Array of spec configurations (required, minimum 1)               |
+| `executionMode` | `"parallel"` \| `"sequential"` | How to process specs (default: `"parallel"`)                     |
 
 **Per-Spec Options:**
 
-| Spec Option | Type | Description |
-|-------------|------|-------------|
-| `name` | `string` | Optional identifier for logging |
-| `input` | `string` | Input OpenAPI YAML file path (required) |
-| `outputTypes` | `string` | Preferred output TypeScript file path (required unless deprecated `output` is set) |
-| `output` | `string` | Deprecated alias for `outputTypes`; allowed for backward compatibility |
-| `mode` | `"strict"` \| `"normal"` \| `"loose"` | Validation mode for top-level schemas (default: `"normal"`) |
-| `emptyObjectBehavior` | `"strict"` \| `"loose"` \| `"record"` | How to handle empty objects (default: `"loose"`) |
-| `includeDescriptions` | `boolean` | Include JSDoc comments |
-| `useDescribe` | `boolean` | Add `.describe()` calls |
-| `defaultNullable` | `boolean` | Treat properties as nullable by default when not explicitly specified (default: `false`) |
-| `schemaType` | `"all"` \| `"request"` \| `"response"` | Schema filtering |
-| `prefix` | `string` | Prefix for schema names |
-| `suffix` | `string` | Suffix for schema names |
-| `stripSchemaPrefix` | `string` | Strip prefix from schema names before generating using glob patterns (e.g., `"Company.Models."` or `"*.Models."`) |
-| `useOperationId` | `boolean` | Use operationId for operation-derived query/header schema names when available (default: `true`) |
-| `showStats` | `boolean` | Include generation statistics |
-| `request` | `object` | Request-specific options (mode, includeDescriptions, useDescribe) |
-| `response` | `object` | Response-specific options (mode, includeDescriptions, useDescribe) |
-| `operationFilters` | `object` | Filter operations by tags, paths, methods, etc. (see below) |
+| Spec Option           | Type                                   | Description                                                                                                       |
+| --------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `name`                | `string`                               | Optional identifier for logging                                                                                   |
+| `input`               | `string`                               | Input OpenAPI YAML file path (required)                                                                           |
+| `outputTypes`         | `string`                               | Preferred output TypeScript file path (required unless deprecated `output` is set)                                |
+| `output`              | `string`                               | Deprecated alias for `outputTypes`; allowed for backward compatibility                                            |
+| `mode`                | `"strict"` \| `"normal"` \| `"loose"`  | Validation mode for top-level schemas (default: `"normal"`)                                                       |
+| `emptyObjectBehavior` | `"strict"` \| `"loose"` \| `"record"`  | How to handle empty objects (default: `"loose"`)                                                                  |
+| `includeDescriptions` | `boolean`                              | Include JSDoc comments                                                                                            |
+| `useDescribe`         | `boolean`                              | Add `.describe()` calls                                                                                           |
+| `defaultNullable`     | `boolean`                              | Treat properties as nullable by default when not explicitly specified (default: `false`)                          |
+| `schemaType`          | `"all"` \| `"request"` \| `"response"` | Schema filtering                                                                                                  |
+| `prefix`              | `string`                               | Prefix for schema names                                                                                           |
+| `suffix`              | `string`                               | Suffix for schema names                                                                                           |
+| `stripSchemaPrefix`   | `string`                               | Strip prefix from schema names before generating using glob patterns (e.g., `"Company.Models."` or `"*.Models."`) |
+| `useOperationId`      | `boolean`                              | Use operationId for operation-derived query/header schema names when available (default: `true`)                  |
+| `showStats`           | `boolean`                              | Include generation statistics                                                                                     |
+| `request`             | `object`                               | Request-specific options (mode, includeDescriptions, useDescribe)                                                 |
+| `response`            | `object`                               | Response-specific options (mode, includeDescriptions, useDescribe)                                                |
+| `operationFilters`    | `object`                               | Filter operations by tags, paths, methods, etc. (see below)                                                       |
 
 If `outputTypes` and `output` are both set with different values, configuration validation fails.
 
@@ -208,54 +210,61 @@ If `outputTypes` and `output` are both set with different values, configuration 
 
 Filter which operations to include/exclude during schema generation. Useful for generating separate schemas for different API subsets.
 
-| Filter | Type | Description |
-|--------|------|-------------|
-| `includeTags` | `string[]` | Include only operations with these tags |
-| `excludeTags` | `string[]` | Exclude operations with these tags |
-| `includePaths` | `string[]` | Include only these paths (supports glob patterns like `/users/**`) |
-| `excludePaths` | `string[]` | Exclude these paths (supports glob patterns) |
-| `includeMethods` | `string[]` | Include only these HTTP methods (`get`, `post`, etc.) |
-| `excludeMethods` | `string[]` | Exclude these HTTP methods |
-| `includeOperationIds` | `string[]` | Include only these operationIds (supports glob patterns) |
-| `excludeOperationIds` | `string[]` | Exclude these operationIds (supports glob patterns) |
-| `excludeDeprecated` | `boolean` | Exclude deprecated operations |
+| Filter                | Type       | Description                                                        |
+| --------------------- | ---------- | ------------------------------------------------------------------ |
+| `includeTags`         | `string[]` | Include only operations with these tags                            |
+| `excludeTags`         | `string[]` | Exclude operations with these tags                                 |
+| `includePaths`        | `string[]` | Include only these paths (supports glob patterns like `/users/**`) |
+| `excludePaths`        | `string[]` | Exclude these paths (supports glob patterns)                       |
+| `includeMethods`      | `string[]` | Include only these HTTP methods (`get`, `post`, etc.)              |
+| `excludeMethods`      | `string[]` | Exclude these HTTP methods                                         |
+| `includeOperationIds` | `string[]` | Include only these operationIds (supports glob patterns)           |
+| `excludeOperationIds` | `string[]` | Exclude these operationIds (supports glob patterns)                |
+| `excludeDeprecated`   | `boolean`  | Exclude deprecated operations                                      |
 
 **Example:**
+
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    operationFilters: {
-      includeTags: ['public'],        // Only public endpoints
-      excludeDeprecated: true,         // Skip deprecated operations
-      excludePaths: ['/internal/**']  // Exclude internal paths
-    }
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			operationFilters: {
+				includeTags: ["public"], // Only public endpoints
+				excludeDeprecated: true, // Skip deprecated operations
+				excludePaths: ["/internal/**"], // Exclude internal paths
+			},
+		},
+	],
 });
 ```
 
 ### Batch Execution
 
 **Parallel Mode** (default):
+
 - Processes all specs concurrently
 - Faster for multiple specs
 - Recommended for most use cases
 - Live progress shows all specs processing simultaneously
 
 **Sequential Mode**:
+
 - Processes specs one at a time
 - Useful for resource-constrained environments
 - Easier to debug issues
 - Live progress shows specs processing in order
 
 Both modes:
+
 - Continue processing even if some specs fail
 - Collect all errors and report at the end
 - Exit with code 1 if any spec fails
 - Show live progress updates to stderr
 
 Example output:
+
 ```
 Executing 3 spec(s) in parallel...
 
@@ -282,13 +291,13 @@ Failed specs:
 ## Programmatic Usage
 
 ```typescript
-import { OpenApiGenerator } from '@cerios/openapi-to-zod';
+import { OpenApiGenerator } from "@cerios/openapi-to-zod";
 
 const generator = new OpenApiGenerator({
-  input: 'path/to/openapi.yaml',
-  outputTypes: 'path/to/schemas.ts',
-  mode: 'normal', // 'strict' | 'normal' | 'loose'
-  includeDescriptions: true,
+	input: "path/to/openapi.yaml",
+	outputTypes: "path/to/schemas.ts",
+	mode: "normal", // 'strict' | 'normal' | 'loose'
+	includeDescriptions: true,
 });
 
 // Generate and write to file
@@ -301,32 +310,35 @@ const code = generator.generateString();
 ## Validation Modes
 
 ### Normal Mode (default)
+
 Uses `z.object()` which allows additional properties:
 
 ```typescript
 const userSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
+	id: z.uuid(),
+	name: z.string(),
 });
 ```
 
 ### Strict Mode
+
 Uses `z.strictObject()` which rejects additional properties:
 
 ```typescript
 const userSchema = z.strictObject({
-  id: z.uuid(),
-  name: z.string(),
+	id: z.uuid(),
+	name: z.string(),
 });
 ```
 
 ### Loose Mode
+
 Uses `z.looseObject()` which explicitly allows additional properties:
 
 ```typescript
 const userSchema = z.looseObject({
-  id: z.uuid(),
-  name: z.string(),
+	id: z.uuid(),
+	name: z.string(),
 });
 ```
 
@@ -335,6 +347,7 @@ const userSchema = z.looseObject({
 When OpenAPI schemas define an object without any properties (e.g., `type: object` with no `properties`), the generator needs to decide how to represent it. The `emptyObjectBehavior` option controls this:
 
 ### Loose (default)
+
 Uses `z.looseObject({})` which allows any additional properties:
 
 ```typescript
@@ -345,6 +358,7 @@ const metadataSchema = z.looseObject({});
 ```
 
 ### Strict
+
 Uses `z.strictObject({})` which rejects any properties:
 
 ```typescript
@@ -356,6 +370,7 @@ const emptySchema = z.strictObject({});
 ```
 
 ### Record
+
 Uses `z.record(z.string(), z.unknown())` which treats it as an arbitrary key-value map:
 
 ```typescript
@@ -405,7 +420,7 @@ components:
           minimum: 0
           maximum: 150
         status:
-          $ref: '#/components/schemas/UserStatusEnumOptions'
+          $ref: "#/components/schemas/UserStatusEnumOptions"
 ```
 
 ### Generated Output
@@ -418,20 +433,20 @@ import { z } from "zod";
 
 // Enums
 export enum UserStatusEnum {
-  Active = "active",
-  Inactive = "inactive",
-  Pending = "pending",
+	Active = "active",
+	Inactive = "inactive",
+	Pending = "pending",
 }
 
 // Schemas
 export const userStatusEnumOptionsSchema = z.enum(UserStatusEnum);
 
 export const userSchema = z.object({
-  id: z.uuid().min(36).max(36),
-  email: z.email().max(255),
-  name: z.string().min(1).max(100).optional(),
-  age: z.number().int().gte(0).lte(150).optional(),
-  status: userStatusEnumOptionsSchema.optional(),
+	id: z.uuid().min(36).max(36),
+	email: z.email().max(255),
+	name: z.string().min(1).max(100).optional(),
+	age: z.number().int().gte(0).lte(150).optional(),
+	status: userStatusEnumOptionsSchema.optional(),
 });
 
 // Types
@@ -443,26 +458,26 @@ export type User = z.infer<typeof userSchema>;
 
 The generator supports all OpenAPI string formats with Zod v4:
 
-| OpenAPI Format | Zod v4 Function |
-|----------------|-----------------|
-| `uuid` | `z.uuid()` |
-| `email` | `z.email()` |
-| `url`, `uri` | `z.url()` |
-| `date` | `z.iso.date()` |
-| `date-time` | `z.iso.datetime()` |
-| `time` | `z.iso.time()` |
-| `duration` | `z.iso.duration()` |
-| `ipv4` | `z.ipv4()` |
-| `ipv6` | `z.ipv6()` |
-| `emoji` | `z.emoji()` |
-| `base64` | `z.base64()` |
-| `base64url` | `z.base64url()` |
-| `nanoid` | `z.nanoid()` |
-| `cuid` | `z.cuid()` |
-| `cuid2` | `z.cuid2()` |
-| `ulid` | `z.ulid()` |
-| `cidrv4` | `z.cidrv4()` |
-| `cidrv6` | `z.cidrv6()` |
+| OpenAPI Format | Zod v4 Function    |
+| -------------- | ------------------ |
+| `uuid`         | `z.uuid()`         |
+| `email`        | `z.email()`        |
+| `url`, `uri`   | `z.url()`          |
+| `date`         | `z.iso.date()`     |
+| `date-time`    | `z.iso.datetime()` |
+| `time`         | `z.iso.time()`     |
+| `duration`     | `z.iso.duration()` |
+| `ipv4`         | `z.ipv4()`         |
+| `ipv6`         | `z.ipv6()`         |
+| `emoji`        | `z.emoji()`        |
+| `base64`       | `z.base64()`       |
+| `base64url`    | `z.base64url()`    |
+| `nanoid`       | `z.nanoid()`       |
+| `cuid`         | `z.cuid()`         |
+| `cuid2`        | `z.cuid2()`        |
+| `ulid`         | `z.ulid()`         |
+| `cidrv4`       | `z.cidrv4()`       |
+| `cidrv6`       | `z.cidrv6()`       |
 
 ### Custom Date-Time Format
 
@@ -471,19 +486,19 @@ By default, the generator uses `z.iso.datetime()` for `date-time` format fields,
 If your API returns date-times **without the `Z` suffix** (e.g., `2026-01-07T14:30:00`), you can override this with a custom regex pattern:
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod';
+import { defineConfig } from "@cerios/openapi-to-zod";
 
 export default defineConfig({
-  defaults: {
-    // For date-times without Z suffix
-    customDateTimeFormatRegex: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$',
-  },
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'src/schemas.ts',
-    },
-  ],
+	defaults: {
+		// For date-times without Z suffix
+		customDateTimeFormatRegex: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+	},
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "src/schemas.ts",
+		},
+	],
 });
 ```
 
@@ -493,27 +508,27 @@ In TypeScript config files, you can also use RegExp literals (which don't requir
 
 ```typescript
 export default defineConfig({
-  defaults: {
-    // Use RegExp literal (single escaping)
-    customDateTimeFormatRegex: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/,
-  },
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'src/schemas.ts',
-    },
-  ],
+	defaults: {
+		// Use RegExp literal (single escaping)
+		customDateTimeFormatRegex: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/,
+	},
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "src/schemas.ts",
+		},
+	],
 });
 ```
 
 **Common Custom Formats:**
 
-| Use Case | String Pattern (JSON/YAML) | RegExp Literal (TypeScript) |
-|----------|----------------------------|----------------------------|
-| No timezone suffix<br>`2026-01-07T14:30:00` | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$'` | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/` |
-| With milliseconds, no Z<br>`2026-01-07T14:30:00.123` | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}$'` | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/` |
-| Optional Z suffix<br>`2026-01-07T14:30:00` or<br>`2026-01-07T14:30:00Z` | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z?$'` | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z?$/` |
-| With milliseconds + optional Z<br>`2026-01-07T14:30:00.123Z` | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z?$'` | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z?$/` |
+| Use Case                                                                | String Pattern (JSON/YAML)                                 | RegExp Literal (TypeScript)                        |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| No timezone suffix<br>`2026-01-07T14:30:00`                             | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$'`            | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/`          |
+| With milliseconds, no Z<br>`2026-01-07T14:30:00.123`                    | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}$'`   | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/`   |
+| Optional Z suffix<br>`2026-01-07T14:30:00` or<br>`2026-01-07T14:30:00Z` | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z?$'`          | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z?$/`        |
+| With milliseconds + optional Z<br>`2026-01-07T14:30:00.123Z`            | `'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z?$'` | `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z?$/` |
 
 **Generated Output:**
 
@@ -533,46 +548,56 @@ When using a custom regex, the generator will produce:
 Filter which operations are included in schema generation. This is useful when you want to generate schemas for only a subset of your API.
 
 **Example 1: Filter by tags**
+
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'public-schemas.ts',
-    operationFilters: {
-      includeTags: ['public', 'users']  // Only include operations tagged with 'public' or 'users'
-    }
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "public-schemas.ts",
+			operationFilters: {
+				includeTags: ["public", "users"], // Only include operations tagged with 'public' or 'users'
+			},
+		},
+	],
 });
 ```
 
 **Example 2: Filter by paths**
+
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'v1-schemas.ts',
-    operationFilters: {
-      includePaths: ['/api/v1/**'],     // Only v1 endpoints
-      excludePaths: ['/api/v1/admin/**'] // But exclude admin endpoints
-    }
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "v1-schemas.ts",
+			operationFilters: {
+				includePaths: ["/api/v1/**"], // Only v1 endpoints
+				excludePaths: ["/api/v1/admin/**"], // But exclude admin endpoints
+			},
+		},
+	],
 });
 ```
 
 **Example 3: Exclude deprecated operations**
+
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'current-schemas.ts',
-    operationFilters: {
-      excludeDeprecated: true  // Skip all deprecated operations
-    }
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "current-schemas.ts",
+			operationFilters: {
+				excludeDeprecated: true, // Skip all deprecated operations
+			},
+		},
+	],
 });
 ```
 
 **Filtering Logic:**
+
 1. If no filters specified, all operations are included
 2. Empty arrays are treated as "no constraint"
 3. Include filters are applied first (allowlist)
@@ -586,80 +611,92 @@ export default defineConfig({
 Generate separate schemas for requests and responses by filtering `readOnly` and `writeOnly` properties.
 
 **Example: Request schemas (exclude readOnly)**
+
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'request-schemas.ts',
-    schemaType: 'request'  // Excludes readOnly properties like 'id', 'createdAt'
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "request-schemas.ts",
+			schemaType: "request", // Excludes readOnly properties like 'id', 'createdAt'
+		},
+	],
 });
 ```
 
 **Example: Response schemas (exclude writeOnly)**
+
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'response-schemas.ts',
-    schemaType: 'response'  // Excludes writeOnly properties like 'password'
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "response-schemas.ts",
+			schemaType: "response", // Excludes writeOnly properties like 'password'
+		},
+	],
 });
 ```
 
 **Example: Context-specific validation**
+
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    request: {
-      mode: 'strict',           // Strict validation for incoming data
-      includeDescriptions: false
-    },
-    response: {
-      mode: 'loose',            // Flexible validation for API responses
-      includeDescriptions: true
-    }
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			request: {
+				mode: "strict", // Strict validation for incoming data
+				includeDescriptions: false,
+			},
+			response: {
+				mode: "loose", // Flexible validation for API responses
+				includeDescriptions: true,
+			},
+		},
+	],
 });
 ```
 
 **OpenAPI Spec:**
+
 ```yaml
 User:
   type: object
   properties:
     id:
       type: string
-      readOnly: true      # Excluded in 'request' mode
+      readOnly: true # Excluded in 'request' mode
     email:
       type: string
     password:
       type: string
-      writeOnly: true     # Excluded in 'response' mode
+      writeOnly: true # Excluded in 'response' mode
     createdAt:
       type: string
       format: date-time
-      readOnly: true      # Excluded in 'request' mode
+      readOnly: true # Excluded in 'request' mode
 ```
 
 **Generated Request Schema** (`schemaType: 'request'`):
+
 ```typescript
 export const userSchema = z.object({
-  email: z.string(),
-  password: z.string(),  // writeOnly included
-  // id and createdAt excluded (readOnly)
+	email: z.string(),
+	password: z.string(), // writeOnly included
+	// id and createdAt excluded (readOnly)
 });
 ```
 
 **Generated Response Schema** (`schemaType: 'response'`):
+
 ```typescript
 export const userSchema = z.object({
-  id: z.string(),        // readOnly included
-  email: z.string(),
-  createdAt: z.string().datetime(),  // readOnly included
-  // password excluded (writeOnly)
+	id: z.string(), // readOnly included
+	email: z.string(),
+	createdAt: z.string().datetime(), // readOnly included
+	// password excluded (writeOnly)
 });
 ```
 
@@ -687,11 +724,13 @@ However, many teams follow the industry de facto standard for OpenAPI 3.0.x wher
 
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    defaultNullable: true,  // Treat unspecified properties as nullable
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			defaultNullable: true, // Treat unspecified properties as nullable
+		},
+	],
 });
 ```
 
@@ -704,14 +743,14 @@ export default defineConfig({
 
 **Behavior comparison:**
 
-| Schema Property | `defaultNullable: false` (default) | `defaultNullable: true` |
-|-----------------|-------------------------------------|-------------------------|
-| `nullable: true` | `.nullable()` | `.nullable()` |
-| `nullable: false` | No `.nullable()` | No `.nullable()` |
-| No annotation (primitive) | No `.nullable()` | `.nullable()` |
-| No annotation (`$ref`) | No `.nullable()` | No `.nullable()` |
-| No annotation (enum) | No `.nullable()` | No `.nullable()` |
-| No annotation (const) | No `.nullable()` | No `.nullable()` |
+| Schema Property           | `defaultNullable: false` (default) | `defaultNullable: true` |
+| ------------------------- | ---------------------------------- | ----------------------- |
+| `nullable: true`          | `.nullable()`                      | `.nullable()`           |
+| `nullable: false`         | No `.nullable()`                   | No `.nullable()`        |
+| No annotation (primitive) | No `.nullable()`                   | `.nullable()`           |
+| No annotation (`$ref`)    | No `.nullable()`                   | No `.nullable()`        |
+| No annotation (enum)      | No `.nullable()`                   | No `.nullable()`        |
+| No annotation (const)     | No `.nullable()`                   | No `.nullable()`        |
 
 **Example:**
 
@@ -729,34 +768,36 @@ components:
         name:
           type: string
         status:
-          $ref: '#/components/schemas/Status'
+          $ref: "#/components/schemas/Status"
         nullableStatus:
           allOf:
-            - $ref: '#/components/schemas/Status'
+            - $ref: "#/components/schemas/Status"
           nullable: true
 ```
 
 **With `defaultNullable: false` (default):**
+
 ```typescript
 export const statusSchema = z.enum(["active", "inactive"]);
 
 export const userSchema = z.object({
-  id: z.number().int(),
-  name: z.string(),              // Not nullable (no annotation)
-  status: statusSchema,          // Not nullable ($ref)
-  nullableStatus: statusSchema.nullable(), // Explicitly nullable
+	id: z.number().int(),
+	name: z.string(), // Not nullable (no annotation)
+	status: statusSchema, // Not nullable ($ref)
+	nullableStatus: statusSchema.nullable(), // Explicitly nullable
 });
 ```
 
 **With `defaultNullable: true`:**
+
 ```typescript
 export const statusSchema = z.enum(["active", "inactive"]);
 
 export const userSchema = z.object({
-  id: z.number().int().nullable(),  // Nullable (primitive)
-  name: z.string().nullable(),       // Nullable (primitive)
-  status: statusSchema,              // NOT nullable ($ref - must be explicit)
-  nullableStatus: statusSchema.nullable(), // Explicitly nullable
+	id: z.number().int().nullable(), // Nullable (primitive)
+	name: z.string().nullable(), // Nullable (primitive)
+	status: statusSchema, // NOT nullable ($ref - must be explicit)
+	nullableStatus: statusSchema.nullable(), // Explicitly nullable
 });
 ```
 
@@ -816,18 +857,19 @@ Customize schema names with prefixes and suffixes:
 ```typescript
 // In your config file
 export default defineConfig({
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'schemas.ts',
-      prefix: 'api',  // Output: apiUserSchema, apiProductSchema
-      suffix: 'dto',  // Output: userDtoSchema, productDtoSchema
-    },
-  ],
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			prefix: "api", // Output: apiUserSchema, apiProductSchema
+			suffix: "dto", // Output: userDtoSchema, productDtoSchema
+		},
+	],
 });
 ```
 
 This is useful when:
+
 - Working with multiple API specs in the same project
 - Following specific naming conventions (DTO, Model, Entity)
 - Avoiding naming conflicts with existing code
@@ -837,6 +879,7 @@ This is useful when:
 The `stripSchemaPrefix` option removes common prefixes from schema names in your OpenAPI spec before generating Zod schemas. This is particularly useful when your OpenAPI spec uses namespaced schema names (like .NET-generated specs with "Company.Models.User").
 
 **OpenAPI Spec with Namespaced Schemas:**
+
 ```yaml
 components:
   schemas:
@@ -848,7 +891,7 @@ components:
         name:
           type: string
         role:
-          $ref: '#/components/schemas/Company.Models.UserRole'
+          $ref: "#/components/schemas/Company.Models.UserRole"
     Company.Models.UserRole:
       type: string
       enum: [admin, user, guest]
@@ -860,23 +903,24 @@ components:
         title:
           type: string
         author:
-          $ref: '#/components/schemas/Company.Models.User'
+          $ref: "#/components/schemas/Company.Models.User"
 ```
 
 **Without `stripSchemaPrefix`:**
+
 ```typescript
 export const companyModelsUserRoleSchema = z.enum(["admin", "user", "guest"]);
 
 export const companyModelsUserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  role: companyModelsUserRoleSchema  // Long reference name
+	id: z.string(),
+	name: z.string(),
+	role: companyModelsUserRoleSchema, // Long reference name
 });
 
 export const companyModelsPostSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  author: companyModelsUserSchema  // Long reference name
+	id: z.string(),
+	title: z.string(),
+	author: companyModelsUserSchema, // Long reference name
 });
 
 export type CompanyModelsUserRole = z.infer<typeof companyModelsUserRoleSchema>;
@@ -885,19 +929,20 @@ export type CompanyModelsPost = z.infer<typeof companyModelsPostSchema>;
 ```
 
 **With `stripSchemaPrefix: "Company.Models."`:**
+
 ```typescript
 export const userRoleSchema = z.enum(["admin", "user", "guest"]);
 
 export const userSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  role: userRoleSchema  // Clean reference
+	id: z.string(),
+	name: z.string(),
+	role: userRoleSchema, // Clean reference
 });
 
 export const postSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  author: userSchema  // Clean reference
+	id: z.string(),
+	title: z.string(),
+	author: userSchema, // Clean reference
 });
 
 export type UserRole = z.infer<typeof userRoleSchema>;
@@ -909,11 +954,13 @@ export type Post = z.infer<typeof postSchema>;
 
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    stripSchemaPrefix: 'Company.Models.'  // Strip this exact prefix
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			stripSchemaPrefix: "Company.Models.", // Strip this exact prefix
+		},
+	],
 });
 ```
 
@@ -923,18 +970,21 @@ Use glob patterns to strip dynamic prefixes:
 
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    // Strip any namespace prefix with wildcard
-    stripSchemaPrefix: '*.Models.'
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			// Strip any namespace prefix with wildcard
+			stripSchemaPrefix: "*.Models.",
+		},
+	],
 });
 ```
 
 **Glob Pattern Syntax:**
 
 Glob patterns support powerful matching using [minimatch](https://github.com/isaacs/minimatch):
+
 - `*` matches any characters within a single segment (stops at `.`)
 - `**` matches any characters across multiple segments (crosses `.` boundaries)
 - `?` matches a single character
@@ -944,29 +994,31 @@ Glob patterns support powerful matching using [minimatch](https://github.com/isa
 
 ```typescript
 // Examples of glob patterns:
-stripSchemaPrefix: '*.Models.'                      // Matches Company.Models., App.Models.
-stripSchemaPrefix: '**.Models.'                     // Matches any depth: Company.Api.Models., App.V2.Models.
-stripSchemaPrefix: 'Company.{Models,Services}.'     // Matches Company.Models. or Company.Services.
-stripSchemaPrefix: 'api_v[0-9]_'                   // Matches api_v1_, api_v2_, etc.
-stripSchemaPrefix: 'v*.*.'                          // Matches v1.0., v2.1., etc.
-stripSchemaPrefix: '!(Internal)*.'                  // Matches any prefix except those starting with Internal
+stripSchemaPrefix: "*.Models."; // Matches Company.Models., App.Models.
+stripSchemaPrefix: "**.Models."; // Matches any depth: Company.Api.Models., App.V2.Models.
+stripSchemaPrefix: "Company.{Models,Services}."; // Matches Company.Models. or Company.Services.
+stripSchemaPrefix: "api_v[0-9]_"; // Matches api_v1_, api_v2_, etc.
+stripSchemaPrefix: "v*.*."; // Matches v1.0., v2.1., etc.
+stripSchemaPrefix: "!(Internal)*."; // Matches any prefix except those starting with Internal
 ```
 
 #### Common Patterns
 
 **Pattern 1: .NET Namespaces**
+
 ```typescript
 {
-  stripSchemaPrefix: 'Company.Models.'
+	stripSchemaPrefix: "Company.Models.";
 }
 // Company.Models.User → User
 // Company.Models.Post → Post
 ```
 
 **Pattern 2: Multiple Namespaces with Wildcard**
+
 ```typescript
 {
-  stripSchemaPrefix: '*.Models.'
+	stripSchemaPrefix: "*.Models.";
 }
 // MyApp.Models.User → User
 // OtherApp.Models.User → User
@@ -974,27 +1026,30 @@ stripSchemaPrefix: '!(Internal)*.'                  // Matches any prefix except
 ```
 
 **Pattern 3: Multiple Namespace Types**
+
 ```typescript
 {
-  stripSchemaPrefix: '*.{Models,Services}.'
+	stripSchemaPrefix: "*.{Models,Services}.";
 }
 // App.Models.User → User
 // App.Services.UserService → UserService
 ```
 
 **Pattern 4: Version Prefixes with Character Class**
+
 ```typescript
 {
-  stripSchemaPrefix: 'v[0-9].'
+	stripSchemaPrefix: "v[0-9].";
 }
 // v1.User → User
 // v2.Product → Product
 ```
 
 **Pattern 5: Versioned Prefixes with Wildcards**
+
 ```typescript
 {
-  stripSchemaPrefix: 'api_v*_'
+	stripSchemaPrefix: "api_v*_";
 }
 // api_v1_User → User
 // api_v2_Product → Product
@@ -1007,17 +1062,20 @@ stripSchemaPrefix: '!(Internal)*.'                  // Matches any prefix except
 
 ```typescript
 export default defineConfig({
-  specs: [{
-    input: 'openapi.yaml',
-    outputTypes: 'schemas.ts',
-    stripSchemaPrefix: 'Company.Models.',  // Applied first
-    prefix: 'api',                          // Applied second
-    suffix: 'dto'                           // Applied third
-  }]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "schemas.ts",
+			stripSchemaPrefix: "Company.Models.", // Applied first
+			prefix: "api", // Applied second
+			suffix: "dto", // Applied third
+		},
+	],
 });
 ```
 
 **Result:**
+
 - `Company.Models.User` → `User` → `apiUserDtoSchema`
 - `Company.Models.Post` → `Post` → `apiPostDtoSchema`
 
@@ -1043,6 +1101,7 @@ Statistics are **included by default** in generated files. Use `showStats: false
 ```
 
 Helpful for:
+
 - Understanding your API complexity
 - Tracking changes over time
 - Debugging generation issues
@@ -1052,12 +1111,14 @@ Helpful for:
 ### Basic Types
 
 #### String Constraints
+
 - `minLength` → `.min(n)`
 - `maxLength` → `.max(n)`
 - `pattern` → `.regex(/pattern/)`
 - `format` → Specific Zod validators (see Format Support section)
 
 #### Number Constraints
+
 - `minimum` → `.gte(n)` (inclusive)
 - `maximum` → `.lte(n)` (inclusive)
 - `exclusiveMinimum` → `.gt(n)` (OpenAPI 3.0 boolean or 3.1 number)
@@ -1066,15 +1127,17 @@ Helpful for:
 - `integer` type → `.int()`
 
 **Example:**
+
 ```yaml
 Price:
   type: number
   minimum: 0
   maximum: 10000
-  multipleOf: 0.01  # Enforces 2 decimal places
+  multipleOf: 0.01 # Enforces 2 decimal places
 ```
 
 **Generated:**
+
 ```typescript
 export const priceSchema = z.number().gte(0).lte(10000).multipleOf(0.01);
 ```
@@ -1082,6 +1145,7 @@ export const priceSchema = z.number().gte(0).lte(10000).multipleOf(0.01);
 #### Exclusive Bounds (OpenAPI 3.0 & 3.1)
 
 **OpenAPI 3.0 Style (boolean):**
+
 ```yaml
 Percentage:
   type: number
@@ -1092,6 +1156,7 @@ Percentage:
 ```
 
 **OpenAPI 3.1 Style (number):**
+
 ```yaml
 Score:
   type: number
@@ -1100,6 +1165,7 @@ Score:
 ```
 
 **Both generate:**
+
 ```typescript
 export const percentageSchema = z.number().gt(0).lt(100);
 ```
@@ -1107,11 +1173,13 @@ export const percentageSchema = z.number().gt(0).lt(100);
 ### Array Features
 
 #### Basic Array Constraints
+
 - `minItems` → `.min(n)`
 - `maxItems` → `.max(n)`
 - `uniqueItems: true` → `.refine()` with Set-based validation
 
 **Example:**
+
 ```yaml
 UniqueTags:
   type: array
@@ -1123,14 +1191,15 @@ UniqueTags:
 ```
 
 **Generated:**
+
 ```typescript
 export const uniqueTagsSchema = z
-  .array(z.string())
-  .min(1)
-  .max(10)
-  .refine((items) => new Set(items).size === items.length, {
-    message: "Array items must be unique"
-  });
+	.array(z.string())
+	.min(1)
+	.max(10)
+	.refine(items => new Set(items).size === items.length, {
+		message: "Array items must be unique",
+	});
 ```
 
 #### Tuple Validation (OpenAPI 3.1)
@@ -1155,34 +1224,33 @@ Coordinates:
 ```
 
 **Generated:**
+
 ```typescript
-export const coordinatesSchema = z.tuple([
-  z.number().gte(-90).lte(90),
-  z.number().gte(-180).lte(180)
-]);
+export const coordinatesSchema = z.tuple([z.number().gte(-90).lte(90), z.number().gte(-180).lte(180)]);
 ```
 
 **With Rest Items:**
+
 ```yaml
 CommandArgs:
   type: array
   prefixItems:
-    - type: string  # Command name
-    - type: string  # Action
+    - type: string # Command name
+    - type: string # Action
   items:
-    type: string  # Additional arguments
+    type: string # Additional arguments
 ```
 
 **Generated:**
+
 ```typescript
-export const commandArgsSchema = z
-  .tuple([z.string(), z.string()])
-  .rest(z.string());
+export const commandArgsSchema = z.tuple([z.string(), z.string()]).rest(z.string());
 ```
 
 ### Object Features
 
 #### Property Constraints
+
 - `required` array → Properties without `.optional()`
 - `additionalProperties: false` → `.strict()` (or implicit in strict mode)
 - `additionalProperties: true` → `.catchall(z.unknown())`
@@ -1191,6 +1259,7 @@ export const commandArgsSchema = z
 - `maxProperties` → `.refine()` with property count validation
 
 **Example:**
+
 ```yaml
 FlexibleMetadata:
   type: object
@@ -1201,13 +1270,14 @@ FlexibleMetadata:
 ```
 
 **Generated:**
+
 ```typescript
 export const flexibleMetadataSchema = z
-  .object({})
-  .catchall(z.string())
-  .refine((obj) => Object.keys(obj).length >= 1 && Object.keys(obj).length <= 10, {
-    message: "Object must have between 1 and 10 properties"
-  });
+	.object({})
+	.catchall(z.string())
+	.refine(obj => Object.keys(obj).length >= 1 && Object.keys(obj).length <= 10, {
+		message: "Object must have between 1 and 10 properties",
+	});
 ```
 
 ### Schema Composition
@@ -1217,6 +1287,7 @@ export const flexibleMetadataSchema = z
 Uses `.extend()` for objects (Zod v4 compliant - `.merge()` is deprecated), `.and()` for primitives:
 
 **Object Extending:**
+
 ```yaml
 User:
   allOf:
@@ -1231,12 +1302,13 @@ User:
 ```
 
 **Generated:**
+
 ```typescript
-export const userSchema = baseEntitySchema
-  .extend(timestampedSchema.shape)
-  .extend(z.object({
-    username: z.string()
-  }).shape);
+export const userSchema = baseEntitySchema.extend(timestampedSchema.shape).extend(
+	z.object({
+		username: z.string(),
+	}).shape
+);
 ```
 
 #### OneOf / AnyOf
@@ -1247,6 +1319,7 @@ export const userSchema = baseEntitySchema
 ### Nullable Types
 
 **OpenAPI 3.0 Style:**
+
 ```yaml
 NullableString:
   type: string
@@ -1254,12 +1327,14 @@ NullableString:
 ```
 
 **OpenAPI 3.1 Style:**
+
 ```yaml
 NullableString:
   type: ["string", "null"]
 ```
 
 **Both generate:**
+
 ```typescript
 export const nullableStringSchema = z.string().nullable();
 ```
@@ -1275,6 +1350,7 @@ Environment:
 ```
 
 **Generated:**
+
 ```typescript
 export const environmentSchema = z.literal("production");
 ```
@@ -1296,11 +1372,12 @@ OldUser:
 ```
 
 **Generated:**
+
 ```typescript
 /** Legacy user schema @deprecated */
 export const oldUserSchema = z.object({
-  /** Old ID format, use uuid instead @deprecated */
-  legacyId: z.number().int().optional()
+	/** Old ID format, use uuid instead @deprecated */
+	legacyId: z.number().int().optional(),
 });
 ```
 
@@ -1316,9 +1393,12 @@ UserAccount:
 ```
 
 **Generated:**
+
 ```typescript
 /** User Account Represents a user account in the system */
-export const userAccountSchema = z.object({ /* ... */ });
+export const userAccountSchema = z.object({
+	/* ... */
+});
 ```
 
 #### Examples
@@ -1335,6 +1415,7 @@ StatusCode:
 ```
 
 **Generated:**
+
 ```typescript
 /** HTTP Status Code @example "200", "404", "500" */
 export const statusCodeSchema = z.enum(["200", "201", "400", "404", "500"]);
@@ -1342,49 +1423,52 @@ export const statusCodeSchema = z.enum(["200", "201", "400", "404", "500"]);
 
 ### Feature Matrix
 
-| Feature | OpenAPI 3.0 | OpenAPI 3.1 | Zod Method |
-|---------|-------------|-------------|------------|
-| Basic types | ✅ | ✅ | `z.string()`, `z.number()`, etc. |
-| String constraints | ✅ | ✅ | `.min()`, `.max()`, `.regex()` |
-| Number constraints | ✅ | ✅ | `.gte()`, `.lte()`, `.int()` |
-| Exclusive bounds (boolean) | ✅ | ✅ | `.gt()`, `.lt()` |
-| Exclusive bounds (number) | ❌ | ✅ | `.gt()`, `.lt()` |
-| multipleOf | ✅ | ✅ | `.multipleOf()` |
-| Array constraints | ✅ | ✅ | `.min()`, `.max()` |
-| uniqueItems | ✅ | ✅ | `.refine()` with Set |
-| prefixItems (tuples) | ❌ | ✅ | `z.tuple()` |
-| additionalProperties | ✅ | ✅ | `.strict()`, `.catchall()` |
-| minProperties/maxProperties | ✅ | ✅ | `.refine()` |
-| const | ✅ | ✅ | `z.literal()` |
-| nullable (property) | ✅ | ✅ | `.nullable()` |
-| nullable (type array) | ❌ | ✅ | `.nullable()` |
-| allOf (objects) | ✅ | ✅ | `.extend()` |
-| allOf (primitives) | ✅ | ✅ | `.and()` |
-| oneOf/anyOf | ✅ | ✅ | `z.union()` |
-| discriminators | ✅ | ✅ | `z.discriminatedUnion()` |
-| deprecated | ✅ | ✅ | JSDoc `@deprecated` |
-| title | ✅ | ✅ | JSDoc comment |
-| examples | ✅ | ✅ | JSDoc `@example` |
-| format | ✅ | ✅ | Specific Zod validators |
-| readOnly/writeOnly | ✅ | ✅ | Schema filtering |
+| Feature                     | OpenAPI 3.0 | OpenAPI 3.1 | Zod Method                       |
+| --------------------------- | ----------- | ----------- | -------------------------------- |
+| Basic types                 | ✅          | ✅          | `z.string()`, `z.number()`, etc. |
+| String constraints          | ✅          | ✅          | `.min()`, `.max()`, `.regex()`   |
+| Number constraints          | ✅          | ✅          | `.gte()`, `.lte()`, `.int()`     |
+| Exclusive bounds (boolean)  | ✅          | ✅          | `.gt()`, `.lt()`                 |
+| Exclusive bounds (number)   | ❌          | ✅          | `.gt()`, `.lt()`                 |
+| multipleOf                  | ✅          | ✅          | `.multipleOf()`                  |
+| Array constraints           | ✅          | ✅          | `.min()`, `.max()`               |
+| uniqueItems                 | ✅          | ✅          | `.refine()` with Set             |
+| prefixItems (tuples)        | ❌          | ✅          | `z.tuple()`                      |
+| additionalProperties        | ✅          | ✅          | `.strict()`, `.catchall()`       |
+| minProperties/maxProperties | ✅          | ✅          | `.refine()`                      |
+| const                       | ✅          | ✅          | `z.literal()`                    |
+| nullable (property)         | ✅          | ✅          | `.nullable()`                    |
+| nullable (type array)       | ❌          | ✅          | `.nullable()`                    |
+| allOf (objects)             | ✅          | ✅          | `.extend()`                      |
+| allOf (primitives)          | ✅          | ✅          | `.and()`                         |
+| oneOf/anyOf                 | ✅          | ✅          | `z.union()`                      |
+| discriminators              | ✅          | ✅          | `z.discriminatedUnion()`         |
+| deprecated                  | ✅          | ✅          | JSDoc `@deprecated`              |
+| title                       | ✅          | ✅          | JSDoc comment                    |
+| examples                    | ✅          | ✅          | JSDoc `@example`                 |
+| format                      | ✅          | ✅          | Specific Zod validators          |
+| readOnly/writeOnly          | ✅          | ✅          | Schema filtering                 |
 
 ## Error Messages
 
 The generator provides clear, actionable error messages:
 
 ### Invalid References
+
 ```
 Error: Invalid schema 'User': Invalid reference at 'profile':
 '#/components/schemas/NonExistentProfile' points to non-existent schema 'NonExistentProfile'
 ```
 
 ### YAML Syntax Errors
+
 ```
 Error: Failed to parse OpenAPI YAML file at openapi.yaml:
 Implicit keys need to be on a single line at line 12, column 9
 ```
 
 All errors include:
+
 - File path
 - Line and column numbers (when available)
 - Clear description of the problem
@@ -1399,11 +1483,11 @@ Starting from **v0.7.0**, this package exports several utilities that can be use
 A Least Recently Used (LRU) cache implementation for efficient caching.
 
 ```typescript
-import { LRUCache } from '@cerios/openapi-to-zod';
+import { LRUCache } from "@cerios/openapi-to-zod";
 
 const cache = new LRUCache<string, ParsedSpec>(50);
-cache.set('spec-key', parsedSpec);
-const spec = cache.get('spec-key');
+cache.set("spec-key", parsedSpec);
+const spec = cache.get("spec-key");
 ```
 
 ### `toPascalCase(str: string | number): string`
@@ -1411,10 +1495,10 @@ const spec = cache.get('spec-key');
 Converts strings to PascalCase, handling kebab-case, snake_case, and special characters.
 
 ```typescript
-import { toPascalCase } from '@cerios/openapi-to-zod';
+import { toPascalCase } from "@cerios/openapi-to-zod";
 
-toPascalCase('my-api-client');  // => 'MyApiClient'
-toPascalCase('user_name');      // => 'UserName'
+toPascalCase("my-api-client"); // => 'MyApiClient'
+toPascalCase("user_name"); // => 'UserName'
 ```
 
 ### `escapeJSDoc(str: string): string`
@@ -1422,9 +1506,9 @@ toPascalCase('user_name');      // => 'UserName'
 Escapes JSDoc comment terminators to prevent injection.
 
 ```typescript
-import { escapeJSDoc } from '@cerios/openapi-to-zod';
+import { escapeJSDoc } from "@cerios/openapi-to-zod";
 
-escapeJSDoc('Comment with */ terminator');  // => 'Comment with *\\/ terminator'
+escapeJSDoc("Comment with */ terminator"); // => 'Comment with *\\/ terminator'
 ```
 
 ### `executeBatch<T>()` and `Generator` Interface
@@ -1432,18 +1516,18 @@ escapeJSDoc('Comment with */ terminator');  // => 'Comment with *\\/ terminator'
 Execute batch processing with custom generators.
 
 ```typescript
-import { executeBatch, type Generator } from '@cerios/openapi-to-zod';
+import { executeBatch, type Generator } from "@cerios/openapi-to-zod";
 
 class MyGenerator implements Generator {
-  generate(): void {
-    // Your generation logic
-  }
+	generate(): void {
+		// Your generation logic
+	}
 }
 
 await executeBatch(
-  specs,
-  'sequential',  // or 'parallel'
-  spec => new MyGenerator(spec)
+	specs,
+	"sequential", // or 'parallel'
+	spec => new MyGenerator(spec)
 );
 ```
 
@@ -1453,22 +1537,20 @@ Shared utilities for configuration file validation:
 
 ```typescript
 import {
-  createTypeScriptLoader,
-  formatConfigValidationError,
-  type RequestResponseOptions,
-  type BaseOperationFilters
-} from '@cerios/openapi-to-zod';
+	createTypeScriptLoader,
+	formatConfigValidationError,
+	type RequestResponseOptions,
+	type BaseOperationFilters,
+} from "@cerios/openapi-to-zod";
 
 // Create TypeScript config loader for cosmiconfig
 const loader = createTypeScriptLoader();
 
 // Format Zod validation errors
-const errorMessage = formatConfigValidationError(
-  zodError,
-  filePath,
-  configPath,
-  ['Additional note 1', 'Additional note 2']
-);
+const errorMessage = formatConfigValidationError(zodError, filePath, configPath, [
+	"Additional note 1",
+	"Additional note 2",
+]);
 ```
 
 These utilities are marked with `@shared` tags in the source code and are covered by comprehensive tests.
@@ -1480,7 +1562,7 @@ These utilities are marked with `@shared` tags in the source code and are covere
 Main class for generating Zod schemas from OpenAPI specifications.
 
 ```typescript
-import { OpenApiGenerator } from '@cerios/openapi-to-zod';
+import { OpenApiGenerator } from "@cerios/openapi-to-zod";
 
 const generator = new OpenApiGenerator(options);
 
@@ -1495,58 +1577,58 @@ const code = generator.generateString();
 
 ```typescript
 interface OpenApiGeneratorOptions {
-  /**
-   * Input OpenAPI YAML/JSON file path
-   */
-  input: string;
+	/**
+	 * Input OpenAPI YAML/JSON file path
+	 */
+	input: string;
 
-  /**
-   * Output TypeScript file path
-   */
-  outputTypes: string;
+	/**
+	 * Output TypeScript file path
+	 */
+	outputTypes: string;
 
-  /**
-   * Object validation mode
-   * - 'strict': Uses z.strictObject() - no additional properties allowed
-   * - 'normal': Uses z.object() - additional properties allowed
-   * - 'loose': Uses z.looseObject() - explicitly allows additional properties
-   */
-  mode?: 'strict' | 'normal' | 'loose';
+	/**
+	 * Object validation mode
+	 * - 'strict': Uses z.strictObject() - no additional properties allowed
+	 * - 'normal': Uses z.object() - additional properties allowed
+	 * - 'loose': Uses z.looseObject() - explicitly allows additional properties
+	 */
+	mode?: "strict" | "normal" | "loose";
 
-  /**
-   * Whether to include descriptions as JSDoc comments
-   */
-  includeDescriptions?: boolean;
+	/**
+	 * Whether to include descriptions as JSDoc comments
+	 */
+	includeDescriptions?: boolean;
 
-  /**
-   * Add custom prefix to schema names
-   */
-  prefix?: string;
+	/**
+	 * Add custom prefix to schema names
+	 */
+	prefix?: string;
 
-  /**
-   * Add custom suffix to schema names
-   */
-  suffix?: string;
+	/**
+	 * Add custom suffix to schema names
+	 */
+	suffix?: string;
 
-  /**
-   * Strip prefix from schema names using glob patterns
-   */
-  stripSchemaPrefix?: string | string[];
+	/**
+	 * Strip prefix from schema names using glob patterns
+	 */
+	stripSchemaPrefix?: string | string[];
 
-  /**
-   * Show generation statistics in output
-   */
-  showStats?: boolean;
+	/**
+	 * Show generation statistics in output
+	 */
+	showStats?: boolean;
 
-  /**
-   * Schema filtering mode
-   */
-  schemaType?: 'all' | 'request' | 'response';
+	/**
+	 * Schema filtering mode
+	 */
+	schemaType?: "all" | "request" | "response";
 
-  /**
-   * Operation filters for including/excluding operations
-   */
-  operationFilters?: OperationFilters;
+	/**
+	 * Operation filters for including/excluding operations
+	 */
+	operationFilters?: OperationFilters;
 }
 ```
 
@@ -1555,10 +1637,10 @@ interface OpenApiGeneratorOptions {
 Type-safe helper for creating configuration files.
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-zod';
+import { defineConfig } from "@cerios/openapi-to-zod";
 
 export default defineConfig({
-  specs: [{ input: 'api.yaml', outputTypes: 'schemas.ts' }],
+	specs: [{ input: "api.yaml", outputTypes: "schemas.ts" }],
 });
 ```
 

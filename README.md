@@ -13,6 +13,7 @@ npm install @cerios/openapi-to-zod
 ```
 
 **Features:**
+
 - ✅ Zod v4 compatible with latest features
 - 📝 Automatic TypeScript type generation
 - 🎯 Zod enums with proper handling
@@ -34,6 +35,7 @@ npm install @cerios/openapi-to-zod-playwright @playwright/test zod
 ```
 
 **Features:**
+
 - 🎭 Playwright `APIRequestContext` integration
 - 🔒 Full type safety with Zod validation
 - 🎯 Two-layer architecture (client + service)

@@ -23,40 +23,43 @@ For `@cerios/openapi-to-zod` and `@cerios/openapi-to-zod-playwright`, backward c
 Use `outputTypes` going forward:
 
 **Before:**
+
 ```json
 {
-  "specs": [
-    {
-      "input": "openapi.yaml",
-      "output": "src/schemas.ts"
-    }
-  ]
+	"specs": [
+		{
+			"input": "openapi.yaml",
+			"output": "src/schemas.ts"
+		}
+	]
 }
 ```
 
 **After:**
+
 ```json
 {
-  "specs": [
-    {
-      "input": "openapi.yaml",
-      "outputTypes": "src/schemas.ts"
-    }
-  ]
+	"specs": [
+		{
+			"input": "openapi.yaml",
+			"outputTypes": "src/schemas.ts"
+		}
+	]
 }
 ```
 
 **TypeScript config:**
+
 ```typescript
 export default defineConfig({
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputTypes: 'src/schemas.ts', // Previously: output
-      outputClient: 'src/client.ts',
-      outputService: 'src/service.ts',
-    }
-  ]
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputTypes: "src/schemas.ts", // Previously: output
+			outputClient: "src/client.ts",
+			outputService: "src/service.ts",
+		},
+	],
 });
 ```
 

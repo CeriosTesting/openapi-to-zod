@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { formatTypeProperty, generateTypeDeclaration } from "../src/generators/type-generator.js";
 
 describe("Type Generator", () => {

@@ -1,4 +1,5 @@
 import { createTestUtils, type FixtureCategory } from "@cerios/openapi-core/test-utils";
+
 import { OpenApiGenerator } from "../../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../../src/types";
 

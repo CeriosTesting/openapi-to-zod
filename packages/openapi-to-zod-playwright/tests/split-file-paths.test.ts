@@ -1,7 +1,10 @@
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+
 import { afterEach, describe, expect, it } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("Split Files - Path Edge Cases", () => {

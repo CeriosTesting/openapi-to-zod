@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, normalize, relative } from "node:path";
+
 import {
 	analyzeSchemaUsage,
 	ConfigurationError,
@@ -26,6 +27,7 @@ import {
 } from "@cerios/openapi-core";
 import { TypeScriptGenerator } from "@cerios/openapi-to-typescript";
 import { minimatch } from "minimatch";
+
 import { generateEnum } from "./generators/enum-generator";
 import { generateJSDoc } from "./generators/jsdoc-generator";
 import { PropertyGenerator } from "./generators/property-generator";

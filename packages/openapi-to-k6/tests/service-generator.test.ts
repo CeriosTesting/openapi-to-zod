@@ -1,6 +1,7 @@
-/** biome-ignore-all lint/suspicious/noTemplateCurlyInString: <Needed for testing> */
 import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
+
 import { OpenApiK6Generator } from "../src/openapi-k6-generator";
 
 describe("Service Generator", () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { OpenAPISchema } from "../src/types";
 import { escapeJSDoc, getPrimaryType, hasMultipleTypes, isNullable } from "../src/utils/string-utils";
 

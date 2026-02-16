@@ -18,10 +18,10 @@ Added `stringToEnumMember` and `numericToEnumMember` utilities for generating un
 
 ```typescript
 export enum GetEmployeeSortOptions {
-  Externalkey = "externalKey",
-  ExternalkeyDesc = "-externalKey",
-  Name = "name",
-  NameDesc = "-name",
+	Externalkey = "externalKey",
+	ExternalkeyDesc = "-externalKey",
+	Name = "name",
+	NameDesc = "-name",
 }
 ```
 

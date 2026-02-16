@@ -30,11 +30,10 @@ export interface TypeScriptGeneratorOptions extends BaseGeneratorOptions {
 /**
  * Resolved options with defaults applied
  */
-export interface ResolvedOptions
-	extends RequireExcept<
-		TypeScriptGeneratorOptions,
-		"stripSchemaPrefix" | "stripPathPrefix" | "operationFilters" | "prefix" | "suffix" | "batchSize"
-	> {}
+export interface ResolvedOptions extends RequireExcept<
+	TypeScriptGeneratorOptions,
+	"stripSchemaPrefix" | "stripPathPrefix" | "operationFilters" | "prefix" | "suffix" | "batchSize"
+> {}
 
 /**
  * Execution mode for batch processing

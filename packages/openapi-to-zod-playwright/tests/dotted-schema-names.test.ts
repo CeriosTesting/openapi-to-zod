@@ -1,6 +1,9 @@
 import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
+
 import { OpenApiPlaywrightGenerator } from "../src/openapi-playwright-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("Dotted Schema Names Handling", () => {

@@ -7,6 +7,7 @@ import {
 	isNullable,
 } from "@cerios/openapi-core";
 import { describe, expect, it } from "vitest";
+
 import type { OpenAPISchema } from "../../src/types";
 import { addDescription, wrapNullable } from "../../src/utils/string-utils";
 

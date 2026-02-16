@@ -36,11 +36,11 @@ Create a `openapi-to-typescript.config.ts` file:
 import { defineConfig } from "@cerios/openapi-to-typescript";
 
 export default defineConfig({
-  input: "./openapi.yaml",
-  outputTypes: "./src/types.ts",
+	input: "./openapi.yaml",
+	outputTypes: "./src/types.ts",
 
-  // Output format for enums: 'enum', 'union' (default), or 'const-object'
-  enumFormat: "union",
+	// Output format for enums: 'enum', 'union' (default), or 'const-object'
+	enumFormat: "union",
 });
 ```
 
@@ -50,9 +50,9 @@ export default defineConfig({
 import { TypeScriptGenerator } from "@cerios/openapi-to-typescript";
 
 const generator = new TypeScriptGenerator({
-  input: "./openapi.yaml",
-  outputTypes: "./src/types.ts",
-  enumFormat: "union",
+	input: "./openapi.yaml",
+	outputTypes: "./src/types.ts",
+	enumFormat: "union",
 });
 
 // Generate and write to file
@@ -64,46 +64,49 @@ const code = generator.generateString();
 
 ## Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `input` | `string` | - | Path to OpenAPI specification (YAML or JSON) |
-| `outputTypes` | `string` | - | Output file path for generated types |
-| `enumFormat` | `'enum' \| 'union' \| 'const-object'` | `'union'` | How to generate enums |
-| `includeDescriptions` | `boolean` | `true` | Include JSDoc comments |
-| `defaultNullable` | `boolean` | `false` | Treat properties as nullable by default |
-| `stripSchemaPrefix` | `string \| string[]` | - | Remove prefix from schema names (supports glob) |
-| `stripPathPrefix` | `string` | - | Remove prefix from paths |
-| `useOperationId` | `boolean` | `true` | Use operationId for operation-derived type names when available |
-| `prefix` | `string` | - | Add prefix to generated type names |
-| `suffix` | `string` | - | Add suffix to generated type names |
-| `operationFilters` | `object` | - | Filter operations by tags, paths, methods |
-| `showStats` | `boolean` | `true` | Include generation statistics |
-| `batchSize` | `number` | `10` | Parallel processing batch size |
+| Option                | Type                                  | Default   | Description                                                     |
+| --------------------- | ------------------------------------- | --------- | --------------------------------------------------------------- |
+| `input`               | `string`                              | -         | Path to OpenAPI specification (YAML or JSON)                    |
+| `outputTypes`         | `string`                              | -         | Output file path for generated types                            |
+| `enumFormat`          | `'enum' \| 'union' \| 'const-object'` | `'union'` | How to generate enums                                           |
+| `includeDescriptions` | `boolean`                             | `true`    | Include JSDoc comments                                          |
+| `defaultNullable`     | `boolean`                             | `false`   | Treat properties as nullable by default                         |
+| `stripSchemaPrefix`   | `string \| string[]`                  | -         | Remove prefix from schema names (supports glob)                 |
+| `stripPathPrefix`     | `string`                              | -         | Remove prefix from paths                                        |
+| `useOperationId`      | `boolean`                             | `true`    | Use operationId for operation-derived type names when available |
+| `prefix`              | `string`                              | -         | Add prefix to generated type names                              |
+| `suffix`              | `string`                              | -         | Add suffix to generated type names                              |
+| `operationFilters`    | `object`                              | -         | Filter operations by tags, paths, methods                       |
+| `showStats`           | `boolean`                             | `true`    | Include generation statistics                                   |
+| `batchSize`           | `number`                              | `10`      | Parallel processing batch size                                  |
 
 ## Output Format Examples
 
 ### Enum Format
 
 **`union` (default):**
+
 ```typescript
 export type Status = "active" | "inactive" | "pending";
 ```
 
 **`enum`:**
+
 ```typescript
 export enum Status {
-  Active = "active",
-  Inactive = "inactive",
-  Pending = "pending",
+	Active = "active",
+	Inactive = "inactive",
+	Pending = "pending",
 }
 ```
 
 **`const-object`:**
+
 ```typescript
 export const Status = {
-  Active: "active",
-  Inactive: "inactive",
-  Pending: "pending",
+	Active: "active",
+	Inactive: "inactive",
+	Pending: "pending",
 } as const;
 export type Status = (typeof Status)[keyof typeof Status];
 ```

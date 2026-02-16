@@ -6,6 +6,7 @@
  */
 
 import { existsSync, writeFileSync } from "node:fs";
+
 import {
 	CliOptionsError,
 	ConfigValidationError,
@@ -16,6 +17,7 @@ import {
 } from "@cerios/openapi-core";
 import { Command } from "commander";
 import prompts from "prompts";
+
 import type { ExecutionMode } from "./types";
 import { TypeScriptGenerator } from "./typescript-generator";
 import { loadConfig, mergeConfigWithDefaults } from "./utils/config-loader";

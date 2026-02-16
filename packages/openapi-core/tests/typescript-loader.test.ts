@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { createTypeScriptLoader } from "../src/utils/typescript-loader";
 
 describe("typescript-loader", () => {

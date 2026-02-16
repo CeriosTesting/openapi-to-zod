@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+
 import type { TypeScriptGeneratorOptions } from "../src/types";
 import { TypeScriptGenerator } from "../src/typescript-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("Constraints Handling", () => {

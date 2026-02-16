@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("Content Media Type Expansion", () => {

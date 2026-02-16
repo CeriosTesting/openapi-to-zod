@@ -8,6 +8,7 @@ import {
 	stripPrefix,
 	toCamelCase,
 } from "@cerios/openapi-core";
+
 import type { OpenAPISchema, OpenAPISpec } from "../types";
 import { addDescription, wrapNullable } from "../utils/string-utils";
 import { generateArrayValidation } from "../validators/array-validator";

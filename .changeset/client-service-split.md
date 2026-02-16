@@ -12,11 +12,12 @@ Add client-service split architecture for K6 generation
   - Returns `K6ServiceResult<T>` with `response`, `data`, and `ok` properties
 
 - **New `K6ServiceResult<T>` type**: Generic type combining HTTP response with parsed data and status check result:
+
   ```typescript
   interface K6ServiceResult<T> {
-    response: Response;  // Raw K6 HTTP response
-    data: T;             // Parsed response data (typed from OpenAPI spec)
-    ok: boolean;         // Whether status code check passed
+  	response: Response; // Raw K6 HTTP response
+  	data: T; // Parsed response data (typed from OpenAPI spec)
+  	ok: boolean; // Whether status code check passed
   }
   ```
 

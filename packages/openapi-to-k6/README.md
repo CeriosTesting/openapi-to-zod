@@ -37,13 +37,13 @@ npx openapi-to-k6 --input openapi.yaml --output k6/api-client.ts
 ### Programmatic Usage
 
 ```typescript
-import { OpenApiK6Generator } from '@cerios/openapi-to-k6';
+import { OpenApiK6Generator } from "@cerios/openapi-to-k6";
 
 const generator = new OpenApiK6Generator({
-  input: './openapi.yaml',
-  outputClient: './k6/api-client.ts',
-  outputTypes: './k6/api-types.ts',
-  useOperationId: true,
+	input: "./openapi.yaml",
+	outputClient: "./k6/api-client.ts",
+	outputTypes: "./k6/api-types.ts",
+	useOperationId: true,
 });
 
 generator.generate();
@@ -54,23 +54,23 @@ generator.generate();
 Create an `openapi-to-k6.config.ts` file:
 
 ```typescript
-import { defineConfig } from '@cerios/openapi-to-k6';
+import { defineConfig } from "@cerios/openapi-to-k6";
 
 export default defineConfig({
-  defaults: {
-    includeDescriptions: true,
-    showStats: true,
-    preferredContentTypes: ['application/json'],
-  },
-  specs: [
-    {
-      input: 'openapi.yaml',
-      outputClient: 'k6/api-client.ts',
-      outputTypes: 'k6/api-types.ts',
-      useOperationId: true,
-      basePath: '/api/v1',
-    },
-  ],
+	defaults: {
+		includeDescriptions: true,
+		showStats: true,
+		preferredContentTypes: ["application/json"],
+	},
+	specs: [
+		{
+			input: "openapi.yaml",
+			outputClient: "k6/api-client.ts",
+			outputTypes: "k6/api-types.ts",
+			useOperationId: true,
+			basePath: "/api/v1",
+		},
+	],
 });
 ```
 
@@ -83,120 +83,117 @@ import http from "k6/http";
 import type { Params, Response } from "k6/http";
 
 export interface ListUsersParams {
-  page?: number;
-  limit?: number;
+	page?: number;
+	limit?: number;
 }
 
 export interface ListUsersHeaders {
-  "X-Request-ID"?: string;
+	"X-Request-ID"?: string;
 }
 
 export class ApiClient {
-  private readonly baseUrl: string;
-  private readonly commonRequestParameters: Params;
+	private readonly baseUrl: string;
+	private readonly commonRequestParameters: Params;
 
-  constructor(baseUrl: string, commonRequestParameters: Params = {}) {
-    this.baseUrl = baseUrl.replace(/\/$/, "");
-    this.commonRequestParameters = commonRequestParameters;
-  }
+	constructor(baseUrl: string, commonRequestParameters: Params = {}) {
+		this.baseUrl = baseUrl.replace(/\/$/, "");
+		this.commonRequestParameters = commonRequestParameters;
+	}
 
-  private _mergeRequestParameters(requestParams: Params, commonParams: Params): Params {
-    return {
-      ...commonParams,
-      ...requestParams,
-      headers: {
-        ...commonParams?.headers,
-        ...requestParams?.headers,
-      },
-      tags: {
-        ...commonParams?.tags,
-        ...requestParams?.tags,
-      },
-    };
-  }
+	private _mergeRequestParameters(requestParams: Params, commonParams: Params): Params {
+		return {
+			...commonParams,
+			...requestParams,
+			headers: {
+				...commonParams?.headers,
+				...requestParams?.headers,
+			},
+			tags: {
+				...commonParams?.tags,
+				...requestParams?.tags,
+			},
+		};
+	}
 
-  /**
-   * @summary List all users
-   * @method GET /users
-   */
-  listUsers(
-    headers?: ListUsersHeaders,
-    params?: ListUsersParams,
-    requestParameters?: Params
-  ): { response: Response; data: User[]; } {
-    const url = this.baseUrl + `/users` + this._buildQueryString(params);
-    const mergedParams = this._mergeRequestParameters(
-      requestParameters || {},
-      this.commonRequestParameters
-    );
+	/**
+	 * @summary List all users
+	 * @method GET /users
+	 */
+	listUsers(
+		headers?: ListUsersHeaders,
+		params?: ListUsersParams,
+		requestParameters?: Params
+	): { response: Response; data: User[] } {
+		const url = this.baseUrl + `/users` + this._buildQueryString(params);
+		const mergedParams = this._mergeRequestParameters(requestParameters || {}, this.commonRequestParameters);
 
-    const response = http.request("GET", url, undefined, {
-      ...mergedParams,
-      headers: {
-        ...mergedParams?.headers,
-        ...this._stringifyHeaders(headers || {}),
-      },
-    });
+		const response = http.request("GET", url, undefined, {
+			...mergedParams,
+			headers: {
+				...mergedParams?.headers,
+				...this._stringifyHeaders(headers || {}),
+			},
+		});
 
-    const data = response.json() as User[];
-    return { response, data };
-  }
+		const data = response.json() as User[];
+		return { response, data };
+	}
 
-  // ... more methods
+	// ... more methods
 }
 ```
 
 ## Using the Generated Client in K6
 
 ```typescript
-import { ApiClient } from './api-client';
-import { check, sleep } from 'k6';
+import { ApiClient } from "./api-client";
+import { check, sleep } from "k6";
 
 // Create client with base URL and common parameters
-const client = new ApiClient('https://api.example.com', {
-  headers: {
-    'Authorization': 'Bearer token123',
-    'Content-Type': 'application/json',
-  },
-  tags: {
-    name: 'api-test',
-  },
-  timeout: '30s',
+const client = new ApiClient("https://api.example.com", {
+	headers: {
+		Authorization: "Bearer token123",
+		"Content-Type": "application/json",
+	},
+	tags: {
+		name: "api-test",
+	},
+	timeout: "30s",
 });
 
-export default function() {
-  // Simple GET request
-  const { response, data } = client.listUsers();
+export default function () {
+	// Simple GET request
+	const { response, data } = client.listUsers();
 
-  check(response, {
-    'status is 200': (r) => r.status === 200,
-    'has users': () => data.length > 0,
-  });
+	check(response, {
+		"status is 200": r => r.status === 200,
+		"has users": () => data.length > 0,
+	});
 
-  // GET with query parameters
-  const { response: filteredResponse, data: filteredUsers } = client.listUsers(
-    undefined,                    // headers
-    { page: 1, limit: 10 },      // query params
-    { timeout: '5s' }            // request-specific K6 params
-  );
+	// GET with query parameters
+	const { response: filteredResponse, data: filteredUsers } = client.listUsers(
+		undefined, // headers
+		{ page: 1, limit: 10 }, // query params
+		{ timeout: "5s" } // request-specific K6 params
+	);
 
-  // POST with body
-  const { response: createResponse, data: newUser } = client.createUser(
-    { name: 'John', email: 'john@example.com' },  // body
-    { timeout: '10s' }                             // request params
-  );
+	// POST with body
+	const { response: createResponse, data: newUser } = client.createUser(
+		{ name: "John", email: "john@example.com" }, // body
+		{ timeout: "10s" } // request params
+	);
 
-  // Path parameters
-  const { response: userResponse, data: user } = client.getUserById(
-    '123',  // userId path param
-  );
+	// Path parameters
+	const { response: userResponse, data: user } = client.getUserById(
+		"123" // userId path param
+	);
 
-  sleep(1);
+	sleep(1);
 }
 
 export const options = {
-  vus: 10,
-  duration: '30s',
+	vus: 10,
+	duration: "30s",
 };
 ```
 
@@ -204,18 +201,18 @@ export const options = {
 
 ### Generator Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `input` | `string` | required | Path to OpenAPI specification file |
-| `outputClient` | `string` | required | Output path for generated K6 client |
-| `outputTypes` | `string` | - | Separate file for TypeScript types |
-| `useOperationId` | `boolean` | `false` | Use operationId for client/service method names and operation-derived TypeScript type names |
-| `basePath` | `string` | - | Base path to prepend to all endpoints |
-| `stripPathPrefix` | `string` | - | Strip prefix from paths (glob support) |
-| `ignoreHeaders` | `string[]` | - | Header patterns to ignore |
-| `includeDescriptions` | `boolean` | `true` | Include JSDoc descriptions |
-| `showStats` | `boolean` | `true` | Show generation statistics |
-| `preferredContentTypes` | `string[]` | `["application/json"]` | Preferred content types |
+| Option                  | Type       | Default                | Description                                                                                 |
+| ----------------------- | ---------- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `input`                 | `string`   | required               | Path to OpenAPI specification file                                                          |
+| `outputClient`          | `string`   | required               | Output path for generated K6 client                                                         |
+| `outputTypes`           | `string`   | -                      | Separate file for TypeScript types                                                          |
+| `useOperationId`        | `boolean`  | `false`                | Use operationId for client/service method names and operation-derived TypeScript type names |
+| `basePath`              | `string`   | -                      | Base path to prepend to all endpoints                                                       |
+| `stripPathPrefix`       | `string`   | -                      | Strip prefix from paths (glob support)                                                      |
+| `ignoreHeaders`         | `string[]` | -                      | Header patterns to ignore                                                                   |
+| `includeDescriptions`   | `boolean`  | `true`                 | Include JSDoc descriptions                                                                  |
+| `showStats`             | `boolean`  | `true`                 | Show generation statistics                                                                  |
+| `preferredContentTypes` | `string[]` | `["application/json"]` | Preferred content types                                                                     |
 
 ### Operation Filters
 

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, normalize, relative } from "node:path";
+
 import type { Generator } from "@cerios/openapi-core";
 import {
 	ConfigurationError,
@@ -12,6 +13,7 @@ import {
 import { TypeScriptGenerator } from "@cerios/openapi-to-typescript";
 import type { OpenAPISpec } from "@cerios/openapi-to-zod";
 import { OpenApiGenerator } from "@cerios/openapi-to-zod";
+
 import { ClientGenerationError } from "./errors";
 import { generateClientClass } from "./generators/client-generator";
 import { generateInlineRequestSchemas, generateInlineResponseSchemas } from "./generators/inline-schema-generator";

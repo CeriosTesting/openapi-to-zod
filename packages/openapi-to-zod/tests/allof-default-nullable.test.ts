@@ -1,6 +1,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
 
 /**

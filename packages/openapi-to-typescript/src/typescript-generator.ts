@@ -6,6 +6,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, normalize } from "node:path";
+
 import {
 	applyFormatting,
 	ConfigurationError,
@@ -34,6 +35,7 @@ import {
 	topologicalSortSchemas,
 	validateFilters,
 } from "@cerios/openapi-core";
+
 import { generateEnum } from "./generators/enum-generator";
 import { formatTypeProperty, generateTypeDeclaration } from "./generators/type-generator";
 import type { TypeScriptGeneratorOptions } from "./types";

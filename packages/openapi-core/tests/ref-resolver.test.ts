@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { OpenAPISpec } from "../src/types";
 import {
 	mergeParameters,

@@ -1,8 +1,11 @@
 import { existsSync, unlinkSync } from "node:fs";
+
 import { executeBatch, getBatchExitCode } from "@cerios/openapi-core";
 import { afterAll, describe, expect, it } from "vitest";
+
 import { OpenApiGenerator } from "../src/openapi-generator";
 import type { OpenApiGeneratorOptions } from "../src/types";
+
 import { TestUtils } from "./utils/test-utils";
 
 describe("Batch Execution", () => {
