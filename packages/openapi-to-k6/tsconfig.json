@@ -5,7 +5,6 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"@cerios/openapi-core": ["../openapi-core/src"],
-			"@cerios/openapi-core/test-utils": ["../openapi-core/src/test-utils"],
 			"@cerios/openapi-to-typescript": ["../openapi-to-typescript/src"]
 		},
 		"resolveJsonModule": true,

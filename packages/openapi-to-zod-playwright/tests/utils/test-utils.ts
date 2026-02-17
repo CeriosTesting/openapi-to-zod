@@ -1,5 +1,4 @@
-import { createTestUtils, type FixtureCategory } from "@cerios/openapi-core/test-utils";
-
+import { createTestUtils, type FixtureCategory } from "../../../../fixtures/test-utils";
 import { OpenApiPlaywrightGenerator } from "../../src/openapi-playwright-generator";
 import type { OpenApiPlaywrightGeneratorOptions } from "../../src/types";
 

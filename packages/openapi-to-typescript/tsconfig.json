@@ -3,8 +3,7 @@
 		"target": "es2019",
 		"module": "commonjs",
 		"paths": {
-			"@cerios/openapi-core": ["../openapi-core/src"],
-			"@cerios/openapi-core/test-utils": ["../openapi-core/src/test-utils"]
+			"@cerios/openapi-core": ["../openapi-core/src"]
 		},
 		"resolveJsonModule": true,
 		"noEmit": true,

@@ -10,7 +10,6 @@
 		"baseUrl": ".",
 		"paths": {
 			"@cerios/openapi-core": ["packages/openapi-core/src"],
-			"@cerios/openapi-core/test-utils": ["packages/openapi-core/src/test-utils"],
 			"@cerios/openapi-to-typescript": ["packages/openapi-to-typescript/src"],
 			"@cerios/openapi-to-zod": ["packages/openapi-to-zod/src"],
 			"@cerios/openapi-to-zod-playwright": ["packages/openapi-to-zod-playwright/src"],

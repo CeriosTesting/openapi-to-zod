@@ -5,7 +5,6 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"@cerios/openapi-core": ["../openapi-core/src"],
-			"@cerios/openapi-core/test-utils": ["../openapi-core/src/test-utils"],
 			"@cerios/openapi-to-zod": ["../openapi-to-zod/src"],
 			"@cerios/openapi-to-zod-playwright": ["./src"]
 		},

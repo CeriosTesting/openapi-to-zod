@@ -10,7 +10,7 @@ import path from "node:path";
 
 import { parse as parseYaml } from "yaml";
 
-import type { OpenAPISpec } from "../types";
+import type { OpenAPISpec } from "@cerios/openapi-core";
 
 /**
  * Fixture category subdirectories
@@ -20,7 +20,7 @@ export type FixtureCategory = "basic" | "references" | "composition" | "validati
 /**
  * Root fixtures directory (shared across monorepo)
  */
-const FIXTURES_ROOT = path.resolve(__dirname, "../../../../fixtures");
+const FIXTURES_ROOT = __dirname;
 
 /**
  * Get the path to a fixture file from the shared fixtures directory
@@ -240,7 +240,7 @@ export interface BaseTestUtils {
  * @example
  * ```typescript
  * // In tests/utils/test-utils.ts
- * import { createTestUtils } from "@cerios/openapi-core/test-utils";
+ * import { createTestUtils } from "../../../../fixtures/test-utils";
  * import { OpenApiGenerator } from "../../src/openapi-generator";
  *
  * const baseUtils = createTestUtils({ testDir: __dirname });
