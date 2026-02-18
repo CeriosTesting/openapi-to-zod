@@ -216,6 +216,40 @@ describe("TypeScriptGenerator", () => {
 		});
 	});
 
+	describe("Deprecated Properties", () => {
+		it("should add @deprecated JSDoc for deprecated properties", () => {
+			const output = TestUtils.generateFromFixture("deprecated.yaml", {
+				includeDescriptions: true,
+			});
+			expect(output).toContain("/** @deprecated */");
+			expect(output).toContain("legacyId?:");
+		});
+
+		it("should add @deprecated after description when both are present", () => {
+			const output = TestUtils.generateFromFixture("deprecated.yaml", {
+				includeDescriptions: true,
+			});
+			expect(output).toContain("/** The old name field @deprecated */");
+		});
+
+		it("should still add @deprecated when includeDescriptions is false", () => {
+			const output = TestUtils.generateFromFixture("deprecated.yaml", {
+				includeDescriptions: false,
+			});
+			expect(output).toContain("/** @deprecated */");
+			// Description should NOT be included when includeDescriptions is false
+			expect(output).not.toContain("The old name field");
+		});
+
+		it("should handle deprecated nullable properties", () => {
+			const output = TestUtils.generateFromFixture("deprecated.yaml", {
+				includeDescriptions: false,
+			});
+			expect(output).toContain("/** @deprecated */");
+			expect(output).toContain("email?: string | null");
+		});
+	});
+
 	describe("Header Options", () => {
 		it("should include default header (always included)", () => {
 			const output = TestUtils.generateFromFixture("simple.yaml");

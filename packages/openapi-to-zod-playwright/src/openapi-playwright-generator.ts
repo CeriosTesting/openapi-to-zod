@@ -224,6 +224,8 @@ export class OpenApiPlaywrightGenerator implements Generator {
 			emptyObjectBehavior: this.options.emptyObjectBehavior,
 			// Skip type inference when in separate schemas mode (types come from separate file)
 			skipTypeInference: this.separateSchemasMode,
+			// Use z.ZodType<TypeAlias> syntax when types are in a separate file
+			separateTypesFile: this.separateSchemasMode,
 		};
 
 		// Collect inline schemas
@@ -572,8 +574,9 @@ export class OpenApiPlaywrightGenerator implements Generator {
 		const schemasString = this.generateSchemasString();
 		const names = new Set<string>();
 
-		// Match export const X = z.object...
-		const schemaRegex = /export const (\w+)\s*=/g;
+		// Match export const X = z.object... or export const X: Type = z.object...
+		// The type annotation is optional, so we use a non-greedy match for the part between name and =
+		const schemaRegex = /export const (\w+)(?:\s*:[^=]+)?\s*=/g;
 		let match = schemaRegex.exec(schemasString);
 		while (match !== null) {
 			names.add(match[1]);

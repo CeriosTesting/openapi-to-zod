@@ -256,4 +256,71 @@ describe("Service Imports", () => {
 			expect(serviceFile).toContain("userSchema");
 		});
 	});
+
+	describe("Response schema imports", () => {
+		it("should import schema for direct $ref response validation", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: TestUtils.getFixturePath("no-inline-schema-api.yaml"),
+				outputTypes: TestUtils.getOutputPath("test-schemas.ts"),
+				outputClient: TestUtils.getOutputPath("test-client.ts"),
+				outputService: TestUtils.getOutputPath("test-service.ts"),
+			});
+
+			const serviceString = generator.generateServiceString();
+			const serviceFile = generator["generateServiceFile"](
+				TestUtils.getOutputPath("test-service.ts"),
+				TestUtils.getOutputPath("test-schemas.ts"),
+				TestUtils.getOutputPath("test-client.ts")
+			);
+
+			// Should use userSchema for response validation
+			expect(serviceString).toContain("userSchema.parseAsync(body)");
+
+			// Should import userSchema in the schema imports
+			expect(serviceFile).toMatch(/import \{[^}]*userSchema[^}]*\} from/);
+		});
+
+		it("should import both inline and direct $ref response schemas", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: TestUtils.getFixturePath("mixed-response-types-api.yaml"),
+				outputTypes: TestUtils.getOutputPath("test-schemas.ts"),
+				outputClient: TestUtils.getOutputPath("test-client.ts"),
+				outputService: TestUtils.getOutputPath("test-service.ts"),
+			});
+
+			const serviceString = generator.generateServiceString();
+			const serviceFile = generator["generateServiceFile"](
+				TestUtils.getOutputPath("test-service.ts"),
+				TestUtils.getOutputPath("test-schemas.ts"),
+				TestUtils.getOutputPath("test-client.ts")
+			);
+
+			// Should use itemSchema for direct $ref GET response
+			expect(serviceString).toContain("itemSchema.parseAsync(body)");
+
+			// Should use named response schema for POST array response
+			expect(serviceString).toContain("postItemsResponseSchema.parseAsync(body)");
+
+			// Both schemas should be imported
+			expect(serviceFile).toMatch(/import \{[^}]*itemSchema[^}]*\} from/);
+			expect(serviceFile).toMatch(/import \{[^}]*postItemsResponseSchema[^}]*\} from/);
+		});
+
+		it("should generate correct return types for both response patterns", () => {
+			const generator = new OpenApiPlaywrightGenerator({
+				input: TestUtils.getFixturePath("mixed-response-types-api.yaml"),
+				outputTypes: TestUtils.getOutputPath("test-schemas.ts"),
+				outputClient: TestUtils.getOutputPath("test-client.ts"),
+				outputService: TestUtils.getOutputPath("test-service.ts"),
+			});
+
+			const serviceString = generator.generateServiceString();
+
+			// Direct $ref response should use the schema type name
+			expect(serviceString).toMatch(/async getItemsById\([^)]*\): Promise<Item>/);
+
+			// Inline array response should use generated response type name
+			expect(serviceString).toMatch(/async postItems\([^)]*\): Promise<PostItemsResponse>/);
+		});
+	});
 });

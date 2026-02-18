@@ -1,0 +1,55 @@
+openapi: 3.0.0
+info:
+  title: Mixed Response Types Test API
+  version: 1.0.0
+  description: Tests both direct $ref responses and inline array responses
+components:
+  schemas:
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+paths:
+  /items/{id}:
+    get:
+      operationId: getItemById
+      summary: Get a single item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A single item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+  /items:
+    post:
+      operationId: postItems
+      summary: Search items and return array
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+      responses:
+        '200':
+          description: Array of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'

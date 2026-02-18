@@ -202,6 +202,7 @@ export class OpenApiGenerator {
 			stripSchemaPrefix: this.options.stripSchemaPrefix,
 			dateTimeValidation: this.dateTimeValidation,
 			patternCache: this.patternCache,
+			separateTypesFile: this.separateSchemasMode,
 		});
 	}
 
@@ -868,6 +869,7 @@ export class OpenApiGenerator {
 			stripSchemaPrefix: this.options.stripSchemaPrefix,
 			dateTimeValidation: this.dateTimeValidation,
 			patternCache: this.patternCache,
+			separateTypesFile: this.separateSchemasMode,
 		});
 
 		// Set circular dependencies for the new property generator instance

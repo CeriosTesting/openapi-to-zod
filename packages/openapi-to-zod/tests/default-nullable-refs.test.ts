@@ -396,6 +396,7 @@ components:
 			const output = generator.generateString();
 
 			// Circular refs use z.lazy() and should have .nullable() when defaultNullable: true
+			// Combined mode uses ZodTypeAny to avoid circular type alias issues
 			expect(output).toMatch(/parent:\s*z\.lazy\(\(\): z\.ZodTypeAny => treeNodeSchema\)\.nullable\(\)/);
 
 			// Array of circular refs: both the items and the array get .nullable()

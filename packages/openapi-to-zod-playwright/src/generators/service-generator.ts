@@ -833,6 +833,8 @@ function generateServiceMethod(
 		const strippedName = stripPrefix(response.schemaName, stripSchemaPrefix);
 		// Apply prefix/suffix to match the generated schema names
 		const schemaVar = `${toCamelCase(strippedName, { prefix, suffix })}Schema`;
+		// Add schema import for response validation
+		schemaImports.add(`${response.schemaName}Schema`);
 
 		// Determine parse method based on content type
 		const parseResult = getResponseParseMethod(response.contentType, fallbackContentTypeParsing);

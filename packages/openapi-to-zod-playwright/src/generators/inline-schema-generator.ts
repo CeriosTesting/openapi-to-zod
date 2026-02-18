@@ -53,6 +53,13 @@ export interface InlineSchemaGeneratorOptions {
 	emptyObjectBehavior?: "strict" | "loose" | "record";
 	/** When true, skip generating z.infer type exports (used in separate schemas mode) */
 	skipTypeInference?: boolean;
+	/**
+	 * Whether types are in a separate file from schemas.
+	 * When true: Uses z.ZodType<TypeAlias> syntax for schema definitions
+	 * When false: Uses z.infer in the same file
+	 * @default false
+	 */
+	separateTypesFile?: boolean;
 }
 
 /**
@@ -78,6 +85,7 @@ function createPropertyGeneratorContext(
 		emptyObjectBehavior: options.emptyObjectBehavior ?? "loose",
 		dateTimeValidation: buildDateTimeValidation(),
 		patternCache: new LRUCache<string, string>(100),
+		separateTypesFile: options.separateTypesFile ?? false,
 	};
 }
 

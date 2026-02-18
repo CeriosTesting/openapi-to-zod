@@ -12,6 +12,7 @@ import {
 	ConfigurationError,
 	createFilterStatistics,
 	detectCircularReferences,
+	escapeJSDoc,
 	expandTransitiveReferences,
 	extractSchemaRefs,
 	type FilterStatistics,
@@ -451,6 +452,31 @@ export class TypeScriptGenerator {
 	}
 
 	/**
+	 * Generate JSDoc comment for a property schema
+	 * Handles both description and deprecated flags
+	 */
+	private generatePropertyJSDoc(schema: OpenAPISchema): string {
+		const hasDescription = this.options.includeDescriptions && schema.description;
+		const hasDeprecated = schema.deprecated === true;
+
+		if (!hasDescription && !hasDeprecated) {
+			return "";
+		}
+
+		const parts: string[] = [];
+
+		if (hasDescription && schema.description) {
+			parts.push(escapeJSDoc(schema.description));
+		}
+
+		if (hasDeprecated) {
+			parts.push("@deprecated");
+		}
+
+		return `/** ${parts.join(" ")} */\n`;
+	}
+
+	/**
 	 * Generate properties for an object schema
 	 */
 	private generateProperties(_schemaName: string, schema: OpenAPISchema, deps: Set<string>): string[] {
@@ -469,12 +495,9 @@ export class TypeScriptGenerator {
 
 			const prop = formatTypeProperty(propName, typeStr, isRequired);
 
-			// Add JSDoc for property description
-			if (this.options.includeDescriptions && propSchema.description) {
-				properties.push(`/** ${propSchema.description} */\n  ${prop}`);
-			} else {
-				properties.push(prop);
-			}
+			// Add JSDoc for property description and/or deprecated
+			const jsdoc = this.generatePropertyJSDoc(propSchema);
+			properties.push(jsdoc ? `${jsdoc}  ${prop}` : prop);
 		}
 
 		return properties;

@@ -186,7 +186,7 @@ describe("stripSchemaPrefix option", () => {
 			const output = generator.generateString();
 
 			// User has circular reference through posts -> Post -> author -> User
-			// Should use lazy evaluation
+			// Should use lazy evaluation (combined mode uses ZodTypeAny)
 			expect(output).toContain("posts: z.array(z.lazy((): z.ZodTypeAny => postSchema))");
 			expect(output).toContain("author: z.lazy((): z.ZodTypeAny => userSchema)");
 		});

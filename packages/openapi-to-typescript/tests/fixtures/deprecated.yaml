@@ -1,0 +1,29 @@
+openapi: 3.0.3
+info:
+  title: Deprecated Properties Test
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    UserWithDeprecated:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier
+        legacyId:
+          type: string
+          deprecated: true
+        oldName:
+          type: string
+          description: The old name field
+          deprecated: true
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+          deprecated: true
+      required:
+        - id
+        - name

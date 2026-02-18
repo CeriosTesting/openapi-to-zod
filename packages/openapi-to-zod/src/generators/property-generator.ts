@@ -7,6 +7,7 @@ import {
 	resolveRefName,
 	stripPrefix,
 	toCamelCase,
+	toPascalCase,
 } from "@cerios/openapi-core";
 
 import type { OpenAPISchema, OpenAPISpec } from "../types";
@@ -46,6 +47,13 @@ export interface PropertyGeneratorContext {
 	 * Instance-level cache for escaped regex patterns (parallel-safe)
 	 */
 	patternCache: LRUCache<string, string>;
+	/**
+	 * Whether types are generated in a separate file (imported) vs inline (z.infer)
+	 * When true, z.lazy uses z.ZodType<TypeName> for proper type inference
+	 * When false, z.lazy uses z.ZodTypeAny to avoid circular type references
+	 * @default false
+	 */
+	separateTypesFile: boolean;
 }
 
 /**
@@ -450,6 +458,7 @@ export class PropertyGenerator {
 			// Apply stripSchemaPrefix to get consistent schema names
 			const strippedRefName = stripPrefix(resolvedRefName, this.context.stripSchemaPrefix);
 			const schemaName = `${toCamelCase(strippedRefName, this.context.namingOptions)}Schema`;
+			const typeName = toPascalCase(strippedRefName);
 
 			// Check for direct self-reference, circular dependency through alias,
 			// or mutual circular dependency (both schemas are part of a circular chain)
@@ -463,8 +472,11 @@ export class PropertyGenerator {
 				currentSchema && this.circularDependencies.has(currentSchema) && this.circularDependencies.has(refName);
 
 			if (isDirectSelfRef || isCircularAlias || isMutuallyCircular) {
-				// Use lazy evaluation for circular references with explicit type annotation
-				const lazySchema = `z.lazy((): z.ZodTypeAny => ${schemaName})`;
+				// Use lazy evaluation for circular references
+				// When types are in a separate file (imported), use z.ZodType<TypeName> for proper type inference
+				// When types are inline (z.infer), use z.ZodTypeAny to avoid circular type references
+				const lazyTypeAnnotation = this.context.separateTypesFile ? `z.ZodType<${typeName}>` : "z.ZodTypeAny";
+				const lazySchema = `z.lazy((): ${lazyTypeAnnotation} => ${schemaName})`;
 				return wrapNullable(lazySchema, nullable);
 			}
 

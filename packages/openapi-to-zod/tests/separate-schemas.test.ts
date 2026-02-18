@@ -259,6 +259,94 @@ describe("Separate Schemas Mode", () => {
 		});
 	});
 
+	describe("Circular references", () => {
+		it("should use z.ZodType<TypeName> in z.lazy for proper type inference in separate mode", () => {
+			const circularFixture = TestUtils.getFixturePath("self-reference.yaml");
+			const generator = new OpenApiGenerator({
+				input: circularFixture,
+				outputTypes: typesFile,
+				outputZodSchemas: schemasFile,
+				mode: "normal",
+				showStats: false,
+			});
+
+			generator.generate();
+			const schemasContent = readFileSync(schemasFile, "utf-8");
+
+			// In separate schemas mode, z.lazy should use z.ZodType<TypeName> for proper type inference
+			// This prevents "Type 'unknown' is not assignable to type 'X | undefined'" errors
+			expect(schemasContent).toMatch(/z\.lazy\(\(\): z\.ZodType<TreeNode> => treeNodeSchema\)/);
+			expect(schemasContent).not.toContain("z.ZodTypeAny");
+		});
+
+		it("should use z.ZodTypeAny in combined mode to avoid circular type alias issues", () => {
+			const circularFixture = TestUtils.getFixturePath("self-reference.yaml");
+			const combinedOutput = join(outputDir, "combined-circular.ts");
+			const generator = new OpenApiGenerator({
+				input: circularFixture,
+				outputTypes: combinedOutput,
+				// No outputZodSchemas - combined mode
+				mode: "normal",
+				showStats: false,
+			});
+
+			generator.generate();
+			const content = readFileSync(combinedOutput, "utf-8");
+
+			// In combined mode, z.lazy should use z.ZodTypeAny to avoid circular type alias issues
+			// TypeScript can't handle z.ZodType<X> when X is defined via z.infer from the same schema
+			expect(content).toMatch(/z\.lazy\(\(\): z\.ZodTypeAny => treeNodeSchema\)/);
+		});
+
+		it("should compile circular references successfully in separate mode", { timeout: 30_000 }, () => {
+			const circularFixture = TestUtils.getFixturePath("self-reference.yaml");
+			const circularTypesFile = join(outputDir, "circular-types.ts");
+			const circularSchemasFile = join(outputDir, "circular-schemas.ts");
+
+			const generator = new OpenApiGenerator({
+				input: circularFixture,
+				outputTypes: circularTypesFile,
+				outputZodSchemas: circularSchemasFile,
+				mode: "normal",
+				showStats: false,
+			});
+
+			generator.generate();
+
+			// Create a tsconfig for this test
+			const tsconfigPath = join(outputDir, "tsconfig-circular.json");
+			const tsconfig = {
+				compilerOptions: {
+					target: "ES2020",
+					module: "commonjs",
+					strict: true,
+					esModuleInterop: true,
+					skipLibCheck: true,
+					noEmit: true,
+					baseUrl: ".",
+					paths: {
+						zod: ["../../node_modules/zod"],
+					},
+				},
+				include: ["circular-types.ts", "circular-schemas.ts"],
+			};
+			writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2));
+
+			// Should compile without errors
+			try {
+				execSync(`npx tsc --project ${tsconfigPath}`, {
+					cwd: outputDir,
+					stdio: "pipe",
+					encoding: "utf-8",
+				});
+			} catch (error: unknown) {
+				const err = error as { stdout?: string; stderr?: string; message?: string };
+				const output = err.stdout || err.stderr || err.message;
+				throw new Error(`TypeScript compilation failed for circular refs:\n${output}`);
+			}
+		});
+	});
+
 	describe("Enum handling", () => {
 		it("should handle enums with proper type annotation", () => {
 			const generator = new OpenApiGenerator({

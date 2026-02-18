@@ -30,6 +30,7 @@ describe("Unnecessary z.lazy() Prevention", () => {
 			const output = generateOneWayRef();
 
 			// DecisionTreeException.innerException should use z.lazy() (self-reference)
+			// Combined mode uses z.ZodTypeAny to avoid circular type alias issues
 			expect(output).toMatch(/innerException:\s*z\.lazy\(\(\): z\.ZodTypeAny => decisionTreeExceptionSchema\)/);
 		});
 
@@ -53,7 +54,7 @@ describe("Unnecessary z.lazy() Prevention", () => {
 			const lazyMatches = output.match(/z\.lazy\(/g) || [];
 			expect(lazyMatches.length).toBe(1);
 
-			// Verify it's the innerException
+			// Verify it's the innerException (combined mode uses ZodTypeAny)
 			expect(output).toMatch(/innerException:\s*z\.lazy\(\(\): z\.ZodTypeAny => decisionTreeExceptionSchema\)/);
 		});
 
@@ -87,6 +88,7 @@ describe("Unnecessary z.lazy() Prevention", () => {
 			const output = generateMutualCircular();
 
 			// Both Dossier and AbsenceCourse are mutually circular - at least one needs z.lazy
+			// Combined mode uses z.ZodTypeAny to avoid circular type alias issues
 			const hasLazyDossier = output.match(/z\.lazy\(\(\): z\.ZodTypeAny => dossierSchema\)/);
 			const hasLazyAbsenceCourse = output.match(/z\.lazy\(\(\): z\.ZodTypeAny => absenceCourseSchema\)/);
 
@@ -110,7 +112,24 @@ describe("Unnecessary z.lazy() Prevention", () => {
 			const output = generateWithSelfRef();
 
 			// TreeNode should use z.lazy() for its self-references (left, right, children)
+			// Combined mode uses z.ZodTypeAny to avoid circular type alias issues
 			expect(output).toMatch(/z\.lazy\(\(\): z\.ZodTypeAny => treeNodeSchema\)/);
+		});
+	});
+
+	describe("z.lazy() type annotation in combined vs separate mode", () => {
+		it("should use z.ZodTypeAny in combined mode to avoid circular type alias issues", () => {
+			// In combined mode, types are inferred with z.infer which causes circular type alias errors
+			// when using z.ZodType<TypeName>. So we use z.ZodTypeAny in this mode.
+			const generator = new OpenApiGenerator({
+				input: TestUtils.getFixturePath("one-way-circular-ref.yaml"),
+				outputTypes: "output.ts",
+				mode: "normal",
+			});
+			const output = generator.generateString();
+
+			// Combined mode should use z.ZodTypeAny
+			expect(output).toContain("z.ZodTypeAny");
 		});
 	});
 });

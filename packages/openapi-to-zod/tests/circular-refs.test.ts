@@ -23,6 +23,7 @@ describe("Circular Reference Handling", () => {
 
 	it("should add type annotation to lazy callbacks", () => {
 		const output = generateOutput();
+		// Combined mode uses z.ZodTypeAny to avoid circular type alias issues
 		expect(output).toContain("z.lazy((): z.ZodTypeAny =>");
 	});
 
@@ -63,7 +64,7 @@ describe("Circular Reference Handling", () => {
 
 		const output = generator.generateString();
 
-		// Should use z.lazy for self-references
+		// Should use z.lazy for self-references (combined mode uses ZodTypeAny)
 		expect(output).toContain("z.lazy((): z.ZodTypeAny => treeNodeSchema)");
 		// Should not have "variable used before declaration" errors
 		expect(output).toContain("export const treeNodeSchema");
@@ -141,6 +142,7 @@ describe("Circular Reference Handling", () => {
 
 			// All references to circular schemas (Dossier, AbsenceCourse, User) should use z.lazy
 			// to prevent "used before its declaration" TypeScript errors
+			// Combined mode uses z.ZodTypeAny to avoid circular type alias issues
 
 			// Dossier references AbsenceCourse and User - should use z.lazy
 			expect(output).toMatch(/z\.lazy\(\(\): z\.ZodTypeAny => absenceCourseSchema\)/);
