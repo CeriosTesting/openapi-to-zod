@@ -1,6 +1,6 @@
 {
 	"name": "@cerios/openapi-to-zod-playwright",
-	"version": "1.7.0",
+	"version": "1.7.1",
 	"description": "Generate type-safe Playwright API clients from OpenAPI specifications with Zod validation",
 	"keywords": [
 		"api-client",

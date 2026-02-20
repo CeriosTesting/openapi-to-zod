@@ -1,6 +1,6 @@
 {
 	"name": "@cerios/openapi-to-k6",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Generate type-safe K6 HTTP clients from OpenAPI specifications with TypeScript types",
 	"keywords": [
 		"api-client",
