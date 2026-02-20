@@ -54,7 +54,6 @@
 	"scripts": {
 		"build": "tsup",
 		"compile": "tsc --noEmit",
-		"prepublishOnly": "npm run build",
 		"test": "vitest run",
 		"test:watch": "vitest"
 	},

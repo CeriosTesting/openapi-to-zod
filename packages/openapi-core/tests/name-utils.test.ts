@@ -8,6 +8,7 @@ import {
 	generatePathParamsTypeName,
 	generateQueryParamsTypeName,
 	getOperationName,
+	normalizeSchemaTypeName,
 	resolveRefName,
 	toCamelCase,
 	toPascalCase,
@@ -247,6 +248,104 @@ describe("name-utils", () => {
 		it("should generate path params type name", () => {
 			expect(generatePathParamsTypeName("GetUserById")).toBe("GetUserByIdPathParams");
 			expect(generatePathParamsTypeName("DeletePost")).toBe("DeletePostPathParams");
+		});
+	});
+
+	describe("normalizeSchemaTypeName", () => {
+		describe("underscore handling", () => {
+			it("should convert snake_case to PascalCase", () => {
+				expect(normalizeSchemaTypeName("user_name")).toBe("UserName");
+				expect(normalizeSchemaTypeName("first_name_last")).toBe("FirstNameLast");
+			});
+
+			it("should handle schema names with underscores and uppercase", () => {
+				expect(normalizeSchemaTypeName("Org_Entity_POST")).toBe("OrgEntityPOST");
+				expect(normalizeSchemaTypeName("API_Response_DTO")).toBe("APIResponseDTO");
+			});
+
+			it("should handle leading underscore", () => {
+				expect(normalizeSchemaTypeName("_private_type")).toBe("PrivateType");
+			});
+
+			it("should handle trailing underscore", () => {
+				expect(normalizeSchemaTypeName("type_name_")).toBe("TypeName");
+			});
+
+			it("should handle multiple consecutive underscores", () => {
+				expect(normalizeSchemaTypeName("type__name")).toBe("TypeName");
+			});
+		});
+
+		describe("dot handling (namespace separators)", () => {
+			it("should convert dotted names to PascalCase", () => {
+				expect(normalizeSchemaTypeName("Company.Models.User")).toBe("CompanyModelsUser");
+			});
+
+			it("should handle single dot", () => {
+				expect(normalizeSchemaTypeName("Address.Type")).toBe("AddressType");
+			});
+
+			it("should handle leading dot", () => {
+				expect(normalizeSchemaTypeName(".HiddenType")).toBe("HiddenType");
+			});
+
+			it("should handle trailing dot", () => {
+				expect(normalizeSchemaTypeName("TypeName.")).toBe("TypeName");
+			});
+		});
+
+		describe("hyphen handling (kebab-case)", () => {
+			it("should convert kebab-case to PascalCase", () => {
+				expect(normalizeSchemaTypeName("item-create-request")).toBe("ItemCreateRequest");
+				expect(normalizeSchemaTypeName("user-dto")).toBe("UserDto");
+			});
+
+			it("should handle single hyphen", () => {
+				expect(normalizeSchemaTypeName("first-name")).toBe("FirstName");
+			});
+
+			it("should handle uppercase with hyphens", () => {
+				expect(normalizeSchemaTypeName("API-Response")).toBe("APIResponse");
+			});
+		});
+
+		describe("mixed separators", () => {
+			it("should handle combination of all separator types", () => {
+				expect(normalizeSchemaTypeName("My.Namespace_Item-Type")).toBe("MyNamespaceItemType");
+				expect(normalizeSchemaTypeName("Company.Models_User-DTO")).toBe("CompanyModelsUserDTO");
+			});
+
+			it("should handle adjacent different separators", () => {
+				expect(normalizeSchemaTypeName("type._-name")).toBe("TypeName");
+			});
+		});
+
+		describe("array types", () => {
+			it("should normalize array element type and preserve array notation", () => {
+				expect(normalizeSchemaTypeName("User_DTO[]")).toBe("UserDTO[]");
+				expect(normalizeSchemaTypeName("item-response[]")).toBe("ItemResponse[]");
+				expect(normalizeSchemaTypeName("Company.Models.Item[]")).toBe("CompanyModelsItem[]");
+			});
+
+			it("should handle multi-dimensional arrays", () => {
+				expect(normalizeSchemaTypeName("Item_Type[][]")).toBe("ItemType[][]");
+			});
+		});
+
+		describe("edge cases", () => {
+			it("should handle empty string", () => {
+				expect(normalizeSchemaTypeName("")).toBe("");
+			});
+
+			it("should handle already normalized (PascalCase) names", () => {
+				expect(normalizeSchemaTypeName("UserDto")).toBe("UserDto");
+				expect(normalizeSchemaTypeName("CreateUserRequest")).toBe("CreateUserRequest");
+			});
+
+			it("should handle the reported bug case", () => {
+				// The bug: schema names with underscores appeared differently in imports vs types
+				expect(normalizeSchemaTypeName("Org_Entity_POST")).toBe("OrgEntityPOST");
+			});
 		});
 	});
 });

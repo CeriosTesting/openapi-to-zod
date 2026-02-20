@@ -96,6 +96,7 @@ export {
 	generateMethodNameFromPath,
 	generateQueryParamsTypeName,
 	getOperationName,
+	normalizeSchemaTypeName,
 	resolveRefName,
 	toCamelCase,
 	toPascalCase,

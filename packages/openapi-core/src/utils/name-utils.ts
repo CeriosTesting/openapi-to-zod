@@ -331,3 +331,38 @@ export function deriveClassName(outputPath: string, suffix?: string): string {
 
 	return cleanName + suffix;
 }
+
+/**
+ * Normalize schema type name for consistent usage across generators
+ *
+ * This function ensures that schema names from OpenAPI specs are converted
+ * to valid TypeScript type names consistently. It handles:
+ * - Underscores (snake_case): `Org_Entity_POST` → `OrgEntityPOST`
+ * - Dots (namespaced): `Company.Models.User` → `CompanyModelsUser`
+ * - Hyphens (kebab-case): `item-create-request` → `ItemCreateRequest`
+ * - Array types: `User_DTO[]` → `UserDTO[]`
+ *
+ * Use this function whenever you need to reference a schema type name
+ * that should match the output of the TypeScript generator.
+ *
+ * @param typeName - The raw schema type name (may contain special characters)
+ * @returns Normalized PascalCase type name
+ *
+ * @example
+ * ```typescript
+ * normalizeSchemaTypeName("Org_Entity_POST") // "OrgEntityPOST"
+ * normalizeSchemaTypeName("Company.Models.User") // "CompanyModelsUser"
+ * normalizeSchemaTypeName("item-response[]") // "ItemResponse[]"
+ * ```
+ */
+export function normalizeSchemaTypeName(typeName: string): string {
+	if (!typeName) return typeName;
+
+	// Handle array types - normalize the inner type and preserve array notation
+	if (typeName.endsWith("[]")) {
+		return normalizeSchemaTypeName(typeName.slice(0, -2)) + "[]";
+	}
+
+	// Use toPascalCase which handles all special characters consistently
+	return toPascalCase(typeName);
+}

@@ -1,0 +1,132 @@
+openapi: "3.0.0"
+info:
+  title: Special Characters API
+  description: Test API with schema names containing special characters (underscores, dots, hyphens)
+  version: "1.0.0"
+paths:
+  /addresses:
+    post:
+      operationId: createAddress
+      summary: Create an address with underscore-named schema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Org_Entity_POST"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Org_Entity_Response"
+    get:
+      operationId: listAddresses
+      summary: List addresses with dotted schema
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Address.With.Dots"
+  /items:
+    post:
+      operationId: createItem
+      summary: Create an item with hyphenated type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/item-create-request"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/item-response"
+  /combined:
+    post:
+      operationId: createCombined
+      summary: Create with mixed separators
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/My.Namespace_Item-Type"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/API_Response_DTO"
+components:
+  schemas:
+    Org_Entity_POST:
+      type: object
+      description: Schema name with underscores (snake_case style)
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+      required:
+        - street
+        - city
+    Org_Entity_Response:
+      type: object
+      description: Response schema with underscores
+      properties:
+        id:
+          type: string
+        street:
+          type: string
+        city:
+          type: string
+    Address.With.Dots:
+      type: object
+      description: Schema name with dots (namespace style)
+      properties:
+        id:
+          type: string
+        fullAddress:
+          type: string
+    item-create-request:
+      type: object
+      description: Schema name with hyphens (kebab-case)
+      properties:
+        name:
+          type: string
+      required:
+        - name
+    item-response:
+      type: object
+      description: Response schema with hyphens
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    My.Namespace_Item-Type:
+      type: object
+      description: Schema with mixed separators (dots, underscores, hyphens)
+      properties:
+        itemId:
+          type: string
+        data:
+          type: object
+    API_Response_DTO:
+      type: object
+      description: Schema with uppercase parts
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string

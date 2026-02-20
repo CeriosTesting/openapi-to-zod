@@ -3,6 +3,7 @@ import {
 	extractEndpoints,
 	generateOperationJSDoc,
 	getEndpointStats,
+	normalizeSchemaTypeName,
 	sanitizeParamName,
 	toPascalCase,
 	type EndpointInfo,
@@ -10,6 +11,24 @@ import {
 import type { OpenAPISpec } from "@cerios/openapi-core";
 
 import type { OpenApiK6GeneratorOptions } from "../types";
+
+/**
+ * Check if a type is a primitive type (not a schema type that needs importing)
+ */
+function isPrimitiveType(typeName: string): boolean {
+	const primitives = ["string", "number", "boolean", "unknown", "any", "void", "null", "undefined", "never", "object"];
+	// Check for simple primitives
+	if (primitives.includes(typeName)) return true;
+	// Check for array of primitives like "string[]"
+	if (typeName.endsWith("[]")) {
+		return isPrimitiveType(typeName.slice(0, -2));
+	}
+	// Check for Record types
+	if (typeName.startsWith("Record<")) return true;
+	// Check for union of string literals like '"value1" | "value2"'
+	if (typeName.includes('"')) return true;
+	return false;
+}
 
 /**
  * Generates a single service method
@@ -40,16 +59,25 @@ function generateServiceMethod(endpoint: EndpointInfo, includeDescriptions: bool
 		methodParams.push(`params${allRequired ? "" : "?"}: ${paramsTypeName}`);
 	}
 
-	// Request body parameter
+	// Request body parameter - normalize type name to match generated types (skip primitives)
 	if (requestBody) {
-		methodParams.push(`body${requestBody.required ? "" : "?"}: ${requestBody.typeName}`);
+		const normalizedBodyType = isPrimitiveType(requestBody.typeName)
+			? requestBody.typeName
+			: normalizeSchemaTypeName(requestBody.typeName);
+		methodParams.push(`body${requestBody.required ? "" : "?"}: ${normalizedBodyType}`);
 	}
 
 	// K6 request parameters (always optional, always last)
 	methodParams.push("requestParameters?: Params");
 
 	// Determine response type - use actual type or unknown
-	const responseType = endpoint.successResponseType || "unknown";
+	// Normalize schema type names to match generated types, but leave primitives as-is
+	let responseType = "unknown";
+	if (endpoint.successResponseType) {
+		responseType = isPrimitiveType(endpoint.successResponseType)
+			? endpoint.successResponseType
+			: normalizeSchemaTypeName(endpoint.successResponseType);
+	}
 	const returnType = `K6ServiceResult<${responseType}>`;
 
 	// Expected status code
@@ -125,7 +153,8 @@ ${headerMergeCode}    const response = ${clientCall};
 
 /**
  * Collects all schema type names from endpoints (response types, request body types)
- * These are types that come from the OpenAPI schema definitions
+ * These are types that come from the OpenAPI schema definitions.
+ * Normalizes names to ensure consistency with generated TypeScript types.
  */
 function collectSchemaTypeNames(endpoints: EndpointInfo[]): string[] {
 	const names = new Set<string>();
@@ -138,13 +167,19 @@ function collectSchemaTypeNames(endpoints: EndpointInfo[]): string[] {
 		) {
 			// Only add if it looks like a type name (not a primitive like "string" or "number")
 			if (!isPrimitiveType(endpoint.successResponseType)) {
-				names.add(endpoint.successResponseType);
+				// Normalize and handle array types - extract inner type for import
+				const normalized = normalizeSchemaTypeName(endpoint.successResponseType);
+				const innerType = normalized.endsWith("[]") ? normalized.slice(0, -2) : normalized;
+				if (!isPrimitiveType(innerType)) {
+					names.add(innerType);
+				}
 			}
 		}
 		// Collect request body type
 		if (endpoint.requestBody?.typeName && endpoint.requestBody.typeName !== "unknown") {
 			if (!isPrimitiveType(endpoint.requestBody.typeName)) {
-				names.add(endpoint.requestBody.typeName);
+				const normalized = normalizeSchemaTypeName(endpoint.requestBody.typeName);
+				names.add(normalized);
 			}
 		}
 	}
@@ -165,24 +200,6 @@ function collectParamInterfaceNames(endpoints: EndpointInfo[]): string[] {
 		}
 	}
 	return names;
-}
-
-/**
- * Check if a type is a primitive type (not a schema type that needs importing)
- */
-function isPrimitiveType(typeName: string): boolean {
-	const primitives = ["string", "number", "boolean", "unknown", "any", "void", "null", "undefined", "never", "object"];
-	// Check for simple primitives
-	if (primitives.includes(typeName)) return true;
-	// Check for array of primitives like "string[]"
-	if (typeName.endsWith("[]")) {
-		return isPrimitiveType(typeName.slice(0, -2));
-	}
-	// Check for Record types
-	if (typeName.startsWith("Record<")) return true;
-	// Check for union of string literals like '"value1" | "value2"'
-	if (typeName.includes('"')) return true;
-	return false;
 }
 
 /**
