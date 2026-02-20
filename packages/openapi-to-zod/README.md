@@ -1678,4 +1678,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-For issues and questions, please use the [GitHub issues](https://github.com/CeriosTesting/openapi-to-zod/issues) page.
+For issues and questions, please use the [GitHub issues](https://github.com/CeriosTesting/openapi-codegen/issues) page.

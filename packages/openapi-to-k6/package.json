@@ -12,15 +12,15 @@
 		"performance-testing",
 		"typescript"
 	],
-	"homepage": "https://github.com/CeriosTesting/openapi-to-zod#readme",
+	"homepage": "https://github.com/CeriosTesting/openapi-codegen#readme",
 	"bugs": {
-		"url": "https://github.com/CeriosTesting/openapi-to-zod/issues"
+		"url": "https://github.com/CeriosTesting/openapi-codegen/issues"
 	},
 	"license": "MIT",
 	"author": "Ronald Veth - Cerios",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/CeriosTesting/openapi-to-zod.git",
+		"url": "git+https://github.com/CeriosTesting/openapi-codegen.git",
 		"directory": "packages/openapi-to-k6"
 	},
 	"bin": {
