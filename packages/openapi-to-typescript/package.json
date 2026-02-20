@@ -1,6 +1,6 @@
 {
 	"name": "@cerios/openapi-to-typescript",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Generate TypeScript types from OpenAPI specifications",
 	"keywords": [
 		"api",
