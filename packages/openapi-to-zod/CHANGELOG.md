@@ -1,5 +1,282 @@
 # @cerios/openapi-to-zod
 
+## 1.5.0
+
+### Minor Changes
+
+- 5fbc8d0: Consolidate duplicate utilities across packages
+
+  ### @cerios/openapi-core (minor)
+  - Export `capitalize` function for converting strings to PascalCase (handles kebab-case, snake_case, and dots)
+  - Export `applyFormatting` function for applying prefix/suffix formatting to names
+
+  ### @cerios/openapi-to-zod (BREAKING)
+  - Removed `utils/typescript-loader.ts` re-export. Import directly from `@cerios/openapi-core`:
+    ```ts
+    // Before
+    import { createTypeScriptLoader } from "@cerios/openapi-to-zod/utils/typescript-loader";
+    // After
+    import { createTypeScriptLoader } from "@cerios/openapi-core";
+    ```
+  - Removed `utils/content-type-utils.ts` re-export. Import directly from `@cerios/openapi-core`:
+    ```ts
+    // Before
+    import { getResponseParseMethod } from "@cerios/openapi-to-zod/utils/content-type-utils";
+    // After
+    import {
+    	getResponseParseMethod,
+    	type ContentTypeParseResult,
+    	type FallbackContentTypeParsing,
+    } from "@cerios/openapi-core";
+    ```
+  - Refactored internal code to use `capitalize` and `generateMethodNameFromPath` from `@cerios/openapi-core`
+
+  ### @cerios/openapi-to-zod-playwright (patch)
+  - Use `capitalize` from `@cerios/openapi-core` instead of local duplicate
+  - Fixed incorrect JSDoc (function produces PascalCase, not camelCase)
+  - Removed dead code (identical if/else branches)
+
+  ### @cerios/openapi-to-typescript (patch)
+  - Use `applyFormatting` from `@cerios/openapi-core` instead of local duplicates in `typescript-generator.ts`, `type-generator.ts`, and `enum-generator.ts`
+
+- 5fbc8d0: Add `useOperationId` parity for operation-derived naming across generators.
+
+  ## What changed
+  - **Core**: Added shared `useOperationId` option to base generator config/types and extended `getOperationName()` to support explicit operationId toggle behavior.
+  - **openapi-to-typescript**:
+    - Added `useOperationId` support for operation-derived type names (`QueryParams`, `HeaderParams`, inline request/response types).
+    - Default behavior remains unchanged (`useOperationId: true`).
+  - **openapi-to-zod**:
+    - Added `useOperationId` support for operation-derived query/header schema names.
+    - Default behavior remains unchanged (`useOperationId: true`).
+  - **openapi-to-k6**:
+    - Forwarded `useOperationId` into internal `openapi-to-typescript` schema type generation, so generated operation-derived type names match client/service naming mode.
+
+  ## Notes
+  - Existing default naming remains backward compatible.
+  - Added/updated tests in TypeScript, Zod, and K6 packages to verify both naming modes.
+
+- 5fbc8d0: Renamed `output` to `outputTypes` as the canonical config field.
+
+  This change improves clarity by explicitly indicating that the output path is for generated types/schemas, distinguishing it from other output options like `outputClient` and `outputService` in the Playwright and K6 packages.
+
+  For `@cerios/openapi-to-zod` and `@cerios/openapi-to-zod-playwright`, backward compatibility is now included:
+  - `outputTypes` is the preferred field.
+  - Deprecated `output` is still accepted.
+  - One of `outputTypes` or `output` is required.
+  - If both are set and values differ, configuration validation fails.
+  - A deprecation warning is shown in terminal output when `output` is used.
+
+  ### Migration Guide
+
+  Use `outputTypes` going forward:
+
+  **Before:**
+
+  ```json
+  {
+  	"specs": [
+  		{
+  			"input": "openapi.yaml",
+  			"output": "src/schemas.ts"
+  		}
+  	]
+  }
+  ```
+
+  **After:**
+
+  ```json
+  {
+  	"specs": [
+  		{
+  			"input": "openapi.yaml",
+  			"outputTypes": "src/schemas.ts"
+  		}
+  	]
+  }
+  ```
+
+  **TypeScript config:**
+
+  ```typescript
+  export default defineConfig({
+  	specs: [
+  		{
+  			input: "openapi.yaml",
+  			outputTypes: "src/schemas.ts", // Previously: output
+  			outputClient: "src/client.ts",
+  			outputService: "src/service.ts",
+  		},
+  	],
+  });
+  ```
+
+  ### Affected Packages
+  - `@cerios/openapi-core`: `BaseGeneratorOptions.output` → `BaseGeneratorOptions.outputTypes`
+  - `@cerios/openapi-to-zod`: Config files and `OpenApiGeneratorOptions` (`output` remains supported as deprecated alias)
+  - `@cerios/openapi-to-zod-playwright`: Config files and `OpenApiPlaywrightGeneratorOptions` (`output` remains supported as deprecated alias)
+  - `@cerios/openapi-to-typescript`: Config files and `TypeScriptGeneratorOptions`
+  - `@cerios/openapi-to-k6`: Config files and `OpenApiK6GeneratorOptions`
+
+- 5fbc8d0: Add separate types and schemas mode (`outputZodSchemas`) to solve TypeScript depth errors
+
+  ### The Problem
+
+  When using `z.infer<typeof schema>` with very large or deeply nested OpenAPI schemas, TypeScript's type inference can hit recursion limits, causing "Type instantiation is excessively deep and possibly infinite" (TS2589) errors.
+
+  ### The Solution
+
+  New `outputZodSchemas` option generates TypeScript types and Zod schemas in separate files with explicit `z.ZodType<T>` annotations instead of relying on `z.infer`:
+
+  ```typescript
+  // Before (can cause TS2589 errors with large schemas):
+  export const userSchema = z.object({ ... });
+  export type User = z.infer<typeof userSchema>; // 💥 Type instantiation error
+
+  // After (explicit types, no inference needed):
+  // types.ts - generated by @cerios/openapi-to-typescript
+  export type User = { ... };
+
+  // schemas.ts - generated with z.ZodType<T> annotations
+  import type { User } from './types';
+  export const userSchema: z.ZodType<User> = z.object({ ... });
+  ```
+
+  ### New Options
+  - **`outputZodSchemas`**: File path for Zod schemas with explicit type annotations
+  - **`enumFormat`**: Choose between `"union"` or `"const-object"` for enum generation (default: `"const-object"`)
+  - **`typeAssertionThreshold`**: Complexity threshold for switching from `: z.ZodType<T>` annotation to `as unknown as z.ZodType<T>` double assertion for extremely large schemas
+
+  ### Usage
+
+  ```typescript
+  import { defineConfig } from "@cerios/openapi-to-zod";
+
+  export default defineConfig({
+  	specs: [
+  		{
+  			input: "large-api.yaml",
+  			outputTypes: "src/generated/types.ts", // TypeScript types
+  			outputZodSchemas: "src/generated/schemas.ts", // Zod schemas
+  			enumFormat: "const-object", // Optional
+  			typeAssertionThreshold: 100, // Optional: use double assertion for complex schemas
+  		},
+  	],
+  });
+  ```
+
+  ### Requirements
+  - `@cerios/openapi-to-typescript` must be installed (regular dependency)
+  - `outputTypes` is required when `outputZodSchemas` is specified
+
+  ### Benefits
+  - Eliminates "Type instantiation is excessively deep" errors
+  - Better IDE performance with pre-computed types
+  - Cleaner separation of concerns between types and validation
+  - Full type safety maintained through explicit `z.ZodType<T>` annotations
+
+### Patch Changes
+
+- 5fbc8d0: Consolidate batch executor, CLI utilities, and config loader across packages
+
+  ### @cerios/openapi-core (minor)
+
+  New exports for shared CLI and batch processing infrastructure:
+  - **CLI Utilities** (`cli-utils.ts`):
+    - `findSpecFiles(patterns)` - Find OpenAPI spec files matching glob patterns
+    - `ceriosMessages` - Array of fun loading messages
+    - `getRandomCeriosMessage()` - Get a random loading message
+
+  - **Config Loader Factory** (`config-loader-factory.ts`):
+    - `createConfigLoader<TConfig>(options, schema)` - Generic factory for creating type-safe config loaders using cosmiconfig
+    - `mergeCliWithConfig<T>(specConfig, cliOptions)` - Merge CLI options with loaded config
+
+  - **Error Classes**:
+    - `CliOptionsError` - For CLI argument validation errors
+    - `SchemaGenerationError` - For schema generation failures
+    - `CircularReferenceError` - For circular reference detection
+
+  ### @cerios/openapi-to-zod (patch)
+  - Removed duplicate `batch-executor.ts` - now imports `executeBatch` from `@cerios/openapi-core`
+  - CLI utilities (`findSpecFiles`, `ceriosMessages`, `getRandomCeriosMessage`) now imported from `@cerios/openapi-core`
+  - Config loader uses `createConfigLoader` factory from `@cerios/openapi-core`
+  - Error classes re-exported from `@cerios/openapi-core`
+
+  ### @cerios/openapi-to-typescript (patch)
+  - Removed duplicate `batch-executor.ts` - now imports `executeBatch` from `@cerios/openapi-core`
+  - CLI utilities imported from `@cerios/openapi-core`
+  - Config loader uses `createConfigLoader` factory from `@cerios/openapi-core`
+  - Error classes re-exported from `@cerios/openapi-core`
+
+  ### @cerios/openapi-to-zod-playwright (patch)
+  - CLI utilities imported from `@cerios/openapi-core`
+  - Config loader uses `createConfigLoader` factory from `@cerios/openapi-core`
+  - Error classes now use base classes from `@cerios/openapi-core`
+
+- 5fbc8d0: Fix "used before its declaration" TypeScript errors for circular dependencies
+
+  ### @cerios/openapi-to-zod (patch)
+
+  Fixed a bug where schemas involved in mutual circular dependencies (e.g., `Dossier → AbsenceCourse → Dossier` via `allOf` compositions) would cause TypeScript compilation errors due to variables being used before their declaration.
+
+  **Root cause**: The generator was not properly detecting and handling mutual circular references. When schemas reference each other through `allOf`, the topological sort would place them in an order that caused forward references without using `z.lazy()`.
+
+  **Changes**:
+  - Added pre-analysis phase to detect circular dependency chains before code generation
+  - References to any schema in a circular dependency chain now use `z.lazy()` for deferred evaluation
+  - Fixed an issue where new `PropertyGenerator` instances weren't receiving the circular dependencies information
+  - Improved topological sort to defer schemas that depend on circular dependencies
+
+  ### @cerios/openapi-to-zod-playwright (patch)
+  - Inherits the circular dependency fix from `@cerios/openapi-to-zod`
+
+- 5fbc8d0: ### Bug Fixes
+
+  **@cerios/openapi-to-k6**
+  - Fix output files being swapped - client was written to types path and vice versa
+  - Fix import path calculation for types file - now correctly computes relative path from client file to types file
+  - Fix schema types (response and request body types) not being imported in client file when using separate types file
+  - Add `enumFormat` configuration option (inherited from TypeScript generator)
+  - K6 config schema now properly extends TypeScript config schema
+  - Move runtime utilities (`mergeRequestParameters`, `stringifyHeaders`, `buildQueryString`, `cleanBaseUrl`) to a separate runtime module that is imported by generated clients instead of being generated inline
+
+  **@cerios/openapi-to-typescript**
+  - Export `TypeScriptSpecificOptionsSchema`, `TypeScriptGeneratorOptionsSchema`, and `TypeScriptDefaultsSchema` for use by downstream packages
+
+  **All packages**
+  - Replace deprecated Zod v4 `.merge()` method with `.extend()` for schema composition
+
+- 5fbc8d0: Add RequireExcept utility type and update stripSchemaPrefix to support arrays
+
+  ### @cerios/openapi-core (minor)
+  - Add `RequireExcept<T, K>` utility type for creating "resolved options" types where most properties are required but some remain optional
+  - Update `stripPrefix` function to accept `string | string[]` for stripping multiple prefixes
+
+  ### @cerios/openapi-to-typescript (patch)
+  - Simplify `ResolvedOptions` interface using the new `RequireExcept` utility type
+
+  ### @cerios/openapi-to-zod (patch)
+  - Update `PropertyGeneratorContext.stripSchemaPrefix` type to `string | string[]` for consistency with `BaseGeneratorOptions`
+
+  ### @cerios/openapi-to-zod-playwright (patch)
+  - Update `stripSchemaPrefix` parameter types in service generator functions to support `string | string[]`
+
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+- Updated dependencies [5fbc8d0]
+  - @cerios/openapi-to-typescript@1.0.0
+  - @cerios/openapi-core@1.0.0
+
 ## 1.4.0
 
 ### Minor Changes

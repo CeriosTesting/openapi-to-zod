@@ -1,6 +1,6 @@
 {
 	"name": "@cerios/openapi-core",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"description": "Core utilities for parsing and processing OpenAPI specifications. Shared foundation for OpenAPI code generators.",
 	"keywords": [
 		"api",
