@@ -10,6 +10,7 @@
 		"lint": "oxlint --type-aware",
 		"lint:fix": "oxlint --type-aware --fix",
 		"pack": "pnpm --filter \"*\" exec pnpm pack --pack-destination ../..",
+		"release": "changeset publish --provenance",
 		"test": "pnpm -r test",
 		"update-deps": "pnpm update -r --latest",
 		"version-packages": "changeset version"
