@@ -58,6 +58,46 @@ export function formatZodErrorPath(path: PropertyKey[]): string {
 }
 
 /**
+ * Traverse object path to get value, handling both string keys and numeric indices
+ * @param input - The root object to traverse
+ * @param path - Array of path segments (strings or numbers)
+ * @returns The value at the path, or undefined if not found
+ */
+function getValueAtPath(input: unknown, path: PropertyKey[]): unknown {
+	return path.reduce<unknown>((acc, key) => {
+		if (Array.isArray(acc) && typeof key === "number") {
+			return acc[key];
+		}
+		if (isRecord(acc) && isStringKey(key)) {
+			return acc[key];
+		}
+		return undefined;
+	}, input);
+}
+
+/**
+ * Determine if we should skip printing the received value
+ * @param issue - The Zod issue
+ * @param value - The resolved value at the path
+ * @returns true if received part should be omitted
+ */
+function shouldSkipReceivedValue(issue: z.core.$ZodIssue, value: unknown): boolean {
+	// Skip for objects/arrays (e.g., parent context for unrecognized key errors)
+	if (isRecord(value) || Array.isArray(value)) {
+		return true;
+	}
+	// Skip for unrecognized key errors - the value points to parent, not the invalid key
+	if (issue.code === "unrecognized_keys") {
+		return true;
+	}
+	// Skip if the message already mentions "received" to avoid duplication
+	if (issue.message.toLowerCase().includes("received")) {
+		return true;
+	}
+	return false;
+}
+
+/**
  * Format Zod error with actual received values for debugging
  * @param error - Zod error object
  * @param input - The original input data that was validated
@@ -66,12 +106,8 @@ export function formatZodErrorPath(path: PropertyKey[]): string {
 export function formatZodErrorWithValues(error: z.ZodError, input: unknown): string {
 	const formattedIssues = error.issues
 		.map(issue => {
-			const value = issue.path.reduce<unknown>(
-				(acc, key) => (isRecord(acc) && isStringKey(key) ? acc[key] : undefined),
-				input
-			);
-			// Skip printing received value for objects/arrays (e.g., "Unrecognized key" errors)
-			const receivedPart = isRecord(value) ? "" : ` (received: ${JSON.stringify(value)})`;
+			const value = getValueAtPath(input, issue.path);
+			const receivedPart = shouldSkipReceivedValue(issue, value) ? "" : ` (received: ${JSON.stringify(value)})`;
 			return `✖ ${issue.message}${receivedPart}\n  → at ${formatZodErrorPath(issue.path)}`;
 		})
 		.join("\n");

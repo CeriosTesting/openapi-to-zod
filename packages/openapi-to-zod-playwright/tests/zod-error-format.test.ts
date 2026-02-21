@@ -349,13 +349,14 @@ describe("zodErrorFormat option", () => {
 			const { parseWithPrettifyErrorWithValues } = await import("../src/runtime/zod-helpers");
 			const { z } = await import("zod");
 
-			const schema = z.object({ name: z.string() });
+			// Use min() constraint - the error message won't contain "received"
+			const schema = z.object({ age: z.number().min(0) });
 
 			try {
-				await parseWithPrettifyErrorWithValues(schema, { name: 123 });
+				await parseWithPrettifyErrorWithValues(schema, { age: -5 });
 				expect.fail("Should have thrown");
 			} catch (error) {
-				expect((error as Error).message).toContain("received:");
+				expect((error as Error).message).toContain("(received: -5)");
 			}
 		});
 
@@ -365,6 +366,133 @@ describe("zodErrorFormat option", () => {
 			expect(formatZodErrorPath(["user", "name"])).toBe("user.name");
 			expect(formatZodErrorPath(["items", 0, "value"])).toBe("items[0].value");
 			expect(formatZodErrorPath([])).toBe("");
+		});
+
+		it("formatZodErrorWithValues should correctly resolve values at array paths", async () => {
+			const { formatZodErrorWithValues } = await import("../src/runtime/zod-helpers");
+			const { z } = await import("zod");
+
+			// Schema expecting operation to be an object, not null
+			const schema = z.object({
+				data: z.array(
+					z.object({
+						id: z.string(),
+						operation: z.object({ type: z.string() }),
+					})
+				),
+			});
+
+			const input = {
+				data: [
+					{
+						id: "123",
+						operation: null,
+					},
+				],
+			};
+
+			const result = schema.safeParse(input);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				const formatted = formatZodErrorWithValues(result.error, input);
+				// Should NOT contain "(received: undefined)" since it should resolve to null
+				expect(formatted).not.toContain("(received: undefined)");
+				// The message itself mentions "received null", so no extra received part
+				expect(formatted).toContain("at data[0].operation");
+			}
+		});
+
+		it("formatZodErrorWithValues should skip received part for unrecognized key errors", async () => {
+			const { formatZodErrorWithValues } = await import("../src/runtime/zod-helpers");
+			const { z } = await import("zod");
+
+			// Schema with strict mode to reject extra keys
+			const schema = z
+				.object({
+					id: z.string(),
+				})
+				.strict();
+
+			const input = {
+				id: "123",
+				migrationKey: "extra",
+			};
+
+			const result = schema.safeParse(input);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				const formatted = formatZodErrorWithValues(result.error, input);
+				// Should NOT contain "(received:" for unrecognized key errors
+				expect(formatted).not.toContain("(received:");
+				expect(formatted).toContain("Unrecognized key");
+			}
+		});
+
+		it("formatZodErrorWithValues should skip received part when message contains 'received'", async () => {
+			const { formatZodErrorWithValues } = await import("../src/runtime/zod-helpers");
+			const { z } = await import("zod");
+
+			const schema = z.object({
+				value: z.object({ type: z.string() }),
+			});
+
+			const input = { value: null };
+
+			const result = schema.safeParse(input);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				const formatted = formatZodErrorWithValues(result.error, input);
+				// Message already says "received null", should not append extra "(received: ...)"
+				expect(formatted).not.toContain("(received:");
+			}
+		});
+
+		it("formatZodErrorWithValues should show received value when useful", async () => {
+			const { formatZodErrorWithValues } = await import("../src/runtime/zod-helpers");
+			const { z } = await import("zod");
+
+			const schema = z.object({
+				age: z.number().min(0),
+			});
+
+			const input = { age: -5 };
+
+			const result = schema.safeParse(input);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				const formatted = formatZodErrorWithValues(result.error, input);
+				// Should show the actual invalid value
+				expect(formatted).toContain("(received: -5)");
+			}
+		});
+
+		it("formatZodErrorWithValues should handle nested array structure", async () => {
+			const { formatZodErrorWithValues } = await import("../src/runtime/zod-helpers");
+			const { z } = await import("zod");
+
+			// Use min() constraint so the error message won't contain "received"
+			const schema = z.object({
+				data: z.array(
+					z.array(
+						z.object({
+							value: z.number().min(0),
+						})
+					)
+				),
+			});
+
+			const input = {
+				data: [[{ value: -10 }]],
+			};
+
+			const result = schema.safeParse(input);
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				const formatted = formatZodErrorWithValues(result.error, input);
+				// Should correctly resolve value through nested arrays
+				expect(formatted).toContain("(received: -10)");
+				expect(formatted).toContain("at data[0][0].value");
+			}
 		});
 	});
 });
