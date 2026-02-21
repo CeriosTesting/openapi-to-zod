@@ -9,7 +9,6 @@
   Schema names containing special characters (underscores, dots, hyphens) are now normalized consistently across all generated files. Previously, type names like `Org_Entity_POST` would appear as `Org_Entity_POST` in service imports but `OrgEntityPOST` in the types file, causing TypeScript compilation errors.
 
   **Changes:**
-
   - Added `normalizeSchemaTypeName()` utility to `@cerios/openapi-core` for consistent type name normalization
   - Updated K6 service generator to normalize request body and response type names
   - Handles array types correctly (e.g., `User_DTO[]` → `UserDTO[]`)
@@ -23,11 +22,9 @@
 ### Minor Changes
 
 - 5fbc8d0: Add client-service split architecture for K6 generation
-
   - **Client (passthrough layer)**: Now returns raw K6 `Response` directly instead of `{ response, data }`. No JSON parsing - pure wrapper around K6's `http` module.
 
   - **Service (validation layer)**: New optional layer that wraps the client with:
-
     - Status code validation using K6's `check()` function with console logging on failure
     - JSON response body parsing
     - Returns `K6ServiceResult<T>` with `response`, `data`, and `ok` properties
@@ -36,9 +33,9 @@
 
     ```typescript
     interface K6ServiceResult<T> {
-      response: Response; // Raw K6 HTTP response
-      data: T; // Parsed response data (typed from OpenAPI spec)
-      ok: boolean; // Whether status code check passed
+    	response: Response; // Raw K6 HTTP response
+    	data: T; // Parsed response data (typed from OpenAPI spec)
+    	ok: boolean; // Whether status code check passed
     }
     ```
 
@@ -49,15 +46,12 @@
 - 5fbc8d0: Add Content-Type header injection and body serialization for K6 client/service
 
   ## Client Changes
-
   - **Content-Type header injection**: Client methods now automatically include the `Content-Type` header from the OpenAPI spec for endpoints with request bodies. User-provided headers can still override this default.
 
   - **Consistent naming**: Changed `requestParams` to `requestParameters` throughout for consistency between client and service.
 
   ## Service Changes
-
   - **`serializeBody()` helper**: New runtime helper function that handles K6's various body types:
-
     - `null`/`undefined`: passed through as-is
     - `string`: passed through as-is (already serialized)
     - `ArrayBuffer`: passed through as-is (binary data)
@@ -101,7 +95,6 @@
   ```
 
 - 5fbc8d0: ### Features
-
   - Add `outputTypes` option to generate TypeScript types in a separate file
     - When specified, parameter types (e.g., `GetUsersParams`, `GetUsersHeaders`) are generated to a separate file
     - The client file imports types from the separate file
@@ -109,7 +102,6 @@
     - Config: `outputTypes: "k6/api-types.ts"`
 
   ### Bug Fixes
-
   - Fix property quoting for parameter names with special characters
     - Property names like `filter[id]`, `page[number]`, and headers with dashes are now properly quoted
     - Before: `filter[id]?: string;` (invalid TypeScript)
@@ -118,7 +110,6 @@
 - 5fbc8d0: Add `useOperationId` parity for operation-derived naming across generators.
 
   ## What changed
-
   - **Core**: Added shared `useOperationId` option to base generator config/types and extended `getOperationName()` to support explicit operationId toggle behavior.
   - **openapi-to-typescript**:
     - Added `useOperationId` support for operation-derived type names (`QueryParams`, `HeaderParams`, inline request/response types).
@@ -130,7 +121,6 @@
     - Forwarded `useOperationId` into internal `openapi-to-typescript` schema type generation, so generated operation-derived type names match client/service naming mode.
 
   ## Notes
-
   - Existing default naming remains backward compatible.
   - Added/updated tests in TypeScript, Zod, and K6 packages to verify both naming modes.
 
@@ -139,7 +129,6 @@
   This change improves clarity by explicitly indicating that the output path is for generated types/schemas, distinguishing it from other output options like `outputClient` and `outputService` in the Playwright and K6 packages.
 
   For `@cerios/openapi-to-zod` and `@cerios/openapi-to-zod-playwright`, backward compatibility is now included:
-
   - `outputTypes` is the preferred field.
   - Deprecated `output` is still accepted.
   - One of `outputTypes` or `output` is required.
@@ -154,12 +143,12 @@
 
   ```json
   {
-    "specs": [
-      {
-        "input": "openapi.yaml",
-        "output": "src/schemas.ts"
-      }
-    ]
+  	"specs": [
+  		{
+  			"input": "openapi.yaml",
+  			"output": "src/schemas.ts"
+  		}
+  	]
   }
   ```
 
@@ -167,12 +156,12 @@
 
   ```json
   {
-    "specs": [
-      {
-        "input": "openapi.yaml",
-        "outputTypes": "src/schemas.ts"
-      }
-    ]
+  	"specs": [
+  		{
+  			"input": "openapi.yaml",
+  			"outputTypes": "src/schemas.ts"
+  		}
+  	]
   }
   ```
 
@@ -180,19 +169,18 @@
 
   ```typescript
   export default defineConfig({
-    specs: [
-      {
-        input: "openapi.yaml",
-        outputTypes: "src/schemas.ts", // Previously: output
-        outputClient: "src/client.ts",
-        outputService: "src/service.ts",
-      },
-    ],
+  	specs: [
+  		{
+  			input: "openapi.yaml",
+  			outputTypes: "src/schemas.ts", // Previously: output
+  			outputClient: "src/client.ts",
+  			outputService: "src/service.ts",
+  		},
+  	],
   });
   ```
 
   ### Affected Packages
-
   - `@cerios/openapi-core`: `BaseGeneratorOptions.output` → `BaseGeneratorOptions.outputTypes`
   - `@cerios/openapi-to-zod`: Config files and `OpenApiGeneratorOptions` (`output` remains supported as deprecated alias)
   - `@cerios/openapi-to-zod-playwright`: Config files and `OpenApiPlaywrightGeneratorOptions` (`output` remains supported as deprecated alias)
@@ -204,7 +192,6 @@
 - 5fbc8d0: ### Bug Fixes
 
   **@cerios/openapi-to-k6**
-
   - Fix output files being swapped - client was written to types path and vice versa
   - Fix import path calculation for types file - now correctly computes relative path from client file to types file
   - Fix schema types (response and request body types) not being imported in client file when using separate types file
@@ -213,11 +200,9 @@
   - Move runtime utilities (`mergeRequestParameters`, `stringifyHeaders`, `buildQueryString`, `cleanBaseUrl`) to a separate runtime module that is imported by generated clients instead of being generated inline
 
   **@cerios/openapi-to-typescript**
-
   - Export `TypeScriptSpecificOptionsSchema`, `TypeScriptGeneratorOptionsSchema`, and `TypeScriptDefaultsSchema` for use by downstream packages
 
   **All packages**
-
   - Replace deprecated Zod v4 `.merge()` method with `.extend()` for schema composition
 
 - Updated dependencies [5fbc8d0]
