@@ -39,7 +39,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: pnpm changeset version
+          version: pnpm changeset version && pnpm format
           publish: npm run release
           commit: "chore: version packages"
           title: "chore: version packages"
