@@ -13,7 +13,7 @@ export type { OperationFilters } from "@cerios/openapi-core";
 // Re-export types from openapi-to-typescript
 export type { EnumFormat } from "@cerios/openapi-to-typescript";
 
-// Re-export K6 Response type for use in K6ServiceResult
+// Re-export K6 Response type for consumers of this package
 export type { Response as K6Response } from "k6/http";
 
 /**
