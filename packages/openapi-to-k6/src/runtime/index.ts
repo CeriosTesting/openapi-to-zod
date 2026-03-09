@@ -1,8 +1,10 @@
-import type { Params, RequestBody } from "k6/http";
+import type { Params, RequestBody, Response } from "k6/http";
 
 /**
  * Runtime types and helpers for generated K6 clients
  * These are imported by generated code at runtime
+ *
+ * This module has ZERO Node.js dependencies and is safe to use in k6.
  */
 
 /**
@@ -11,9 +13,30 @@ import type { Params, RequestBody } from "k6/http";
 export type { Params } from "k6/http";
 
 /**
- * Re-export K6ServiceResult for use in generated service code
+ * K6 service result type - combines HTTP response with parsed data and status check result
+ * Used as return type for service methods
+ *
+ * @template T - The type of the parsed response data (from generated types)
+ *
+ * @example
+ * ```typescript
+ * // Service method returns K6ServiceResult<User>
+ * const result = service.getUserById("123");
+ * if (result.ok) {
+ *   console.log(result.data.name); // data is typed as User
+ * } else {
+ *   console.log(`Request failed with status: ${result.response.status}`);
+ * }
+ * ```
  */
-export type { K6ServiceResult } from "../types";
+export interface K6ServiceResult<T> {
+	/** The raw K6 HTTP response */
+	response: Response;
+	/** The parsed response data */
+	data: T;
+	/** Whether the status code check passed */
+	ok: boolean;
+}
 
 /**
  * Query string parameters
@@ -33,6 +56,8 @@ export type HttpHeaders = Record<string, unknown>;
  * Merges request parameters with common parameters
  * Request-specific parameters take precedence over common parameters
  *
+ * Deep-merges nested object properties: headers, tags, cookies
+ *
  * @param requestParams - Request-specific K6 parameters
  * @param commonParams - Common K6 parameters set on the client
  * @returns Merged parameters with request params taking precedence
@@ -41,6 +66,10 @@ export function mergeRequestParameters(requestParams: Params, commonParams: Para
 	return {
 		...commonParams,
 		...requestParams,
+		cookies: {
+			...commonParams?.cookies,
+			...requestParams?.cookies,
+		},
 		headers: {
 			...commonParams?.headers,
 			...requestParams?.headers,

@@ -15,6 +15,7 @@ describe("Runtime Utilities", () => {
 		it("should merge empty parameters", () => {
 			const result = mergeRequestParameters({}, {});
 			expect(result).toEqual({
+				cookies: {},
 				headers: {},
 				tags: {},
 			});
@@ -83,13 +84,30 @@ describe("Runtime Utilities", () => {
 			});
 		});
 
-		it("should handle undefined headers and tags gracefully", () => {
+		it("should merge cookies from both sources", () => {
+			const common = {
+				cookies: { session: "abc123", theme: "dark" },
+			};
+			const request = {
+				cookies: { csrfToken: "xyz789" },
+			};
+			const result = mergeRequestParameters(request, common);
+
+			expect(result.cookies).toEqual({
+				session: "abc123",
+				theme: "dark",
+				csrfToken: "xyz789",
+			});
+		});
+
+		it("should handle undefined headers, tags, and cookies gracefully", () => {
 			const common = { timeout: "30s" };
 			const request = { redirects: 5 };
 			const result = mergeRequestParameters(request, common);
 
 			expect(result.timeout).toBe("30s");
 			expect(result.redirects).toBe(5);
+			expect(result.cookies).toEqual({});
 			expect(result.headers).toEqual({});
 			expect(result.tags).toEqual({});
 		});

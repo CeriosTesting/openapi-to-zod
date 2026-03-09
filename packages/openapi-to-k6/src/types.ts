@@ -13,34 +13,8 @@ export type { OperationFilters } from "@cerios/openapi-core";
 // Re-export types from openapi-to-typescript
 export type { EnumFormat } from "@cerios/openapi-to-typescript";
 
-// Re-export K6 Response type for use in K6ServiceResult
+// Re-export K6 Response type for consumers of this package
 export type { Response as K6Response } from "k6/http";
-
-/**
- * K6 service result type - combines HTTP response with parsed data and status check result
- * Used as return type for service methods
- *
- * @template T - The type of the parsed response data (from generated types)
- *
- * @example
- * ```typescript
- * // Service method returns K6ServiceResult<User>
- * const result = service.getUserById("123");
- * if (result.ok) {
- *   console.log(result.data.name); // data is typed as User
- * } else {
- *   console.log(`Request failed with status: ${result.response.status}`);
- * }
- * ```
- */
-export interface K6ServiceResult<T> {
-	/** The raw K6 HTTP response */
-	response: import("k6/http").Response;
-	/** The parsed response data */
-	data: T;
-	/** Whether the status code check passed */
-	ok: boolean;
-}
 
 /**
  * Generator options for K6 client generation

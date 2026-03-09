@@ -249,7 +249,7 @@ export function generateK6ServiceCode(
 	const k6RuntimeImports = hasAnyRequestBody ? "K6ServiceResult, serializeBody" : "K6ServiceResult";
 	parts.push(`import { check } from "k6";
 import type { Params } from "k6/http";
-import { type ${k6RuntimeImports} } from "@cerios/openapi-to-k6";
+import { type ${k6RuntimeImports} } from "@cerios/openapi-to-k6/runtime";
 import { ${clientClassName} } from "${clientImportPath}";`);
 
 	// Import types from types file

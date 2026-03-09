@@ -25,7 +25,7 @@ describe("Client Imports", () => {
 			expect(clientOutput).toMatch(/import type \{[^}]*Response[^}]*\} from "k6\/http"/);
 
 			// Should import runtime utilities
-			expect(clientOutput).toContain('from "@cerios/openapi-to-k6"');
+			expect(clientOutput).toContain('from "@cerios/openapi-to-k6/runtime"');
 			expect(clientOutput).toContain("cleanBaseUrl");
 			expect(clientOutput).toContain("mergeRequestParameters");
 
@@ -130,7 +130,7 @@ describe("Client Imports", () => {
 
 			const serviceOutput = generator.generateServiceString("./client", "./types");
 
-			expect(serviceOutput).toContain('from "@cerios/openapi-to-k6"');
+			expect(serviceOutput).toContain('from "@cerios/openapi-to-k6/runtime"');
 			expect(serviceOutput).toContain("K6ServiceResult");
 		});
 

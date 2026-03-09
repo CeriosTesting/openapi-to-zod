@@ -228,7 +228,7 @@ describe("OpenApiK6Generator", () => {
 
 			const output = generator.generateString();
 
-			expect(output).toContain('from "@cerios/openapi-to-k6"');
+			expect(output).toContain('from "@cerios/openapi-to-k6/runtime"');
 			expect(output).toContain("mergeRequestParameters");
 		});
 

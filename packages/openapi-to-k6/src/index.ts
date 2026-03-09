@@ -43,9 +43,6 @@ export { K6ClientGenerationError } from "./errors";
 
 // Main generator
 export { OpenApiK6Generator } from "./openapi-k6-generator";
-// Runtime exports for generated code
-export type { HttpHeaders, K6ServiceResult, Params, QueryParams } from "./runtime";
-export { buildQueryString, cleanBaseUrl, mergeRequestParameters, serializeBody, stringifyHeaders } from "./runtime";
 // Types
 export type { K6ConfigFile, K6Response, OpenApiK6GeneratorOptions, OperationFilters } from "./types";
 export { defineConfig } from "./types";

@@ -21,7 +21,7 @@ describe("Service Generator", () => {
 			const output = generator.generateServiceString(clientImportPath, typesImportPath);
 
 			expect(output).toContain('import { check } from "k6"');
-			expect(output).toContain('from "@cerios/openapi-to-k6"');
+			expect(output).toContain('from "@cerios/openapi-to-k6/runtime"');
 			expect(output).toContain("K6ServiceResult");
 			expect(output).toContain("export class");
 			expect(output).toContain("Service");

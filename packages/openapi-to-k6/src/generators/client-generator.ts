@@ -269,9 +269,9 @@ export function generateK6ClientCode(
 import type { ${k6Types.join(", ")} } from "k6/http";`;
 
 	if (hasAnyQueryParams) {
-		importsCode += `\nimport { ${runtimeImports.join(", ")}, type QueryParams } from "@cerios/openapi-to-k6";`;
+		importsCode += `\nimport { ${runtimeImports.join(", ")}, type QueryParams } from "@cerios/openapi-to-k6/runtime";`;
 	} else {
-		importsCode += `\nimport { ${runtimeImports.join(", ")} } from "@cerios/openapi-to-k6";`;
+		importsCode += `\nimport { ${runtimeImports.join(", ")} } from "@cerios/openapi-to-k6/runtime";`;
 	}
 
 	parts.push(importsCode);
